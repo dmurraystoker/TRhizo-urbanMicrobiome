@@ -38,6 +38,8 @@ There are 4 primary data files from which all analyses and downstream variables 
 
 Metadata associated with these files and the `raw_data` equivalents is provided [here](https://github.com/dmurraystoker/TRhizo-urbanMicrobiome/tree/main/metadata.md).
 
+Metadata associated with the R objects generated during and used for data analysis is provided [here](https://github.com/dmurraystoker/TRhizo-urbanMicrobiome/blob/main/R_object_metadata.md).
+
 
 ### Sequences
 
@@ -48,7 +50,7 @@ For ease of reproducibility, download and store the sequences in the [urbanMicro
 
 ### Data Analysis
 
-R Markdown code for all data analyses and figure creation are provided in the [data_analysis](https://github.com/dmurraystoker/TRhizo-urbanMicrobiome/tree/main/data_analysis) folder. Separate README files are provided for each subfolder to describe the purpose of the script files.
+R Markdown code for all data analyses and figure creation are provided in the [data_analysis](https://github.com/dmurraystoker/TRhizo-urbanMicrobiome/tree/main/data_analysis) folder.
 
 
 ### Using this repository
