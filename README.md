@@ -43,7 +43,7 @@ Metadata associated with the R objects generated during and used for data analys
 
 ### Sequences
 
-All raw sequence files are provided on NCBI under the BioProject accession [PRJNA1005557](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA1005557).
+All raw sequence files are provided on NCBI under the BioProject accession [PRJNA1107685](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA1107685).
 
 For ease of reproducibility, download and store the sequences in the [urbanMicrobiome_sequences](https://github.com/dmurraystoker/TRhizo-urbanMicrobiome/tree/main/urbanMicrobiome_sequences) with a separate folder for root and soil sequences.
 
