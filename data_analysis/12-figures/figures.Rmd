@@ -1,0 +1,3562 @@
+---
+title: "TRhizo-urbanMicrobiome"
+subtitle: "Figures"
+author: "David Murray-Stoker"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 4
+    fig_caption: yes
+    latex_engine: xelatex
+always_allow_html: true
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+options(knitr.graphics.error = FALSE)
+knitr::opts_chunk$set(results = "hold", fig.pos = "H", fig.align = "center", out.width = "92.5%")
+kableExtra::usepackage_latex("float")
+```
+
+```{r Load Packages for R Markdown, include = FALSE}
+library(kableExtra)
+library(knitr)
+```
+
+
+
+
+
+\newpage
+# Load Packages & Data
+
+## Packages
+
+```{r Load Packages, echo = TRUE, results = "hide"}
+## Load the tidyverse
+library(tidyverse)
+
+## Load phyloseq & tidyamplicons
+library(phyloseq)
+library(tidyamplicons)
+
+## Package for figures
+library(ggpubr)
+
+## Packages for GAM(M) figures
+library(mgcv)
+library(gratia)
+
+## Packages for the site map
+library(ggmap, quietly = TRUE)
+library(ggsn)
+library(sp)
+library(sf)
+
+## Packages for colour palettes
+library(scales)
+library(viridis)
+```
+
+
+\newpage
+## Data
+
+```{r Load Data, echo = TRUE, results = "hide"}
+## Load data
+# Site information
+site.information.data <- read_csv(
+  file = "data/urbanMicrobiome-site_information.csv",
+  col_types = "fnn",
+  show_col_types = FALSE
+)
+
+# tidyamplicons data
+microbiome.tidyamplicon.reference <- read_rds(
+  file = "data/microbiome_tidyamplicon_reference.rds"
+)
+
+# Alpha and beta diversity GAM(M)s
+load("data_analysis/7-diversity_composition_analyses/diversity_composition-reduced_workspace.RData")
+
+# Differential abundance
+load("data_analysis/9-differential_abundance/differential_abundance-reduced_workspace.RData")
+
+# Mutualistic bacteria
+# Data
+mutualistic.bacteria.data <- read_rds(
+  file = "data/mutualistic_bacteria_data.rds"
+)
+# GAMs
+load("data_analysis/10-bacterial_functional_groups/mutualistic_bacteria-workspace.RData")
+
+# Pathogenic bacteria
+# Data
+pathogenic.bacteria.data <- read_rds(
+  file = "data/pathogenic_bacteria_data.rds"
+)
+# GAMs
+load("data_analysis/10-bacterial_functional_groups/pathogenic_bacteria-workspace.RData")
+
+# Ecosystem function bacteria
+# Data
+ecosystem.function.bacteria.data <- read_rds(
+  file = "data/ecosystem_function_bacteria_data.rds"
+)
+# GAMs
+load("data_analysis/10-bacterial_functional_groups/ecosystem_function_bacteria-workspace.RData")
+
+# Carbon and nitrogen data
+load("data_analysis/6-carbon_nitrogen_analyses/carbon_nitrogen-workspace.RData")
+```
+
+
+\newpage
+## Colour Palettes
+
+```{r Set Colour Palettes, echo = TRUE, results = "hide"}
+## Set the base colour palettes
+plasma.continuous <- plasma(n = 12)
+magma.continuous <- magma(n = 12)
+mako.continuous <- mako(n = 12)
+rocket.continuous <- rocket(n = 12)
+viridis.continuous <- viridis(n = 16)
+
+# View the colour palettes
+#show_col(plasma.continuous)
+#show_col(magma.continuous)
+#show_col(mako.continuous)
+#show_col(rocket.continuous)
+#show_col(viridis.continuous)
+
+## Set colour palettes
+# Site map
+site.map.points <- "#A62098FF"
+
+# Microbiome compartment
+microbiome.compartment <- c("#3E049CFF", "#FCD225FF")
+
+# Carbon (total and isotope)
+# Soil
+soil.total.carbon <- "#231526FF"
+soil.carbon.isotope <- "#43BBADFF"
+# Leaf
+leaf.total.carbon <- "#403A75FF"
+leaf.carbon.isotope <- "#ADE3C0FF"
+
+# Nitrogen (total and isotope)
+# Soil
+soil.total.nitrogen <- "#451C47FF"
+soil.nitrogen.isotope <- "#ED513EFF"
+# Leaf
+leaf.total.nitrogen <- "#921C5BFF"
+leaf.nitrogen.isotope <- "#F6A47BFF"
+
+## Compartment by bacteria functional groups
+# Mutualistic bacteria
+mutualistic.compartment <- c("#3D5296FF", "#6CD3ADFF")
+
+# Pathogenic bacteria
+pathogenic.compartment <- c("#921C5BFF", "#F47C56FF")
+
+# Ecosystem function bacteria
+ecosystem.function.compartment <- c("#481A6CFF", "#A5DB36FF")
+```
+
+
+\newpage
+## Plot Theme
+
+```{r Set Plot Theme, echo = TRUE}
+theme_DMS <- function() {
+	# Code modified from Vicki Zhang
+  font <- "Helvetica" # Assign font style
+
+  theme_pubr() %+replace%
+
+    # colour
+    theme(
+
+      # Text
+      plot.title = element_text( # title
+        family = font, # set font family
+        size = 16, # set font size
+        face = "plain", # plain typeface; alternate = "bold"
+        hjust = 0, # left align
+        vjust = 2
+      ), 
+      
+      # Legend title
+      legend.title = element_text( # legend
+        family = font,
+        size = 14
+      ), # font size
+      
+      # Legend text
+      legend.text = element_text( # legend
+        family = font, 
+        size = 12
+      ), # font size
+
+      # Axis titles
+      axis.title = element_text( # axis text
+        family = font,
+        size = 14,
+        color = "gray0"
+      ),
+
+      # Axis text
+      axis.text = element_text( # axis text
+        family = font,
+        size = 12,
+        color = "gray20"
+      ),
+
+      # X axis margin
+      axis.text.x = element_text( # margin for axis text
+        margin = margin(5, b = 10)
+      ),
+
+      #  Facet options
+      strip.background = element_rect(color = "gray0"),
+      strip.text.x = element_text(size = 12),
+      strip.text.y = element_text(size = 12)
+    )
+}
+```
+
+
+
+
+
+
+
+
+
+
+\newpage
+# Site Map
+
+## Main Text (Figure 1)
+
+```{r Setp the Site Map Figure, echo = TRUE, eval = FALSE}
+## Prepare data for spatial plotting
+# Specify columns with coordinates
+coordinates(site.information.data) <- ~ Longitude + Latitude
+
+# Set CRS
+proj4string(site.information.data) <- CRS("+init=epsg:4326")
+
+# Convert df to sf
+site.information.sf <- site.information.data %>%
+  st_as_sf(coords = c("Longitude", "Latitude")) %>%
+  st_transform(crs = 4326)
+
+## Set the boundary box
+boundary.box <- c(-80.0460556, 43.3268801, -79.2660263, 43.7569154)
+
+## Set the base map
+base.map <- ggmap(
+  get_map(location = boundary.box, maptype = "terrain", source = "stamen")
+)
+
+## Assemble the site map
+site.map <- base.map +
+  geom_sf(
+    data = site.information.sf,
+    alpha = 0.85,
+    size = 4,
+    inherit.aes = FALSE,
+    color = site.map.points
+  ) +
+  scale_shape_manual(values = c(19)) +
+  labs(x = "Longitude", y = "Latitude") +
+  scalebar(
+    # data = site.information.sf,
+    # location = "bottomright",
+    x.min = -80.0460556, x.max = -79.2660263,
+    y.min = 43.3268801, y.max = 43.7569154,
+    dist = 10, dist_unit = "km",
+    st.bottom = FALSE, st.color = "black",
+    transform = TRUE, model = "WGS84",
+    st.dist = 0.05
+  ) +
+  theme(
+    legend.position = c(0.15, 0.75),
+    legend.background = element_rect(fill = "white", colour = "black"),
+    legend.box.margin = margin(6, 6, 6, 6),
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 14),
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 14)
+  )
+
+## Export the figure
+ggsave(
+  "figure_1-site_map-base.pdf",
+  plot = site.map,
+  device = "pdf",
+  path = "figures/",
+  width = 8,
+  height = 8,
+  units = "in",
+  dpi = 600
+)
+```
+
+
+
+
+
+
+
+
+
+
+\newpage
+# Alpha Diversity
+
+## Main Text Figure (Figure 2)
+
+```{r Set the Main Text Plots: Alpha Diversity, echo = TRUE}
+## ASV richness by distance
+ASV.richness.by.distance.plot <- fitted_values(
+  ASV.richness.by.distance.GAMM,
+  data = alpha.diversity.cleaned.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = alpha.diversity.cleaned.data,
+    mapping = aes(y = Richness, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = microbiome.compartment, name = "Compartment") +
+  scale_color_manual(values = microbiome.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Richness"
+	) +
+  theme_DMS() +
+	ggtitle("(A)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+## Inverse Simpson by distance
+inverse.simpson.by.distance.plot <- fitted_values(
+  inverse.simpson.by.distance.GAMM,
+  data = alpha.diversity.cleaned.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = alpha.diversity.cleaned.data,
+    mapping = aes(y = Inverse_Simpson, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = microbiome.compartment, name = "Compartment") +
+  scale_color_manual(values = microbiome.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Simpson's D-1"
+	) +
+  theme_DMS() +
+	ggtitle("(B)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+## Evenness by distance
+ASV.evenness.by.distance.plot <- fitted_values(
+  ASV.evenness.by.distance.GAMM,
+  data = alpha.diversity.cleaned.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = alpha.diversity.cleaned.data,
+    mapping = aes(y = Evenness, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = microbiome.compartment, name = "Compartment") +
+  scale_color_manual(values = microbiome.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Evenness"
+	) +
+  theme_DMS() +
+	ggtitle("(C)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+## Faith's PD by distance
+faiths.PD.by.distance.plot <- fitted_values(
+  faiths.PD.by.distance.GAMM,
+  data = alpha.diversity.cleaned.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = alpha.diversity.cleaned.data,
+    mapping = aes(y = Faiths_PD, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = microbiome.compartment, name = "Compartment") +
+  scale_color_manual(values = microbiome.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Faith's PD"
+	) +
+  theme_DMS() +
+	ggtitle("(D)")
+```
+
+\vspace{10pt}
+
+```{r Arrange the Main Text Figure: Alpha Diversity, echo = TRUE}
+## Arrange the figure
+alpha.diversity.main.text.figure <- ggarrange(
+  ASV.richness.by.distance.plot,
+  inverse.simpson.by.distance.plot,
+  ASV.evenness.by.distance.plot,
+  faiths.PD.by.distance.plot,
+  nrow = 4,
+  ncol = 1,
+  legend = "top",
+  common.legend = TRUE
+)
+```
+
+\vspace{10pt}
+
+```{r Export the Main Text Figure: Alpha Diversity, echo = TRUE}
+## Export the figure
+ggsave(
+  "figure_2-alpha_diversity-base.pdf",
+  plot = alpha.diversity.main.text.figure,
+  device = "pdf",
+  path = "figures/",
+  width = 5,
+  height = 10,
+  units = "in",
+  dpi = 600
+)
+```
+
+
+
+
+
+\newpage
+## Supplement Figure (Figure S1)
+
+```{r Set the Supplement Plots: Alpha Diversity, echo = TRUE}
+## ASV richness by HII
+ASV.richness.by.HII.plot <- fitted_values(
+  ASV.richness.by.HII.GAMM,
+  data = alpha.diversity.cleaned.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Human_Influence_Index, y = fitted, group = Compartment)) +
+  geom_point(
+    data = alpha.diversity.cleaned.data,
+    mapping = aes(y = Richness, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = microbiome.compartment, name = "Compartment") +
+  scale_color_manual(values = microbiome.compartment, name = "Compartment") +
+	labs(
+		x = "Human Influence Index",
+		y = "Richness"
+	) +
+  theme_DMS() +
+	ggtitle("(A)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+## Inverse Simpson by HII
+inverse.simpson.by.HII.plot <- fitted_values(
+  inverse.simpson.by.HII.GAMM,
+  data = alpha.diversity.cleaned.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Human_Influence_Index, y = fitted, group = Compartment)) +
+  geom_point(
+    data = alpha.diversity.cleaned.data,
+    mapping = aes(y = Inverse_Simpson, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = microbiome.compartment, name = "Compartment") +
+  scale_color_manual(values = microbiome.compartment, name = "Compartment") +
+	labs(
+		x = "Human Influence Index",
+		y = "Simpson's D-1"
+	) +
+  theme_DMS() +
+	ggtitle("(C)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+## Evenness by HII
+ASV.evenness.by.HII.plot <- fitted_values(
+  ASV.evenness.by.HII.GAMM,
+  data = alpha.diversity.cleaned.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Human_Influence_Index, y = fitted, group = Compartment)) +
+  geom_point(
+    data = alpha.diversity.cleaned.data,
+    mapping = aes(y = Evenness, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = microbiome.compartment, name = "Compartment") +
+  scale_color_manual(values = microbiome.compartment, name = "Compartment") +
+	labs(
+		x = "Human Influence Index",
+		y = "Evenness"
+	) +
+  theme_DMS() +
+	ggtitle("(E)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+## Faith's PD by HII
+faiths.PD.by.HII.plot <- fitted_values(
+  faiths.PD.by.HII.GAMM,
+  data = alpha.diversity.cleaned.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Human_Influence_Index, y = fitted, group = Compartment)) +
+  geom_point(
+    data = alpha.diversity.cleaned.data,
+    mapping = aes(y = Faiths_PD, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = microbiome.compartment, name = "Compartment") +
+  scale_color_manual(values = microbiome.compartment, name = "Compartment") +
+	labs(
+		x = "Human Influence Index",
+		y = "Faith's PD"
+	) +
+  theme_DMS() +
+	ggtitle("(G)")
+
+## ASV richness by ISC
+ASV.richness.by.ISC.plot <- fitted_values(
+  ASV.richness.by.ISC.GAMM,
+  data = alpha.diversity.cleaned.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Mean_ISC, y = fitted, group = Compartment)) +
+  geom_point(
+    data = alpha.diversity.cleaned.data,
+    mapping = aes(y = Richness, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = microbiome.compartment, name = "Compartment") +
+  scale_color_manual(values = microbiome.compartment, name = "Compartment") +
+	labs(
+		x = "Mean ISC (%)",
+		y = "Richness"
+	) +
+  theme_DMS() +
+	ggtitle("(B)") +
+	rremove("xlab") +
+	rremove("ylab") +
+	rremove("xy.text")
+
+## Inverse Simpson by ISC
+inverse.simpson.by.ISC.plot <- fitted_values(
+  inverse.simpson.by.ISC.GAMM,
+  data = alpha.diversity.cleaned.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Mean_ISC, y = fitted, group = Compartment)) +
+  geom_point(
+    data = alpha.diversity.cleaned.data,
+    mapping = aes(y = Inverse_Simpson, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = microbiome.compartment, name = "Compartment") +
+  scale_color_manual(values = microbiome.compartment, name = "Compartment") +
+	labs(
+		x = "Mean ISC (%)",
+		y = "Simpson's D-1"
+	) +
+  theme_DMS() +
+	ggtitle("(D)") +
+	rremove("xlab") +
+	rremove("ylab") +
+	rremove("xy.text")
+
+## Evenness by ISC
+ASV.evenness.by.ISC.plot <- fitted_values(
+  ASV.evenness.by.ISC.GAMM,
+  data = alpha.diversity.cleaned.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Mean_ISC, y = fitted, group = Compartment)) +
+  geom_point(
+    data = alpha.diversity.cleaned.data,
+    mapping = aes(y = Evenness, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = microbiome.compartment, name = "Compartment") +
+  scale_color_manual(values = microbiome.compartment, name = "Compartment") +
+	labs(
+		x = "Mean ISC (%)",
+		y = "Evenness"
+	) +
+  theme_DMS() +
+	ggtitle("(F)") +
+	rremove("xlab") +
+	rremove("ylab") +
+	rremove("xy.text")
+
+## Faith's PD by ISC
+faiths.PD.by.ISC.plot <- fitted_values(
+  faiths.PD.by.ISC.GAMM,
+  data = alpha.diversity.cleaned.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Mean_ISC, y = fitted, group = Compartment)) +
+  geom_point(
+    data = alpha.diversity.cleaned.data,
+    mapping = aes(y = Faiths_PD, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = microbiome.compartment, name = "Compartment") +
+  scale_color_manual(values = microbiome.compartment, name = "Compartment") +
+	labs(
+		x = "Mean ISC (%)",
+		y = "Faith's PD"
+	) +
+  theme_DMS() +
+	ggtitle("(H)") +
+	rremove("ylab") +
+	rremove("y.text")
+```
+
+\vspace{10pt}
+
+```{r Arrange the Supplement Figure: Alpha Diversity, echo = TRUE}
+## Arrange the figure
+alpha.diversity.supplement.figure <- ggarrange(
+  ASV.richness.by.HII.plot,
+  ASV.richness.by.ISC.plot,
+  inverse.simpson.by.HII.plot,
+  inverse.simpson.by.ISC.plot,
+  ASV.evenness.by.HII.plot,
+  ASV.evenness.by.ISC.plot,
+  faiths.PD.by.HII.plot,
+  faiths.PD.by.ISC.plot,
+  nrow = 4,
+  ncol = 2,
+  legend = "top",
+  common.legend = TRUE
+)
+```
+
+\vspace{10pt}
+
+```{r Export the Supplement Figure: Alpha Diversity, echo = TRUE}
+## Export the figure
+ggsave(
+  "figure_S1-alpha_diversity_supplement-base.pdf",
+  plot = alpha.diversity.supplement.figure,
+  device = "pdf",
+  path = "figures/",
+  width = 7.5,
+  height = 10,
+  units = "in",
+  dpi = 600
+)
+```
+
+
+
+
+
+
+
+
+
+
+\newpage
+# Beta Diversity
+
+## Main Text Figure (Figure 3)
+
+```{r Set the Main Text Plot: PCoA, echo = TRUE}
+## Convert tidyamplicons to phyloseq
+microbiome.phyloseq <- as_phyloseq(microbiome.tidyamplicon.reference)
+
+## Combine urbanization metrics to sample data
+microbiome.ordination.plot.data <- samples(microbiome.tidyamplicon.reference) %>%
+	left_join(urbanization.data, by = "Population") %>%
+	column_to_rownames(var = "Sequence_ID")
+
+## Update phyloseq sample data
+sample_data(microbiome.phyloseq) <- microbiome.ordination.plot.data
+
+## Set the weighted UniFrac PCoA plot
+weighted.UniFrac.PCoA.plot <- plot_ordination(
+  microbiome.phyloseq,
+  weighted.UniFrac.distance.PCoA,
+  type = "samples",
+  color = "Distance",
+  shape = "Compartment"
+) +
+  geom_point(size = 1.15) +
+  scale_color_viridis(begin = 1, end = 0, option = "C") +
+  scale_shape_manual(values = c(19, 17)) +
+  labs(x = "PCoA Axis 1 (50.5%)", y = "PCoA Axis 2 (5.3%)") +
+  theme_DMS() +
+	ggtitle("(A)")
+```
+
+\vspace{10pt}
+
+```{r Set the Main Text Plots: Multivariate Dispersion, echo = TRUE}
+## Weighted UniFrac multivariate dispersion by distance
+weighted.UniFrac.multivariate.dispersion.by.distance.plot <- fitted_values(
+  weighted.UniFrac.multivariate.dispersion.by.distance.GAM,
+  data = multivariate.dispersion.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = multivariate.dispersion.data,
+    mapping = aes(y = Mean_Weighted_UniFrac_Dispersion, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), linewidth = 1.5) +
+  scale_fill_manual(values = microbiome.compartment, name = "Compartment") +
+  scale_color_manual(values = microbiome.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Mean Weighted UniFrac Dispersion"
+	) +
+  theme_DMS() +
+	ggtitle("(B)")
+```
+
+```{r Arrange the Main Text Figure: Multivariate Dispersion & PCoA, echo = TRUE}
+## Arrange the figure
+beta.diversity.main.text.figure <- ggarrange(
+  weighted.UniFrac.PCoA.plot,
+  weighted.UniFrac.multivariate.dispersion.by.distance.plot,
+  nrow = 2,
+  ncol = 1,
+  legend = "top",
+  common.legend = FALSE
+)
+```
+
+\vspace{10pt}
+
+```{r Export the Main Text Figure: Multivariate Dispersion & PCoA, echo = TRUE}
+## Export the figure
+ggsave(
+  "figure_3-beta_diversity-base.pdf",
+  plot = beta.diversity.main.text.figure,
+  device = "pdf",
+  path = "figures/",
+  width = 7.5,
+  height = 7.5,
+  units = "in",
+  dpi = 600
+)
+```
+
+
+
+
+
+\newpage
+## Supplement Figure (Figures S2-S4)
+
+```{r Set the Supplement Plots: PCoA, echo = TRUE}
+## Set the Bray-Curtis PCoA plot
+BC.PCoA.plot <- plot_ordination(
+  microbiome.phyloseq,
+  BC.distance.PCoA,
+  type = "samples",
+  color = "Distance",
+  shape = "Compartment"
+) +
+  geom_point(size = 1.15) +
+  scale_color_viridis(begin = 1, end = 0, option = "C") +
+  scale_shape_manual(values = c(19, 17)) +
+  labs(x = "PCoA Axis 1 (34.9%)", y = "PCoA Axis 2 (3.6%)") +
+  theme_DMS() +
+	ggtitle("(A)")
+
+
+## Set the UniFrac PCoA plot
+UniFrac.PCoA.plot <- plot_ordination(
+  microbiome.phyloseq,
+  UniFrac.distance.PCoA,
+  type = "samples",
+  color = "Distance",
+  shape = "Compartment"
+) +
+  geom_point(size = 1.15) +
+  scale_color_viridis(begin = 1, end = 0, option = "C") +
+  scale_shape_manual(values = c(19, 17)) +
+  labs(x = "PCoA Axis 1 (22.2%)", y = "PCoA Axis 2 (2.5%)") +
+  theme_DMS() +
+	ggtitle("(A)")
+```
+
+\vspace{10pt}
+
+```{r Set the Supplement Plots: Multivariate Dispersion, echo = TRUE}
+# Weighted UniFrac=========================================================
+## Weighted UniFrac multivariate dispersion by HII
+weighted.UniFrac.multivariate.dispersion.by.HII.plot <- fitted_values(
+  weighted.UniFrac.multivariate.dispersion.by.HII.GAM,
+  data = multivariate.dispersion.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Human_Influence_Index, y = fitted, group = Compartment)) +
+  geom_point(
+    data = multivariate.dispersion.data,
+    mapping = aes(y = Mean_Weighted_UniFrac_Dispersion, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = microbiome.compartment, name = "Compartment") +
+  scale_color_manual(values = microbiome.compartment, name = "Compartment") +
+	labs(
+		x = "Human Influence Index",
+		y = "Mean Weighted UniFrac Dispersion"
+	) +
+  theme_DMS() +
+	ggtitle("(A)")
+
+## Weighted UniFrac multivariate dispersion by ISC
+weighted.UniFrac.multivariate.dispersion.by.ISC.plot <- fitted_values(
+  weighted.UniFrac.multivariate.dispersion.by.ISC.GAM,
+  data = multivariate.dispersion.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Mean_ISC, y = fitted, group = Compartment)) +
+  geom_point(
+    data = multivariate.dispersion.data,
+    mapping = aes(y = Mean_Weighted_UniFrac_Dispersion, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = microbiome.compartment, name = "Compartment") +
+  scale_color_manual(values = microbiome.compartment, name = "Compartment") +
+	labs(
+		x = "Mean ISC (%)",
+		y = "Mean Weighted UniFrac Dispersion"
+	) +
+  theme_DMS() +
+	ggtitle("(B)")
+
+
+# Bray-Curtis==============================================================
+## Bray-Curtis multivariate dispersion by distance
+BC.multivariate.dispersion.by.distance.plot <- fitted_values(
+  BC.multivariate.dispersion.by.distance.GAM,
+  data = multivariate.dispersion.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = multivariate.dispersion.data,
+    mapping = aes(y = Mean_BC_Dispersion, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = microbiome.compartment, name = "Compartment") +
+  scale_color_manual(values = microbiome.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Mean Bray-Curtis Dispersion"
+	) +
+  theme_DMS() +
+	ggtitle("(B)")
+
+# Bray-Curtis multivariate dispersion by HII
+BC.multivariate.dispersion.by.HII.plot <- fitted_values(
+  BC.multivariate.dispersion.by.HII.GAM,
+  data = multivariate.dispersion.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Human_Influence_Index, y = fitted, group = Compartment)) +
+  geom_point(
+    data = multivariate.dispersion.data,
+    mapping = aes(y = Mean_BC_Dispersion, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = microbiome.compartment, name = "Compartment") +
+  scale_color_manual(values = microbiome.compartment, name = "Compartment") +
+	labs(
+		x = "Human Influence Index",
+		y = "Mean Bray-Curtis Dispersion"
+	) +
+  theme_DMS() +
+	ggtitle("(C)")
+
+# Bray-Curtis multivariate dispersion by ISC
+BC.multivariate.dispersion.by.ISC.plot <- fitted_values(
+  BC.multivariate.dispersion.by.ISC.GAM,
+  data = multivariate.dispersion.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Mean_ISC, y = fitted, group = Compartment)) +
+  geom_point(
+    data = multivariate.dispersion.data,
+    mapping = aes(y = Mean_BC_Dispersion, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = microbiome.compartment, name = "Compartment") +
+  scale_color_manual(values = microbiome.compartment, name = "Compartment") +
+	labs(
+		x = "Mean ISC (%)",
+		y = "Mean Bray-Curtis Dispersion"
+	) +
+  theme_DMS() +
+	ggtitle("(D)")
+
+
+# UniFrac==================================================================
+## UniFrac multivariate dispersion by distance
+UniFrac.multivariate.dispersion.by.distance.plot <- fitted_values(
+  UniFrac.multivariate.dispersion.by.distance.GAM,
+  data = multivariate.dispersion.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = multivariate.dispersion.data,
+    mapping = aes(y = Mean_UniFrac_Dispersion, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = microbiome.compartment, name = "Compartment") +
+  scale_color_manual(values = microbiome.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Mean UniFrac Dispersion"
+	) +
+  theme_DMS() +
+	ggtitle("(B)")
+
+## UniFrac multivariate dispersion by HII
+UniFrac.multivariate.dispersion.by.HII.plot <- fitted_values(
+  UniFrac.multivariate.dispersion.by.HII.GAM,
+  data = multivariate.dispersion.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Human_Influence_Index, y = fitted, group = Compartment)) +
+  geom_point(
+    data = multivariate.dispersion.data,
+    mapping = aes(y = Mean_UniFrac_Dispersion, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = microbiome.compartment, name = "Compartment") +
+  scale_color_manual(values = microbiome.compartment, name = "Compartment") +
+	labs(
+		x = "Human Influence Index",
+		y = "Mean UniFrac Dispersion"
+	) +
+  theme_DMS() +
+	ggtitle("(C)")
+
+## UniFrac multivariate dispersion by ISC
+UniFrac.multivariate.dispersion.by.ISC.plot <- fitted_values(
+  UniFrac.multivariate.dispersion.by.ISC.GAM,
+  data = multivariate.dispersion.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Mean_ISC, y = fitted, group = Compartment)) +
+  geom_point(
+    data = multivariate.dispersion.data,
+    mapping = aes(y = Mean_UniFrac_Dispersion, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = microbiome.compartment, name = "Compartment") +
+  scale_color_manual(values = microbiome.compartment, name = "Compartment") +
+	labs(
+		x = "Mean ISC (%)",
+		y = "Mean UniFrac Dispersion"
+	) +
+  theme_DMS() +
+	ggtitle("(D)")
+```
+
+\vspace{10pt}
+
+```{r Arrange the Supplement Figures: Multivariate Dispersion & PCoA, echo = TRUE}
+## Arrange the figures
+# Figure S2
+beta.diversity.supplement.figure.S2 <- ggarrange(
+  weighted.UniFrac.multivariate.dispersion.by.HII.plot,
+  weighted.UniFrac.multivariate.dispersion.by.ISC.plot,
+  nrow = 2,
+  ncol = 1,
+  legend = "top",
+  common.legend = TRUE
+)
+
+# Figure S3
+beta.diversity.supplement.figure.S3 <- ggarrange(
+  BC.PCoA.plot,
+  BC.multivariate.dispersion.by.distance.plot,
+  BC.multivariate.dispersion.by.HII.plot,
+  BC.multivariate.dispersion.by.ISC.plot,
+  nrow = 4,
+  ncol = 1,
+  legend = "top",
+  common.legend = TRUE
+)
+
+# Figure S4
+beta.diversity.supplement.figure.S4 <- ggarrange(
+  UniFrac.PCoA.plot,
+  UniFrac.multivariate.dispersion.by.distance.plot,
+  UniFrac.multivariate.dispersion.by.HII.plot,
+  UniFrac.multivariate.dispersion.by.ISC.plot,
+  nrow = 4,
+  ncol = 1,
+  legend = "top",
+  common.legend = TRUE
+)
+```
+
+\vspace{10pt}
+
+```{r Export the Supplement Figures: Multivariate Dispersion & PCoA, echo = TRUE}
+## Export the figures
+# Figure S2
+ggsave(
+  "figure_S2-beta_diversity_supplement-base.pdf",
+  plot = beta.diversity.supplement.figure.S2,
+  device = "pdf",
+  path = "figures/",
+  width = 5,
+  height = 7.5,
+  units = "in",
+  dpi = 600
+)
+
+# Figure S3
+ggsave(
+  "figure_S3-beta_diversity_supplement-base.pdf",
+  plot = beta.diversity.supplement.figure.S3,
+  device = "pdf",
+  path = "figures/",
+  width = 7.5,
+  height = 15,
+  units = "in",
+  dpi = 600
+)
+
+# Figure S4
+ggsave(
+  "figure_S4-beta_diversity_supplement-base.pdf",
+  plot = beta.diversity.supplement.figure.S4,
+  device = "pdf",
+  path = "figures/",
+  width = 7.5,
+  height = 15,
+  units = "in",
+  dpi = 600
+)
+```
+
+
+
+
+
+
+
+
+
+
+\newpage
+# Differential Abundance Heatmap
+
+## Data Management
+
+```{r Data Management: Differential Abundance Heatmap, echo = TRUE}
+## Distance
+# Filter results to P < 0.100 and sort lowest-to-highest LFC
+distance.DA.ANCOMBC.results <- ANCOMBC.distance.results %>%
+	select(
+		Genus, lfc_CompartmentRoot:`lfc_CompartmentRoot:Distance`,
+		q_CompartmentRoot:`q_CompartmentRoot:Distance`
+	) %>%
+	filter(q_Distance < 0.100) %>%
+	rename(
+		Compartment_LFC = lfc_CompartmentRoot, Distance_LFC = lfc_Distance,
+		Interaction_LFC = `lfc_CompartmentRoot:Distance`,
+		Compartment_P_FDR = q_CompartmentRoot, Distance_P_FDR = q_Distance,
+		Interaction_P_FDR = `q_CompartmentRoot:Distance`
+	)
+
+# Filter to include additional focal taxa
+distance.DA.supplemental.results <- ANCOMBC.distance.results %>%
+	select(
+		Genus, lfc_CompartmentRoot:`lfc_CompartmentRoot:Distance`,
+		q_CompartmentRoot:`q_CompartmentRoot:Distance`
+	) %>%
+	filter(
+		Genus == "Rhizobium" | Genus == "Allorhizobium" | Genus == "Bradyrhizobium" |
+		Genus == "Mesorhizobium" | Genus == "Shinella" | Genus == "Legionella" |
+		Genus == "Stenotrophomonas" | Genus == "Clostridium_sensu_stricto" |
+		Genus == "Sphingomonas" | Genus == "Xanthomonas" | Genus == "Rhizobacter" |
+		Genus == "Agrobacterium" | Genus == "Sphingopyxis" | Genus == "Streptomyces" |
+		Genus == "Sphingobium" | Genus == "Desulfosporosinus" | Genus == "Phyllobacterium"
+	) %>%
+	rename(
+		Compartment_LFC = lfc_CompartmentRoot, Distance_LFC = lfc_Distance,
+		Interaction_LFC = `lfc_CompartmentRoot:Distance`,
+		Compartment_P_FDR = q_CompartmentRoot, Distance_P_FDR = q_Distance,
+		Interaction_P_FDR = `q_CompartmentRoot:Distance`
+	)
+
+# Combine the results into a single dataframe
+distance.DA.full.results <- bind_rows(
+	distance.DA.ANCOMBC.results, distance.DA.supplemental.results
+) %>%
+	arrange(Distance_LFC) %>% 
+    mutate(
+    	Compartment_LFC = replace(Compartment_LFC, Compartment_P_FDR > 0.100, NA),
+    	Interaction_LFC = replace(Interaction_LFC, Interaction_P_FDR > 0.100, NA)
+    )
+
+# Filter to only include the distance term
+distance.DA.urbanization.results <- distance.DA.full.results %>%
+	select(Genus, Distance_LFC, Distance_P_FDR) %>%
+	add_column(Distance = "Distance")
+# Filter to only include the compartment term
+distance.DA.compartment.results <- distance.DA.full.results %>%
+	select(Genus, Compartment_LFC, Compartment_P_FDR) %>%
+	add_column(Compartment = "Compartment")
+# Filter to include only the interaction term
+distance.DA.interaction.results <- distance.DA.full.results %>%
+	select(Genus, Interaction_LFC, Interaction_P_FDR) %>%
+	add_column(Interaction = "Interaction")
+
+
+## HII
+# Filter results to P < 0.100 and sort lowest-to-highest LFC
+HII.DA.ANCOMBC.results <- ANCOMBC.HII.results %>%
+	select(
+		Genus, lfc_CompartmentRoot:`lfc_CompartmentRoot:Human_Influence_Index`,
+		q_CompartmentRoot:`q_CompartmentRoot:Human_Influence_Index`
+	) %>%
+	filter(q_Human_Influence_Index < 0.100) %>%
+	rename(
+		Compartment_LFC = lfc_CompartmentRoot, Human_Influence_Index_LFC = lfc_Human_Influence_Index,
+		Interaction_LFC = `lfc_CompartmentRoot:Human_Influence_Index`,
+		Compartment_P_FDR = q_CompartmentRoot, Human_Influence_Index_P_FDR = q_Human_Influence_Index,
+		Interaction_P_FDR = `q_CompartmentRoot:Human_Influence_Index`
+	)
+
+# Filter to include additional focal taxa
+HII.DA.supplemental.results <- ANCOMBC.HII.results %>%
+	select(
+		Genus, lfc_CompartmentRoot:`lfc_CompartmentRoot:Human_Influence_Index`,
+		q_CompartmentRoot:`q_CompartmentRoot:Human_Influence_Index`
+	) %>%
+	filter(
+		Genus == "Rhizobium" | Genus == "Allorhizobium" | Genus == "Bradyrhizobium" |
+		Genus == "Mesorhizobium" | Genus == "Pararhizobium" | Genus == "Shinella" |
+		Genus == "Mycobacterium" | Genus == "Staphylococcus" | Genus == "Stenotrophomonas" |
+		Genus == "Clostridium_sensu_stricto" | Genus == "Paenibacillus" | Genus == "Xanthomonas" |
+		Genus == "Rhizobacter" | Genus == "Agrobacterium" |
+		Genus == "Nitrosospira" | Genus == "Devosia" | Genus == "Streptomyces" |
+		Genus == "Sphingobium" | Genus == "Desulfosporosinus" |
+		Genus == "Phyllobacterium"
+	) %>%
+	rename(
+		Compartment_LFC = lfc_CompartmentRoot, Human_Influence_Index_LFC = lfc_Human_Influence_Index,
+		Interaction_LFC = `lfc_CompartmentRoot:Human_Influence_Index`,
+		Compartment_P_FDR = q_CompartmentRoot, Human_Influence_Index_P_FDR = q_Human_Influence_Index,
+		Interaction_P_FDR = `q_CompartmentRoot:Human_Influence_Index`
+	)
+
+# Combine the results into a single dataframe
+HII.DA.full.results <- bind_rows(
+	HII.DA.ANCOMBC.results, HII.DA.supplemental.results
+) %>%
+	arrange(Human_Influence_Index_LFC) %>% 
+  mutate(
+    Compartment_LFC = replace(Compartment_LFC, Compartment_P_FDR > 0.100, NA),
+    Interaction_LFC = replace(Interaction_LFC, Interaction_P_FDR > 0.100, NA)
+  )
+
+# Filter to only include the HII term
+HII.DA.urbanization.results <- HII.DA.full.results %>%
+	select(Genus, Human_Influence_Index_LFC, Human_Influence_Index_P_FDR) %>%
+	add_column(Human_Influence_Index = "Human_Influence_Index")
+# Filter to only include the compartment term
+HII.DA.compartment.results <- HII.DA.full.results %>%
+	select(Genus, Compartment_LFC, Compartment_P_FDR) %>%
+	add_column(Compartment = "Compartment")
+# Filter to include only the interaction term
+HII.DA.interaction.results <- HII.DA.full.results %>%
+	select(Genus, Interaction_LFC, Interaction_P_FDR) %>%
+	add_column(Interaction = "Interaction")
+
+
+## ISC
+# Filter results to P < 0.100 and sort lowest-to-highest LFC
+ISC.DA.ANCOMBC.results <- ANCOMBC.ISC.results %>%
+	select(
+		Genus, lfc_CompartmentRoot:`lfc_CompartmentRoot:Mean_ISC`,
+		q_CompartmentRoot:`q_CompartmentRoot:Mean_ISC`
+	) %>%
+	filter(q_Mean_ISC < 0.100) %>%
+	rename(
+		Compartment_LFC = lfc_CompartmentRoot, Mean_ISC_LFC = lfc_Mean_ISC,
+		Interaction_LFC = `lfc_CompartmentRoot:Mean_ISC`,
+		Compartment_P_FDR = q_CompartmentRoot, Mean_ISC_P_FDR = q_Mean_ISC,
+		Interaction_P_FDR = `q_CompartmentRoot:Mean_ISC`
+	)
+
+# Filter to include additional focal taxa
+ISC.DA.supplemental.results <- ANCOMBC.ISC.results %>%
+	select(
+		Genus, lfc_CompartmentRoot:`lfc_CompartmentRoot:Mean_ISC`,
+		q_CompartmentRoot:`q_CompartmentRoot:Mean_ISC`
+	) %>%
+	filter(
+		Genus == "Rhizobium" | Genus == "Allorhizobium" | Genus == "Bradyrhizobium" |
+		Genus == "Mesorhizobium" | Genus == "Shinella" | Genus == "Mycobacterium" |
+		Genus == "Legionella" | Genus == "Clostridium_sensu_stricto" |
+		Genus == "Paenibacillus" | Genus == "Xanthomonas" | Genus == "Sphingomonas" |
+		Genus == "Xanthomonas" | Genus == "Rhizobacter" | Genus == "Agrobacterium" |
+		Genus == "Sphingopyxis" | Genus == "Devosia" | Genus == "Streptomyces" |
+		Genus == "Sphingobium" | Genus == "Desulfosporosinus" |
+		Genus == "Desulfocapsa" | Genus == "Phyllobacterium"
+	) %>%
+	rename(
+		Compartment_LFC = lfc_CompartmentRoot, Mean_ISC_LFC = lfc_Mean_ISC,
+		Interaction_LFC = `lfc_CompartmentRoot:Mean_ISC`,
+		Compartment_P_FDR = q_CompartmentRoot, Mean_ISC_P_FDR = q_Mean_ISC,
+		Interaction_P_FDR = `q_CompartmentRoot:Mean_ISC`
+	)
+
+# Combine the results into a single dataframe
+ISC.DA.full.results <- bind_rows(
+	ISC.DA.ANCOMBC.results, ISC.DA.supplemental.results
+) %>%
+	arrange(Mean_ISC_LFC) %>% 
+  mutate(
+    Compartment_LFC = replace(Compartment_LFC, Compartment_P_FDR > 0.100, NA),
+    Interaction_LFC = replace(Interaction_LFC, Interaction_P_FDR > 0.100, NA)
+  )
+
+# Filter to only include the ISC term
+ISC.DA.urbanization.results <- ISC.DA.full.results %>%
+	select(Genus, Mean_ISC_LFC, Mean_ISC_P_FDR) %>%
+	add_column(Mean_ISC = "Mean_ISC")
+# Filter to only include the compartment term
+ISC.DA.compartment.results <- ISC.DA.full.results %>%
+	select(Genus, Compartment_LFC, Compartment_P_FDR) %>%
+	add_column(Compartment = "Compartment")
+# Filter to include only the interaction term
+ISC.DA.interaction.results <- ISC.DA.full.results %>%
+	select(Genus, Interaction_LFC, Interaction_P_FDR) %>%
+	add_column(Interaction = "Interaction")
+```
+
+
+\newpage
+## Main Text Figure (Figure 5)
+
+```{r Set the Main Text Plot: Differential Abundance Heatmap, echo = TRUE}
+## Distance ANCOMBC heatmap
+# Set y-axis order
+distance.genus.order <- distance.DA.full.results$Genus
+
+# Distance
+distance.ANCOMBC.panel.a <- ggplot(
+	distance.DA.urbanization.results,
+	aes(x = Distance, y = Genus)
+) +
+  geom_tile(aes(fill = Distance_LFC)) +
+	scale_fill_viridis(option = "F", begin = 1, end = 0, na.value = "white") +
+	scale_y_discrete(limits = distance.genus.order) +
+  theme_DMS() +
+	ggtitle("(A)") +
+  font("y.text", size = 8, color = "gray20") +
+	rremove("x.text")
+
+# Compartment
+distance.ANCOMBC.panel.b <- ggplot(
+	distance.DA.compartment.results,
+	aes(x = Compartment, y = Genus)
+) +
+  geom_tile(aes(fill = Compartment_LFC)) +
+	scale_fill_viridis(option = "F", begin = 1, end = 0, na.value = "white") +
+	scale_y_discrete(limits = distance.genus.order) +
+  theme_DMS() +
+	ggtitle("(B)") +
+  font("y.text", size = 8, color = "gray20") +
+	rremove("ylab") +
+	rremove("xy.text")
+
+# Interaction
+distance.ANCOMBC.panel.c <- ggplot(
+	distance.DA.interaction.results,
+	aes(x = Interaction, y = Genus)
+) +
+  geom_tile(aes(fill = Interaction_LFC)) +
+	scale_fill_viridis(option = "F", begin = 1, end = 0, na.value = "white") +
+	scale_y_discrete(limits = distance.genus.order) +
+  theme_DMS() +
+	ggtitle("(C)") +
+  font("y.text", size = 8, color = "gray20") +
+	rremove("ylab") +
+	rremove("xy.text")
+```
+
+\vspace{10pt}
+
+```{r Arrange the Main Text Figure: Differential Abundance Heatmap, echo = TRUE}
+## Arrange the figure
+differential.abundance.main.text.figure <- ggarrange(
+  distance.ANCOMBC.panel.a,
+  distance.ANCOMBC.panel.b,
+  distance.ANCOMBC.panel.c,
+  nrow = 1,
+  ncol = 3,
+  legend = "top",
+  common.legend = FALSE,
+  widths = c(1.35, 1, 1)
+)
+```
+
+\vspace{10pt}
+
+```{r Export the Main Text Figure: Differential Abundance Heatmap, echo = TRUE}
+## Export the figure
+ggsave(
+  "figure_5-differential_abundance_heatmap-base.pdf",
+  plot = differential.abundance.main.text.figure,
+  device = "pdf",
+  path = "figures/",
+  width = 15,
+  height = 10,
+  units = "in",
+  dpi = 600
+)
+```
+
+
+
+
+
+\newpage
+## Supplement Figures (Figures S5-S6)
+
+```{r Set the Supplement Plots: Differential Abundance Heatmaps, echo = TRUE}
+## HII ANCOMBC heatmap
+# Set y-axis order
+HII.genus.order <- HII.DA.full.results$Genus
+
+# HII
+HII.ANCOMBC.panel.a <- ggplot(
+	HII.DA.urbanization.results,
+	aes(x = Human_Influence_Index, y = Genus)
+) +
+  geom_tile(aes(fill = Human_Influence_Index_LFC)) +
+	scale_fill_viridis(option = "F", begin = 1, end = 0, na.value = "white") +
+	scale_y_discrete(limits = HII.genus.order) +
+  theme_DMS() +
+	ggtitle("(A)") +
+  font("y.text", size = 8, color = "gray20") +
+	rremove("x.text")
+
+# Compartment
+HII.ANCOMBC.panel.b <- ggplot(
+	HII.DA.compartment.results,
+	aes(x = Compartment, y = Genus)
+) +
+  geom_tile(aes(fill = Compartment_LFC)) +
+	scale_fill_viridis(option = "F", begin = 1, end = 0, na.value = "white") +
+	scale_y_discrete(limits = HII.genus.order) +
+  theme_DMS() +
+	ggtitle("(B)") +
+  font("y.text", size = 8, color = "gray20") +
+	rremove("ylab") +
+	rremove("xy.text")
+
+# Interaction
+HII.ANCOMBC.panel.c <- ggplot(
+	HII.DA.interaction.results,
+	aes(x = Interaction, y = Genus)
+) +
+  geom_tile(aes(fill = Interaction_LFC)) +
+	scale_fill_viridis(option = "F", begin = 1, end = 0, na.value = "white") +
+	scale_y_discrete(limits = HII.genus.order) +
+  theme_DMS() +
+	ggtitle("(C)") +
+  font("y.text", size = 8, color = "gray20") +
+	rremove("ylab") +
+	rremove("xy.text")
+
+
+## ISC ANCOMBC heatmap
+# Set y-axis order
+ISC.genus.order <- ISC.DA.full.results$Genus
+
+# ISC
+ISC.ANCOMBC.panel.a <- ggplot(
+	ISC.DA.urbanization.results,
+	aes(x = Mean_ISC, y = Genus)
+) +
+  geom_tile(aes(fill = Mean_ISC_LFC)) +
+	scale_fill_viridis(option = "F", begin = 1, end = 0, na.value = "white") +
+	scale_y_discrete(limits = ISC.genus.order) +
+  theme_DMS() +
+	ggtitle("(A)") +
+  font("y.text", size = 8, color = "gray20") +
+	rremove("x.text")
+
+# Compartment
+ISC.ANCOMBC.panel.b <- ggplot(
+	ISC.DA.compartment.results,
+	aes(x = Compartment, y = Genus)
+) +
+  geom_tile(aes(fill = Compartment_LFC)) +
+	scale_fill_viridis(option = "F", begin = 1, end = 0, na.value = "white") +
+	scale_y_discrete(limits = ISC.genus.order) +
+  theme_DMS() +
+	ggtitle("(B)") +
+  font("y.text", size = 8, color = "gray20") +
+	rremove("ylab") +
+	rremove("xy.text")
+
+# Interaction
+ISC.ANCOMBC.panel.c <- ggplot(
+	ISC.DA.interaction.results,
+	aes(x = Interaction, y = Genus)
+) +
+  geom_tile(aes(fill = Interaction_LFC)) +
+	scale_fill_viridis(option = "F", begin = 1, end = 0, na.value = "white") +
+	scale_y_discrete(limits = ISC.genus.order) +
+  theme_DMS() +
+	ggtitle("(C)") +
+  font("y.text", size = 8, color = "gray20") +
+	rremove("ylab") +
+	rremove("xy.text")
+```
+
+\vspace{10pt}
+
+```{r Arrange the Supplement Figures: Differential Abundance Heatmaps, echo = TRUE}
+## Arrange the figures
+# HII
+differential.abundance.supplement.figure.S5 <- ggarrange(
+  HII.ANCOMBC.panel.a,
+  HII.ANCOMBC.panel.b,
+  HII.ANCOMBC.panel.c,
+  nrow = 1,
+  ncol = 3,
+  legend = "top",
+  common.legend = FALSE,
+  widths = c(1.35, 1, 1)
+)
+
+# ISC
+differential.abundance.supplement.figure.S6 <- ggarrange(
+	ISC.ANCOMBC.panel.a,
+  ISC.ANCOMBC.panel.b,
+  ISC.ANCOMBC.panel.c,
+  nrow = 1,
+  ncol = 3,
+  legend = "top",
+  common.legend = FALSE,
+  widths = c(1.35, 1, 1)
+)
+```
+
+\vspace{10pt}
+
+```{r Export the Supplement Figures: Differential Abundance Heatmaps, echo = TRUE}
+## Export the figures
+# HII
+ggsave(
+  "figure_S5-differential_abundance_heatmap-base.pdf",
+  plot = differential.abundance.supplement.figure.S5,
+  device = "pdf",
+  path = "figures/",
+  width = 15,
+  height = 10,
+  units = "in",
+  dpi = 600
+)
+
+# ISC
+ggsave(
+  "figure_S6-differential_abundance_heatmap-base.pdf",
+  plot = differential.abundance.supplement.figure.S6,
+  device = "pdf",
+  path = "figures/",
+  width = 15,
+  height = 10,
+  units = "in",
+  dpi = 600
+)
+```
+
+
+
+
+
+
+\newpage
+# Focal Bacteria Taxa GAMs
+
+## Main Text Figure (Figure 6)
+
+```{r Set the Main Text Plots: Focal Bacteria Taxa GAMs, echo = TRUE}
+## Mutualistic bacteria====================================================
+# Rhizobium
+rhizobium.by.distance.plot <- fitted_values(
+  rhizobium.by.distance.GAM,
+  data = mutualistic.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = mutualistic.bacteria.data,
+    mapping = aes(y = Rhizobium_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = microbiome.compartment, name = "Compartment") +
+  scale_color_manual(values = microbiome.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Rhizobium \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(A)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+# Bradyrhizobium
+bradyrhizobium.by.distance.plot <- fitted_values(
+  bradyrhizobium.by.distance.GAM,
+  data = mutualistic.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = mutualistic.bacteria.data,
+    mapping = aes(y = Bradyrhizobium_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = microbiome.compartment, name = "Compartment") +
+  scale_color_manual(values = microbiome.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Bradyrhizobium \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(D)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+# Mesorhizobium
+mesorhizobium.by.distance.plot <- fitted_values(
+  mesorhizobium.by.distance.GAM,
+  data = mutualistic.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = mutualistic.bacteria.data,
+    mapping = aes(y = Mesorhizobium_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = microbiome.compartment, name = "Compartment") +
+  scale_color_manual(values = microbiome.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Mesorhizobium \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(G)")
+
+
+## Pathogenic bacteria====================================================
+# Legionella
+legionella.by.distance.plot <- fitted_values(
+  legionella.by.distance.GAM,
+  data = pathogenic.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = pathogenic.bacteria.data,
+    mapping = aes(y = Legionella_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = microbiome.compartment, name = "Compartment") +
+  scale_color_manual(values = microbiome.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Legionella \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(B)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+# Legionella
+staphylococcus.by.distance.plot <- fitted_values(
+  staphylococcus.by.distance.GAM,
+  data = pathogenic.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = pathogenic.bacteria.data,
+    mapping = aes(y = Staphylococcus_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = microbiome.compartment, name = "Compartment") +
+  scale_color_manual(values = microbiome.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Staphylococcus \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(E)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+# Agrobacterium
+agrobacterium.by.distance.plot <- fitted_values(
+  agrobacterium.by.distance.GAM,
+  data = pathogenic.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = pathogenic.bacteria.data,
+    mapping = aes(y = Agrobacterium_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = microbiome.compartment, name = "Compartment") +
+  scale_color_manual(values = microbiome.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Agrobacterium \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(H)")
+
+
+## Ecosystem function bacteria=============================================
+# Nitrosomonas
+nitrosomonas.by.distance.plot <- fitted_values(
+  nitrosomonas.by.distance.GAM,
+  data = ecosystem.function.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = ecosystem.function.bacteria.data,
+    mapping = aes(y = Nitrosomonas_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = microbiome.compartment, name = "Compartment") +
+  scale_color_manual(values = microbiome.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Nitrosomonas \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(C)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+# Nitrospira
+nitrospira.by.distance.plot <- fitted_values(
+  nitrospira.by.distance.GAM,
+  data = ecosystem.function.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = ecosystem.function.bacteria.data,
+    mapping = aes(y = Nitrospira_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = microbiome.compartment, name = "Compartment") +
+  scale_color_manual(values = microbiome.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Nitrospira \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(F)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+# Paracoccus
+paracoccus.by.distance.plot <- fitted_values(
+  paracoccus.by.distance.GAM,
+  data = ecosystem.function.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = ecosystem.function.bacteria.data,
+    mapping = aes(y = Paracoccus_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = microbiome.compartment, name = "Compartment") +
+  scale_color_manual(values = microbiome.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Paracoccus \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(I)")
+```
+
+\vspace{10pt}
+
+```{r Arrange the Main Text Figure: Focal Bacteria Taxa GAMs, echo = TRUE}
+## Arrange the figure
+focal.bacteria.taxa.main.text.figure <- ggarrange(
+  rhizobium.by.distance.plot, legionella.by.distance.plot,
+  nitrosomonas.by.distance.plot, bradyrhizobium.by.distance.plot,
+  staphylococcus.by.distance.plot, nitrospira.by.distance.plot,
+  mesorhizobium.by.distance.plot, agrobacterium.by.distance.plot,
+  paracoccus.by.distance.plot,
+  nrow = 3,
+  ncol = 3,
+  legend = "top",
+  common.legend = TRUE,
+  align = "v"
+)
+```
+
+\vspace{10pt}
+
+```{r Export the Main Text Figure: Focal Bacteria Taxa GAMs, echo = TRUE}
+## Export the figure
+ggsave(
+  "figure_6-focal_bacteria_taxa-base.pdf",
+  plot = focal.bacteria.taxa.main.text.figure ,
+  device = "pdf",
+  path = "figures/",
+  width = 12.5,
+  height = 10,
+  units = "in",
+  dpi = 600
+)
+```
+
+
+
+
+
+\newpage
+## Supplement Figures (Figures S7-S9)
+
+```{r Set the Supplement Plots: Focal Bacteria Taxa GAMs, echo = TRUE}
+## Mutualistic bacteria====================================================
+# Rhizobium
+rhizobium.by.distance.supplement.plot <- fitted_values(
+  rhizobium.by.distance.GAM,
+  data = mutualistic.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = mutualistic.bacteria.data,
+    mapping = aes(y = Rhizobium_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = mutualistic.compartment, name = "Compartment") +
+  scale_color_manual(values = mutualistic.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Rhizobium \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(A)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+# Bradyrhizobium
+bradyrhizobium.by.distance.supplement.plot <- fitted_values(
+  bradyrhizobium.by.distance.GAM,
+  data = mutualistic.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = mutualistic.bacteria.data,
+    mapping = aes(y = Bradyrhizobium_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = mutualistic.compartment, name = "Compartment") +
+  scale_color_manual(values = mutualistic.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Bradyrhizobium \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(B)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+# Allorhizobium
+allorhizobium.by.distance.supplement.plot <- fitted_values(
+  allorhizobium.by.distance.GAM,
+  data = mutualistic.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = mutualistic.bacteria.data,
+    mapping = aes(y = Allorhizobium_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = mutualistic.compartment, name = "Compartment") +
+  scale_color_manual(values = mutualistic.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Allorhizobium \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(C)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+# Mesorhizobium
+mesorhizobium.by.distance.supplement.plot <- fitted_values(
+  mesorhizobium.by.distance.GAM,
+  data = mutualistic.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = mutualistic.bacteria.data,
+    mapping = aes(y = Mesorhizobium_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = mutualistic.compartment, name = "Compartment") +
+  scale_color_manual(values = mutualistic.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Mesorhizobium \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(D)")
+
+# Pararhizobium
+pararhizobium.by.distance.supplement.plot <- fitted_values(
+  pararhizobium.by.distance.GAM,
+  data = mutualistic.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = mutualistic.bacteria.data,
+    mapping = aes(y = Pararhizobium_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = mutualistic.compartment, name = "Compartment") +
+  scale_color_manual(values = mutualistic.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Pararhizobium \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(E)")
+
+# Shinella
+shinella.by.distance.supplement.plot <- fitted_values(
+  shinella.by.distance.GAM,
+  data = mutualistic.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = mutualistic.bacteria.data,
+    mapping = aes(y = Shinella_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = mutualistic.compartment, name = "Compartment") +
+  scale_color_manual(values = mutualistic.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Shinella \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(F)")
+
+
+## Pathogenic bacteria====================================================
+# Legionella
+legionella.by.distance.supplement.plot <- fitted_values(
+  legionella.by.distance.GAM,
+  data = pathogenic.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = pathogenic.bacteria.data,
+    mapping = aes(y = Legionella_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = pathogenic.compartment, name = "Compartment") +
+  scale_color_manual(values = pathogenic.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Legionella \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(A)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+# Staphylococcus
+staphylococcus.by.distance.supplement.plot <- fitted_values(
+  staphylococcus.by.distance.GAM,
+  data = pathogenic.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = pathogenic.bacteria.data,
+    mapping = aes(y = Staphylococcus_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = pathogenic.compartment, name = "Compartment") +
+  scale_color_manual(values = pathogenic.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Staphylococcus \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(B)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+# Agrobacterium
+agrobacterium.by.distance.supplement.plot <- fitted_values(
+  agrobacterium.by.distance.GAM,
+  data = pathogenic.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = pathogenic.bacteria.data,
+    mapping = aes(y = Agrobacterium_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = pathogenic.compartment, name = "Compartment") +
+  scale_color_manual(values = pathogenic.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Agrobacterium \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(C)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+# Mycobacterium
+mycobacterium.by.distance.supplement.plot <- fitted_values(
+  mycobacterium.by.distance.GAM,
+  data = pathogenic.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = pathogenic.bacteria.data,
+    mapping = aes(y = Mycobacterium_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = pathogenic.compartment, name = "Compartment") +
+  scale_color_manual(values = pathogenic.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Mycobacterium \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(D)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+# Stenotrophomonas
+stenotrophomonas.by.distance.supplement.plot <- fitted_values(
+  stenotrophomonas.by.distance.GAM,
+  data = pathogenic.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = pathogenic.bacteria.data,
+    mapping = aes(y = Stenotrophomonas_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = pathogenic.compartment, name = "Compartment") +
+  scale_color_manual(values = pathogenic.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Stenotrophomonas \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(E)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+# Acinetobacter
+acinetobacter.by.distance.supplement.plot <- fitted_values(
+  acinetobacter.by.distance.GAM,
+  data = pathogenic.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = pathogenic.bacteria.data,
+    mapping = aes(y = Acinetobacter_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = pathogenic.compartment, name = "Compartment") +
+  scale_color_manual(values = pathogenic.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Acinetobacter \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(F)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+# Clostridium
+clostridium.by.distance.supplement.plot <- fitted_values(
+  clostridium.by.distance.GAM,
+  data = pathogenic.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = pathogenic.bacteria.data,
+    mapping = aes(y = Clostridium_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = pathogenic.compartment, name = "Compartment") +
+  scale_color_manual(values = pathogenic.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Clostridium \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(G)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+# Paenibacillus
+paenibacillus.by.distance.supplement.plot <- fitted_values(
+  paenibacillus.by.distance.GAM,
+  data = pathogenic.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = pathogenic.bacteria.data,
+    mapping = aes(y = Paenibacillus_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = pathogenic.compartment, name = "Compartment") +
+  scale_color_manual(values = pathogenic.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Paenibacillus \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(H)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+# Williamsia
+williamsia.by.distance.supplement.plot <- fitted_values(
+  williamsia.by.distance.GAM,
+  data = pathogenic.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = pathogenic.bacteria.data,
+    mapping = aes(y = Williamsia_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = pathogenic.compartment, name = "Compartment") +
+  scale_color_manual(values = pathogenic.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Williamsia \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(I)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+# Sphingomonas
+sphingomonas.by.distance.supplement.plot <- fitted_values(
+  sphingomonas.by.distance.GAM,
+  data = pathogenic.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = pathogenic.bacteria.data,
+    mapping = aes(y = Sphingomonas_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = pathogenic.compartment, name = "Compartment") +
+  scale_color_manual(values = pathogenic.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Sphingomonas \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(J)")
+
+# Xanthomonas
+xanthomonas.by.distance.supplement.plot <- fitted_values(
+  xanthomonas.by.distance.GAM,
+  data = pathogenic.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = pathogenic.bacteria.data,
+    mapping = aes(y = Xanthomonas_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = pathogenic.compartment, name = "Compartment") +
+  scale_color_manual(values = pathogenic.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Xanthomonas \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(K)")
+
+# Rhizobacter
+rhizobacter.by.distance.supplement.plot <- fitted_values(
+  rhizobacter.by.distance.GAM,
+  data = pathogenic.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = pathogenic.bacteria.data,
+    mapping = aes(y = Rhizobacter_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = pathogenic.compartment, name = "Compartment") +
+  scale_color_manual(values = pathogenic.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Rhizobacter \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(L)")
+
+
+## Ecosystem function bacteria=============================================
+# Nitrosomonas
+nitrosomonas.by.distance.supplement.plot <- fitted_values(
+  nitrosomonas.by.distance.GAM,
+  data = ecosystem.function.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = ecosystem.function.bacteria.data,
+    mapping = aes(y = Nitrosomonas_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = ecosystem.function.compartment, name = "Compartment") +
+  scale_color_manual(values = ecosystem.function.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Nitrosomonas \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(A)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+# Nitrospira
+nitrospira.by.distance.supplement.plot <- fitted_values(
+  nitrospira.by.distance.GAM,
+  data = ecosystem.function.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = ecosystem.function.bacteria.data,
+    mapping = aes(y = Nitrospira_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = ecosystem.function.compartment, name = "Compartment") +
+  scale_color_manual(values = ecosystem.function.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Nitrospira \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(B)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+# Paracoccus
+paracoccus.by.distance.supplement.plot <- fitted_values(
+  paracoccus.by.distance.GAM,
+  data = ecosystem.function.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = ecosystem.function.bacteria.data,
+    mapping = aes(y = Paracoccus_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = ecosystem.function.compartment, name = "Compartment") +
+  scale_color_manual(values = ecosystem.function.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Paracoccus \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(C)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+# Desulfuromonas
+desulfuromonas.by.distance.supplement.plot <- fitted_values(
+  desulfuromonas.by.distance.GAM,
+  data = ecosystem.function.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = ecosystem.function.bacteria.data,
+    mapping = aes(y = Desulfuromonas_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = ecosystem.function.compartment, name = "Compartment") +
+  scale_color_manual(values = ecosystem.function.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Desulfuromonas \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(D)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+# Aciditerrimonas
+aciditerrimonas.by.distance.supplement.plot <- fitted_values(
+  aciditerrimonas.by.distance.GAM,
+  data = ecosystem.function.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = ecosystem.function.bacteria.data,
+    mapping = aes(y = Aciditerrimonas_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = ecosystem.function.compartment, name = "Compartment") +
+  scale_color_manual(values = ecosystem.function.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Aciditerrimonas \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(E)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+# Nitrosospira
+nitrosospira.by.distance.supplement.plot <- fitted_values(
+  nitrosospira.by.distance.GAM,
+  data = ecosystem.function.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = ecosystem.function.bacteria.data,
+    mapping = aes(y = Nitrosospira_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = ecosystem.function.compartment, name = "Compartment") +
+  scale_color_manual(values = ecosystem.function.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Nitrosospira \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(F)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+# Sphingopyxis
+sphingopyxis.by.distance.supplement.plot <- fitted_values(
+  sphingopyxis.by.distance.GAM,
+  data = ecosystem.function.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = ecosystem.function.bacteria.data,
+    mapping = aes(y = Sphingopyxis_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = ecosystem.function.compartment, name = "Compartment") +
+  scale_color_manual(values = ecosystem.function.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Sphingopyxis \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(G)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+# Cytophaga
+cytophaga.by.distance.supplement.plot <- fitted_values(
+  cytophaga.by.distance.GAM,
+  data = ecosystem.function.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = ecosystem.function.bacteria.data,
+    mapping = aes(y = Cytophaga_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = ecosystem.function.compartment, name = "Compartment") +
+  scale_color_manual(values = ecosystem.function.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Cytophaga \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(H)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+# Novosphingobium
+novosphingobium.by.distance.supplement.plot <- fitted_values(
+  novosphingobium.by.distance.GAM,
+  data = ecosystem.function.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = ecosystem.function.bacteria.data,
+    mapping = aes(y = Novosphingobium_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = ecosystem.function.compartment, name = "Compartment") +
+  scale_color_manual(values = ecosystem.function.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Novosphingobium \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(I)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+# Devosia
+devosia.by.distance.supplement.plot <- fitted_values(
+  devosia.by.distance.GAM,
+  data = ecosystem.function.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = ecosystem.function.bacteria.data,
+    mapping = aes(y = Devosia_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = ecosystem.function.compartment, name = "Compartment") +
+  scale_color_manual(values = ecosystem.function.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Devosia \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(J)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+# Streptomyces
+streptomyces.by.distance.supplement.plot <- fitted_values(
+  streptomyces.by.distance.GAM,
+  data = ecosystem.function.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = ecosystem.function.bacteria.data,
+    mapping = aes(y = Streptomyces_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = ecosystem.function.compartment, name = "Compartment") +
+  scale_color_manual(values = ecosystem.function.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Streptomyces \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(K)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+# Sphingobium
+sphingobium.by.distance.supplement.plot <- fitted_values(
+  sphingobium.by.distance.GAM,
+  data = ecosystem.function.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = ecosystem.function.bacteria.data,
+    mapping = aes(y = Sphingobium_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = ecosystem.function.compartment, name = "Compartment") +
+  scale_color_manual(values = ecosystem.function.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Sphingobium \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(L)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+# Desulfosporosinus
+desulfosporosinus.by.distance.supplement.plot <- fitted_values(
+  desulfosporosinus.by.distance.GAM,
+  data = ecosystem.function.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = ecosystem.function.bacteria.data,
+    mapping = aes(y = Desulfosporosinus_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = ecosystem.function.compartment, name = "Compartment") +
+  scale_color_manual(values = ecosystem.function.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Desulfosporosinus \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(M)")
+
+# Desulfocapsa
+desulfocapsa.by.distance.supplement.plot <- fitted_values(
+  desulfocapsa.by.distance.GAM,
+  data = ecosystem.function.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = ecosystem.function.bacteria.data,
+    mapping = aes(y = Desulfocapsa_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = ecosystem.function.compartment, name = "Compartment") +
+  scale_color_manual(values = ecosystem.function.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Desulfocapsa \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(N)")
+
+# Phyllobacterium
+phyllobacterium.by.distance.supplement.plot <- fitted_values(
+  phyllobacterium.by.distance.GAM,
+  data = ecosystem.function.bacteria.data,
+  exclude = "s(Population)"
+) %>%
+  ggplot(aes(x = Distance, y = fitted, group = Compartment)) +
+  geom_point(
+    data = ecosystem.function.bacteria.data,
+    mapping = aes(y = Phyllobacterium_Relative_Abundance, color = Compartment),
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = Compartment), alpha = 0.4) +
+  geom_line(aes(color = Compartment), size = 1.5) +
+  scale_fill_manual(values = ecosystem.function.compartment, name = "Compartment") +
+  scale_color_manual(values = ecosystem.function.compartment, name = "Compartment") +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Phyllobacterium \n Relative Abundance"
+	) +
+  theme_DMS() +
+	ggtitle("(O)")
+```
+
+\vspace{10pt}
+
+```{r Arrange the Supplement Figures: Focal Bacteria Taxa, echo = TRUE}
+## Arrange the figures
+# Mutualistic bacteria
+mutualistic.bacteria.supplement.figure <- ggarrange(
+  rhizobium.by.distance.supplement.plot, bradyrhizobium.by.distance.supplement.plot,
+  allorhizobium.by.distance.supplement.plot, mesorhizobium.by.distance.supplement.plot,
+  pararhizobium.by.distance.supplement.plot, shinella.by.distance.supplement.plot,
+  ncol = 3,
+  nrow = 2,
+  align = "v",
+  legend = "top",
+  common.legend = TRUE
+)
+
+# Pathogenic bacteria
+pathogenic.bacteria.supplement.figure <- ggarrange(
+  legionella.by.distance.supplement.plot, staphylococcus.by.distance.supplement.plot,
+  agrobacterium.by.distance.supplement.plot, mycobacterium.by.distance.supplement.plot,
+  stenotrophomonas.by.distance.supplement.plot, acinetobacter.by.distance.supplement.plot,
+  clostridium.by.distance.supplement.plot, paenibacillus.by.distance.supplement.plot,
+  williamsia.by.distance.supplement.plot, sphingomonas.by.distance.supplement.plot,
+  xanthomonas.by.distance.supplement.plot, rhizobacter.by.distance.supplement.plot,
+  ncol = 3,
+  nrow = 4,
+  align = "v",
+  legend = "top",
+  common.legend = TRUE
+)
+
+# Ecosystem function bacteria
+ecosystem.function.bacteria.supplement.figure <- ggarrange(
+  nitrosomonas.by.distance.supplement.plot, nitrospira.by.distance.supplement.plot,
+  paracoccus.by.distance.supplement.plot, desulfuromonas.by.distance.supplement.plot,
+  aciditerrimonas.by.distance.supplement.plot, nitrosospira.by.distance.supplement.plot,
+  sphingopyxis.by.distance.supplement.plot, cytophaga.by.distance.supplement.plot,
+  novosphingobium.by.distance.supplement.plot, devosia.by.distance.supplement.plot,
+  streptomyces.by.distance.supplement.plot, sphingobium.by.distance.supplement.plot,
+  desulfosporosinus.by.distance.supplement.plot, desulfocapsa.by.distance.supplement.plot,
+  phyllobacterium.by.distance.supplement.plot,
+  ncol = 3,
+  nrow = 5,
+  align = "v",
+  legend = "top",
+  common.legend = TRUE
+)
+```
+
+\vspace{10pt}
+
+```{r Export the Figure: Mutualistic Bacteria, echo = TRUE}
+## Export the figures
+# Mutualistic bacteria
+ggsave(
+  "figure_S7-mutualistic_bacteria-base.pdf",
+  plot = mutualistic.bacteria.supplement.figure,
+  device = "pdf",
+  path = "figures/",
+  width = 12.5,
+  height = 7.5,
+  units = "in",
+  dpi = 600
+)
+
+# Pathogenic bacteria
+ggsave(
+  "figure_S8-pathogenic_bacteria-base.pdf",
+  plot = pathogenic.bacteria.supplement.figure,
+  device = "pdf",
+  path = "figures/",
+  width = 12.5,
+  height = 12.5,
+  units = "in",
+  dpi = 600
+)
+
+# Ecosystem function bacteria
+ggsave(
+  "figure_S9-ecosystem_function_bacteria-base.pdf",
+  plot = ecosystem.function.bacteria.supplement.figure,
+  device = "pdf",
+  path = "figures/",
+  width = 12.5,
+  height = 12.5,
+  units = "in",
+  dpi = 600
+)
+```
+
+
+
+
+\newpage
+# Carbon and Nitrogen
+
+## Carbon Figure (Figure S10)
+
+```{r Set the Supplement Plots: Carbon, echo = TRUE}
+## Soil====================================================================
+## Soil total carbon by distance
+soil.total.carbon.by.distance.plot <- fitted_values(
+  soil.total.C.by.distance.GAM,
+  data = carbon.nitrogen.data
+) %>%
+  ggplot(aes(x = Distance, y = fitted)) +
+  geom_point(
+    data = carbon.nitrogen.data,
+    mapping = aes(y = Soil_Total_Carbon),
+    alpha = 0.8,
+    size = 1.5,
+    color = soil.total.carbon
+  ) +
+  geom_ribbon(
+  	aes(ymin = lower, ymax = upper),
+  	alpha = 0.4,
+  	fill = soil.total.carbon
+  ) +
+  geom_line(linewidth = 1.5, color = soil.total.carbon) +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Soil Total C"
+	) +
+  theme_DMS() +
+	ggtitle("(J)")
+
+## Soil total carbon by HII
+soil.total.carbon.by.HII.plot <- fitted_values(
+  soil.total.C.by.HII.GAM,
+  data = carbon.nitrogen.data
+) %>%
+  ggplot(aes(x = Human_Influence_Index, y = fitted)) +
+  geom_point(
+    data = carbon.nitrogen.data,
+    mapping = aes(y = Soil_Total_Carbon),
+    alpha = 0.8,
+    size = 1.5,
+    color = soil.total.carbon
+  ) +
+  geom_ribbon(
+  	aes(ymin = lower, ymax = upper),
+  	alpha = 0.4,
+  	fill = soil.total.carbon
+  ) +
+  geom_line(linewidth = 1.5, color = soil.total.carbon) +
+	labs(
+		x = "Human Influence Index",
+		y = "Soil Total C"
+	) +
+  theme_DMS() +
+	ggtitle("(K)") +
+	rremove("ylab")
+
+## Soil total carbon by ISC
+soil.total.carbon.by.ISC.plot <- fitted_values(
+  soil.total.C.by.ISC.GAM,
+  data = carbon.nitrogen.data
+) %>%
+  ggplot(aes(x = Mean_ISC, y = fitted)) +
+  geom_point(
+    data = carbon.nitrogen.data,
+    mapping = aes(y = Soil_Total_Carbon),
+    alpha = 0.8,
+    size = 1.5,
+    color = soil.total.carbon
+  ) +
+  geom_ribbon(
+  	aes(ymin = lower, ymax = upper),
+  	alpha = 0.4,
+  	fill = soil.total.carbon
+  ) +
+  geom_line(linewidth = 1.5, color = soil.total.carbon) +
+	labs(
+		x = "Mean ISC (%)",
+		y = "Soil Total C"
+	) +
+  theme_DMS() +
+	ggtitle("(L)") +
+	rremove("ylab")
+
+## Soil carbon isotope by distance
+soil.carbon.isotope.by.distance.plot <- fitted_values(
+  soil.delta.13C.by.distance.GAM,
+  data = carbon.nitrogen.data
+) %>%
+  ggplot(aes(x = Distance, y = fitted)) +
+  geom_point(
+    data = carbon.nitrogen.data,
+    mapping = aes(y = Soil_Delta_13C),
+    alpha = 0.8,
+    size = 1.5,
+    color = soil.carbon.isotope
+  ) +
+  geom_ribbon(
+  	aes(ymin = lower, ymax = upper),
+  	alpha = 0.4,
+  	fill = soil.carbon.isotope
+  ) +
+  geom_line(linewidth = 1.5, color = soil.carbon.isotope) +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Soil D13C"
+	) +
+  theme_DMS() +
+	ggtitle("(D)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+## Soil carbon isotope by HII
+soil.carbon.isotope.by.HII.plot <- fitted_values(
+  soil.delta.13C.by.HII.GAM,
+  data = carbon.nitrogen.data
+) %>%
+  ggplot(aes(x = Human_Influence_Index, y = fitted)) +
+  geom_point(
+    data = carbon.nitrogen.data,
+    mapping = aes(y = Soil_Delta_13C),
+    alpha = 0.8,
+    size = 1.5,
+    color = soil.carbon.isotope
+  ) +
+  geom_ribbon(
+  	aes(ymin = lower, ymax = upper),
+  	alpha = 0.4,
+  	fill = soil.carbon.isotope
+  ) +
+  geom_line(linewidth = 1.5, color = soil.carbon.isotope) +
+	labs(
+		x = "Human Influence Index",
+		y = "Soil D13C"
+	) +
+  theme_DMS() +
+	ggtitle("(E)") +
+	rremove("xlab") +
+	rremove("x.text") +
+	rremove("ylab")
+
+## Soil carbon isotope by ISC
+soil.carbon.isotope.by.ISC.plot <- fitted_values(
+  soil.delta.13C.by.ISC.GAM,
+  data = carbon.nitrogen.data
+) %>%
+  ggplot(aes(x = Mean_ISC, y = fitted)) +
+  geom_point(
+    data = carbon.nitrogen.data,
+    mapping = aes(y = Soil_Delta_13C),
+    alpha = 0.8,
+    size = 1.5,
+    color = soil.carbon.isotope
+  ) +
+  geom_ribbon(
+  	aes(ymin = lower, ymax = upper),
+  	alpha = 0.4,
+  	fill = soil.carbon.isotope
+  ) +
+  geom_line(linewidth = 1.5, color = soil.carbon.isotope) +
+	labs(
+		x = "Mean ISC (%)",
+		y = "Soil D13C"
+	) +
+  theme_DMS() +
+	ggtitle("(F)") +
+	rremove("xlab") +
+	rremove("x.text") +
+	rremove("ylab")
+
+
+## Leaf====================================================================
+## Leaf total carbon by distance
+leaf.total.carbon.by.distance.plot <- fitted_values(
+  leaf.total.C.by.distance.GAM,
+  data = carbon.nitrogen.data
+) %>%
+  ggplot(aes(x = Distance, y = fitted)) +
+  geom_point(
+    data = carbon.nitrogen.data,
+    mapping = aes(y = Leaf_Total_Carbon),
+    alpha = 0.8,
+    size = 1.5,
+    color = leaf.total.carbon
+  ) +
+  geom_ribbon(
+  	aes(ymin = lower, ymax = upper),
+  	alpha = 0.4,
+  	fill = leaf.total.carbon
+  ) +
+  geom_line(linewidth = 1.5, color = leaf.total.carbon) +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Leaf Total C"
+	) +
+  theme_DMS() +
+	ggtitle("(G)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+## Leaf total carbon by HII
+leaf.total.carbon.by.HII.plot <- fitted_values(
+  leaf.total.C.by.HII.GAM,
+  data = carbon.nitrogen.data
+) %>%
+  ggplot(aes(x = Human_Influence_Index, y = fitted)) +
+  geom_point(
+    data = carbon.nitrogen.data,
+    mapping = aes(y = Leaf_Total_Carbon),
+    alpha = 0.8,
+    size = 1.5,
+    color = leaf.total.carbon
+  ) +
+  geom_ribbon(
+  	aes(ymin = lower, ymax = upper),
+  	alpha = 0.4,
+  	fill = leaf.total.carbon
+  ) +
+  geom_line(linewidth = 1.5, color = leaf.total.carbon) +
+	labs(
+		x = "Human Influence Index",
+		y = "Leaf Total C"
+	) +
+  theme_DMS() +
+	ggtitle("(H)") +
+	rremove("xlab") +
+	rremove("x.text") +
+	rremove("ylab")
+
+## Leaf total carbon by ISC
+leaf.total.carbon.by.ISC.plot <- fitted_values(
+  leaf.total.C.by.ISC.GAM,
+  data = carbon.nitrogen.data
+) %>%
+  ggplot(aes(x = Mean_ISC, y = fitted)) +
+  geom_point(
+    data = carbon.nitrogen.data,
+    mapping = aes(y = Leaf_Total_Carbon),
+    alpha = 0.8,
+    size = 1.5,
+    color = leaf.total.carbon
+  ) +
+  geom_ribbon(
+  	aes(ymin = lower, ymax = upper),
+  	alpha = 0.4,
+  	fill = leaf.total.carbon
+  ) +
+  geom_line(linewidth = 1.5, color = leaf.total.carbon) +
+	labs(
+		x = "Mean ISC (%)",
+		y = "Leaf Total C"
+	) +
+  theme_DMS() +
+	ggtitle("(I)") +
+	rremove("xlab") +
+	rremove("x.text") +
+	rremove("ylab")
+
+## Leaf carbon isotope by distance
+leaf.carbon.isotope.by.distance.plot <- fitted_values(
+  leaf.delta.13C.by.distance.GAM,
+  data = carbon.nitrogen.data
+) %>%
+  ggplot(aes(x = Distance, y = fitted)) +
+  geom_point(
+    data = carbon.nitrogen.data,
+    mapping = aes(y = Leaf_Delta_13C),
+    alpha = 0.8,
+    size = 1.5,
+    color = leaf.carbon.isotope
+  ) +
+  geom_ribbon(
+  	aes(ymin = lower, ymax = upper),
+  	alpha = 0.4,
+  	fill = leaf.carbon.isotope
+  ) +
+  geom_line(linewidth = 1.5, color = leaf.carbon.isotope) +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Leaf D13C"
+	) +
+  theme_DMS() +
+	ggtitle("(A)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+## Leaf carbon isotope by HII
+leaf.carbon.isotope.by.HII.plot <- fitted_values(
+  leaf.delta.13C.by.HII.GAM,
+  data = carbon.nitrogen.data
+) %>%
+  ggplot(aes(x = Human_Influence_Index, y = fitted)) +
+  geom_point(
+    data = carbon.nitrogen.data,
+    mapping = aes(y = Leaf_Delta_13C),
+    alpha = 0.8,
+    size = 1.5,
+    color = leaf.carbon.isotope
+  ) +
+  geom_ribbon(
+  	aes(ymin = lower, ymax = upper),
+  	alpha = 0.4,
+  	fill = leaf.carbon.isotope
+  ) +
+  geom_line(linewidth = 1.5, color = leaf.carbon.isotope) +
+	labs(
+		x = "Human Influence Index",
+		y = "Leaf D13C"
+	) +
+  theme_DMS() +
+	ggtitle("(B)") +
+	rremove("xlab") +
+	rremove("x.text") +
+	rremove("ylab")
+
+## Leaf carbon isotope by ISC
+leaf.carbon.isotope.by.ISC.plot <- fitted_values(
+  leaf.delta.13C.by.ISC.GAM,
+  data = carbon.nitrogen.data
+) %>%
+  ggplot(aes(x = Mean_ISC, y = fitted)) +
+  geom_point(
+    data = carbon.nitrogen.data,
+    mapping = aes(y = Leaf_Delta_13C),
+    alpha = 0.8,
+    size = 1.5,
+    color = leaf.carbon.isotope
+  ) +
+  geom_ribbon(
+  	aes(ymin = lower, ymax = upper),
+  	alpha = 0.4,
+  	fill = leaf.carbon.isotope
+  ) +
+  geom_line(linewidth = 1.5, color = leaf.carbon.isotope) +
+	labs(
+		x = "Mean ISC (%)",
+		y = "Leaf D13C"
+	) +
+  theme_DMS() +
+	ggtitle("(C)") +
+	rremove("xlab") +
+	rremove("x.text") +
+	rremove("ylab")
+```
+
+\vspace{10pt}
+
+```{r Arrange the Supplement Figure: Carbon, echo = TRUE}
+## Arrange the figure
+carbon.supplement.figure <- ggarrange(
+  leaf.carbon.isotope.by.distance.plot, leaf.carbon.isotope.by.HII.plot,
+  leaf.carbon.isotope.by.ISC.plot, soil.carbon.isotope.by.distance.plot,
+  soil.carbon.isotope.by.HII.plot, soil.carbon.isotope.by.ISC.plot,
+  leaf.total.carbon.by.distance.plot, leaf.total.carbon.by.HII.plot,
+  leaf.total.carbon.by.ISC.plot, soil.total.carbon.by.distance.plot,
+  soil.total.carbon.by.HII.plot, soil.total.carbon.by.ISC.plot,
+  nrow = 4,
+  ncol = 3,
+  legend = "none",
+  align = "v"
+)
+```
+
+\vspace{10pt}
+
+```{r Export the Supplement Figure: Carbon, echo = TRUE}
+## Export the figure
+ggsave(
+  "figure_S10-carbon_total_isotope-base.pdf",
+  plot = carbon.supplement.figure,
+  device = "pdf",
+  path = "figures/",
+  width = 12.5,
+  height = 12.5,
+  units = "in",
+  dpi = 600
+)
+```
+
+
+
+
+
+\newpage
+## Nitrogen Figure (Figure S11)
+
+```{r Set the Supplement Plots: Nitrogen, echo = TRUE}
+## Soil====================================================================
+## Soil total nitrogen by distance
+soil.total.nitrogen.by.distance.plot <- fitted_values(
+  soil.total.N.by.distance.GAM,
+  data = carbon.nitrogen.data
+) %>%
+  ggplot(aes(x = Distance, y = fitted)) +
+  geom_point(
+    data = carbon.nitrogen.data,
+    mapping = aes(y = Soil_Total_Nitrogen),
+    alpha = 0.8,
+    size = 1.5,
+    color = soil.total.nitrogen
+  ) +
+  geom_ribbon(
+  	aes(ymin = lower, ymax = upper),
+  	alpha = 0.4,
+  	fill = soil.total.nitrogen
+  ) +
+  geom_line(linewidth = 1.5, color = soil.total.nitrogen) +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Soil Total N"
+	) +
+  theme_DMS() +
+	ggtitle("(J)")
+
+## Soil total nitrogen by HII
+soil.total.nitrogen.by.HII.plot <- fitted_values(
+  soil.total.N.by.HII.GAM,
+  data = carbon.nitrogen.data
+) %>%
+  ggplot(aes(x = Human_Influence_Index, y = fitted)) +
+  geom_point(
+    data = carbon.nitrogen.data,
+    mapping = aes(y = Soil_Total_Nitrogen),
+    alpha = 0.8,
+    size = 1.5,
+    color = soil.total.nitrogen
+  ) +
+  geom_ribbon(
+  	aes(ymin = lower, ymax = upper),
+  	alpha = 0.4,
+  	fill = soil.total.nitrogen
+  ) +
+  geom_line(linewidth = 1.5, color = soil.total.nitrogen) +
+	labs(
+		x = "Human Influence Index",
+		y = "Soil Total N"
+	) +
+  theme_DMS() +
+	ggtitle("(K)") +
+	rremove("ylab")
+
+## Soil total nitrogen by ISC
+soil.total.nitrogen.by.ISC.plot <- fitted_values(
+  soil.total.N.by.ISC.GAM,
+  data = carbon.nitrogen.data
+) %>%
+  ggplot(aes(x = Mean_ISC, y = fitted)) +
+  geom_point(
+    data = carbon.nitrogen.data,
+    mapping = aes(y = Soil_Total_Nitrogen),
+    alpha = 0.8,
+    size = 1.5,
+    color = soil.total.nitrogen
+  ) +
+  geom_ribbon(
+  	aes(ymin = lower, ymax = upper),
+  	alpha = 0.4,
+  	fill = soil.total.nitrogen
+  ) +
+  geom_line(linewidth = 1.5, color = soil.total.nitrogen) +
+	labs(
+		x = "Mean ISC (%)",
+		y = "Soil Total N"
+	) +
+  theme_DMS() +
+	ggtitle("(L)") +
+	rremove("ylab")
+
+## Soil nitrogen isotope by distance
+soil.nitrogen.isotope.by.distance.plot <- fitted_values(
+  soil.delta.15N.by.distance.GAM,
+  data = carbon.nitrogen.data
+) %>%
+  ggplot(aes(x = Distance, y = fitted)) +
+  geom_point(
+    data = carbon.nitrogen.data,
+    mapping = aes(y = Soil_Delta_15N),
+    alpha = 0.8,
+    size = 1.5,
+    color = soil.nitrogen.isotope
+  ) +
+  geom_ribbon(
+  	aes(ymin = lower, ymax = upper),
+  	alpha = 0.4,
+  	fill = soil.nitrogen.isotope
+  ) +
+  geom_line(linewidth = 1.5, color = soil.nitrogen.isotope) +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Soil D15N"
+	) +
+  theme_DMS() +
+	ggtitle("(D)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+## Soil nitrogen isotope by HII
+soil.nitrogen.isotope.by.HII.plot <- fitted_values(
+  soil.delta.15N.by.HII.GAM,
+  data = carbon.nitrogen.data
+) %>%
+  ggplot(aes(x = Human_Influence_Index, y = fitted)) +
+  geom_point(
+    data = carbon.nitrogen.data,
+    mapping = aes(y = Soil_Delta_15N),
+    alpha = 0.8,
+    size = 1.5,
+    color = soil.nitrogen.isotope
+  ) +
+  geom_ribbon(
+  	aes(ymin = lower, ymax = upper),
+  	alpha = 0.4,
+  	fill = soil.nitrogen.isotope
+  ) +
+  geom_line(linewidth = 1.5, color = soil.nitrogen.isotope) +
+	labs(
+		x = "Human Influence Index",
+		y = "Soil D15N"
+	) +
+  theme_DMS() +
+	ggtitle("(E)") +
+	rremove("xlab") +
+	rremove("x.text") +
+	rremove("ylab")
+
+## Soil nitrogen isotope by ISC
+soil.nitrogen.isotope.by.ISC.plot <- fitted_values(
+  soil.delta.15N.by.ISC.GAM,
+  data = carbon.nitrogen.data
+) %>%
+  ggplot(aes(x = Mean_ISC, y = fitted)) +
+  geom_point(
+    data = carbon.nitrogen.data,
+    mapping = aes(y = Soil_Delta_15N),
+    alpha = 0.8,
+    size = 1.5,
+    color = soil.nitrogen.isotope
+  ) +
+  geom_ribbon(
+  	aes(ymin = lower, ymax = upper),
+  	alpha = 0.4,
+  	fill = soil.nitrogen.isotope
+  ) +
+  geom_line(linewidth = 1.5, color = soil.nitrogen.isotope) +
+	labs(
+		x = "Mean ISC (%)",
+		y = "Soil D15N"
+	) +
+  theme_DMS() +
+	ggtitle("(F)") +
+	rremove("xlab") +
+	rremove("x.text") +
+	rremove("ylab")
+
+
+## Leaf====================================================================
+## Leaf total nitrogen by distance
+leaf.total.nitrogen.by.distance.plot <- fitted_values(
+  leaf.total.N.by.distance.GAM,
+  data = carbon.nitrogen.data
+) %>%
+  ggplot(aes(x = Distance, y = fitted)) +
+  geom_point(
+    data = carbon.nitrogen.data,
+    mapping = aes(y = Leaf_Total_Nitrogen),
+    alpha = 0.8,
+    size = 1.5,
+    color = leaf.total.nitrogen
+  ) +
+  geom_ribbon(
+  	aes(ymin = lower, ymax = upper),
+  	alpha = 0.4,
+  	fill = leaf.total.nitrogen
+  ) +
+  geom_line(linewidth = 1.5, color = leaf.total.nitrogen) +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Leaf Total N"
+	) +
+  theme_DMS() +
+	ggtitle("(G)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+## Leaf total nitrogen by HII
+leaf.total.nitrogen.by.HII.plot <- fitted_values(
+  leaf.total.N.by.HII.GAM,
+  data = carbon.nitrogen.data
+) %>%
+  ggplot(aes(x = Human_Influence_Index, y = fitted)) +
+  geom_point(
+    data = carbon.nitrogen.data,
+    mapping = aes(y = Leaf_Total_Nitrogen),
+    alpha = 0.8,
+    size = 1.5,
+    color = leaf.total.nitrogen
+  ) +
+  geom_ribbon(
+  	aes(ymin = lower, ymax = upper),
+  	alpha = 0.4,
+  	fill = leaf.total.nitrogen
+  ) +
+  geom_line(linewidth = 1.5, color = leaf.total.nitrogen) +
+	labs(
+		x = "Human Influence Index",
+		y = "Leaf Total N"
+	) +
+  theme_DMS() +
+	ggtitle("(H)") +
+	rremove("xlab") +
+	rremove("x.text") +
+	rremove("ylab")
+
+## Leaf total nitrogen by ISC
+leaf.total.nitrogen.by.ISC.plot <- fitted_values(
+  leaf.total.N.by.ISC.GAM,
+  data = carbon.nitrogen.data
+) %>%
+  ggplot(aes(x = Mean_ISC, y = fitted)) +
+  geom_point(
+    data = carbon.nitrogen.data,
+    mapping = aes(y = Leaf_Total_Nitrogen),
+    alpha = 0.8,
+    size = 1.5,
+    color = leaf.total.nitrogen
+  ) +
+  geom_ribbon(
+  	aes(ymin = lower, ymax = upper),
+  	alpha = 0.4,
+  	fill = leaf.total.nitrogen
+  ) +
+  geom_line(linewidth = 1.5, color = leaf.total.nitrogen) +
+	labs(
+		x = "Mean ISC (%)",
+		y = "Leaf Total N"
+	) +
+  theme_DMS() +
+	ggtitle("(I)") +
+	rremove("xlab") +
+	rremove("x.text") +
+	rremove("ylab")
+
+## Leaf nitrogen isotope by distance
+leaf.nitrogen.isotope.by.distance.plot <- fitted_values(
+  leaf.delta.15N.by.distance.GAM,
+  data = carbon.nitrogen.data
+) %>%
+  ggplot(aes(x = Distance, y = fitted)) +
+  geom_point(
+    data = carbon.nitrogen.data,
+    mapping = aes(y = Leaf_Delta_15N),
+    alpha = 0.8,
+    size = 1.5,
+    color = leaf.nitrogen.isotope
+  ) +
+  geom_ribbon(
+  	aes(ymin = lower, ymax = upper),
+  	alpha = 0.4,
+  	fill = leaf.nitrogen.isotope
+  ) +
+  geom_line(linewidth = 1.5, color = leaf.nitrogen.isotope) +
+	labs(
+		x = "Distance from the City Centre (km)",
+		y = "Leaf D15N"
+	) +
+  theme_DMS() +
+	ggtitle("(A)") +
+	rremove("xlab") +
+	rremove("x.text")
+
+## Leaf nitrogen isotope by HII
+leaf.nitrogen.isotope.by.HII.plot <- fitted_values(
+  leaf.delta.15N.by.HII.GAM,
+  data = carbon.nitrogen.data
+) %>%
+  ggplot(aes(x = Human_Influence_Index, y = fitted)) +
+  geom_point(
+    data = carbon.nitrogen.data,
+    mapping = aes(y = Leaf_Delta_15N),
+    alpha = 0.8,
+    size = 1.5,
+    color = leaf.nitrogen.isotope
+  ) +
+  geom_ribbon(
+  	aes(ymin = lower, ymax = upper),
+  	alpha = 0.4,
+  	fill = leaf.nitrogen.isotope
+  ) +
+  geom_line(linewidth = 1.5, color = leaf.nitrogen.isotope) +
+	labs(
+		x = "Human Influence Index",
+		y = "Leaf D15N"
+	) +
+  theme_DMS() +
+	ggtitle("(B)") +
+	rremove("xlab") +
+	rremove("x.text") +
+	rremove("ylab")
+
+## Leaf nitrogen isotope by ISC
+leaf.nitrogen.isotope.by.ISC.plot <- fitted_values(
+  leaf.delta.15N.by.ISC.GAM,
+  data = carbon.nitrogen.data
+) %>%
+  ggplot(aes(x = Mean_ISC, y = fitted)) +
+  geom_point(
+    data = carbon.nitrogen.data,
+    mapping = aes(y = Leaf_Delta_15N),
+    alpha = 0.8,
+    size = 1.5,
+    color = leaf.nitrogen.isotope
+  ) +
+  geom_ribbon(
+  	aes(ymin = lower, ymax = upper),
+  	alpha = 0.4,
+  	fill = leaf.nitrogen.isotope
+  ) +
+  geom_line(linewidth = 1.5, color = leaf.nitrogen.isotope) +
+	labs(
+		x = "Mean ISC (%)",
+		y = "Leaf D15N"
+	) +
+  theme_DMS() +
+	ggtitle("(C)") +
+	rremove("xlab") +
+	rremove("x.text") +
+	rremove("ylab")
+```
+
+\vspace{10pt}
+
+```{r Arrange the Supplement Figure: Nitrogen, echo = TRUE}
+## Arrange the figure
+nitrogen.supplement.figure <- ggarrange(
+  leaf.nitrogen.isotope.by.distance.plot, leaf.nitrogen.isotope.by.HII.plot,
+  leaf.nitrogen.isotope.by.ISC.plot, soil.nitrogen.isotope.by.distance.plot,
+  soil.nitrogen.isotope.by.HII.plot, soil.nitrogen.isotope.by.ISC.plot,
+  leaf.total.nitrogen.by.distance.plot, leaf.total.nitrogen.by.HII.plot,
+  leaf.total.nitrogen.by.ISC.plot, soil.total.nitrogen.by.distance.plot,
+  soil.total.nitrogen.by.HII.plot, soil.total.nitrogen.by.ISC.plot,
+  nrow = 4,
+  ncol = 3,
+  legend = "none",
+  align = "v"
+)
+```
+
+\vspace{10pt}
+
+```{r Export the Supplement Figure: Nitrogen, echo = TRUE}
+## Export the figure
+ggsave(
+  "figure_S11-nitrogen_total_isotope-base.pdf",
+  plot = nitrogen.supplement.figure,
+  device = "pdf",
+  path = "figures/",
+  width = 12.5,
+  height = 12.5,
+  units = "in",
+  dpi = 600
+)
+```
+
+

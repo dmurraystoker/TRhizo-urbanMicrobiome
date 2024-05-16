@@ -1,0 +1,903 @@
+---
+title: "TRhizo-urbanMicrobiome"
+subtitle: "Carbon & Nitrogen Analyses"
+author: "David Murray-Stoker"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 5
+    fig_caption: yes
+    latex_engine: xelatex
+always_allow_html: true
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(results = "hold", fig.pos = "H", fig.align = "center", out.width = "92.5%")
+options(knitr.graphics.error = FALSE)
+kableExtra::usepackage_latex("float")
+```
+
+```{r Load Packages for R Markdown, include = FALSE}
+library(kableExtra)
+library(knitr)
+```
+
+
+
+
+
+\newpage
+# Load Packages
+
+\vspace{10pt}
+
+```{r Load Packages, include = FALSE}
+## Load the tidyverse
+library(tidyverse)
+
+## Packages for analyses
+library(broom)
+library(easystats)
+library(mgcv)
+
+## Set contrasts for Type III sums-of-squares
+options(contrasts = c("contr.sum", "contr.sum"))
+
+## Make the results reproducible
+set.seed(666)
+```
+
+
+
+
+
+\newpage
+# Data Management
+
+\vspace{10pt}
+
+```{r Load Data, echo = TRUE}
+## Load the carbon data
+carbon.data.uncleaned <- read_csv(
+	file = "data/urbanMicrobiome-carbon_data.csv",
+	col_types = c("fnnnn"),
+	show_col_types = FALSE
+)
+
+## Load the nitrogen data
+nitrogen.data.uncleaned <- read_csv(
+	file = "data/urbanMicrobiome-nitrogen_data.csv",
+	col_types = c("fnnnn"),
+	show_col_types = FALSE
+)
+
+## Load the urbanization data
+urbanization.data <- read_rds(
+	file = "data/urbanization_data.rds"
+)
+```
+
+\vspace{10pt}
+
+```{r Merge Nutrient and Urbanization Metric Data, echo = TRUE}
+## Combined data
+carbon.nitrogen.data <- urbanization.data %>%
+	full_join(carbon.data.uncleaned, by = "Population") %>%
+	full_join(nitrogen.data.uncleaned, by = "Population")
+```
+
+
+
+
+
+\newpage
+# Carbon Analyses 
+
+\vspace{10pt}
+
+## Soil Total Carbon
+
+### Fit the GAMs
+
+\vspace{10pt}
+
+```{r Soil Total Carbon GAMs, echo TRUE}
+## Soil total carbon
+# Distance
+soil.total.C.by.distance.GAM <- gam(
+	Soil_Total_Carbon ~ s(Distance, bs = "ts", k = 10),
+	data = carbon.nitrogen.data,
+	method = "REML"
+)
+# HII
+soil.total.C.by.HII.GAM <- gam(
+	Soil_Total_Carbon ~ s(Human_Influence_Index, bs = "ts", k = 10),
+	data = carbon.nitrogen.data,
+	method = "REML"
+)
+# ISC
+soil.total.C.by.ISC.GAM <- gam(
+	Soil_Total_Carbon ~ s(Mean_ISC, bs = "ts", k = 10),
+	data = carbon.nitrogen.data,
+	method = "REML"
+)
+```
+
+\vspace{10pt}
+
+### Check Model Assumptions
+
+```{r performance Diagnostics: Soil Total Carbon GAMs, echo = TRUE, eval = FALSE}
+## Soil total carbon-by-distance model diagnostics
+check_model(soil.total.C.by.distance.GAM)
+# Visual check = assumptions met
+
+## Soil total carbon-by-HII model diagnostics
+check_model(soil.total.C.by.HII.GAM)
+# Visual check = assumptions met
+
+## Soil total carbon-by-ISC model diagnostics
+check_model(soil.total.C.by.ISC.GAM)
+# Visual check = assumptions met
+```
+
+
+
+\newpage
+### ANOVAs
+
+\vspace{10pt}
+
+```{r ANOVA Table: Soil Total Carbon-by-Distance GAM, echo = FALSE}
+kable(
+  tidy(soil.total.C.by.distance.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the soil total carbon-by-distance GAM. Adjusted R-squared = 0.298, deviance = 35.0.",
+  col.names = c("Term", "EDF", "Ref.df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Soil Total Carbon-by-HII GAM, echo = FALSE}
+kable(
+  tidy(soil.total.C.by.HII.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the soil total carbon-by-HII GAM. Adjusted R-squared = 0.152, deviance = 17.4.",
+  col.names = c("Term", "EDF", "Ref.df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Soil Total Carbon-by-ISC GAM, echo = FALSE}
+kable(
+  tidy(soil.total.C.by.ISC.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the soil total carbon-by-ISC GAM. Adjusted R-squared = 0.331, deviance = 37.9.",
+  col.names = c("Term", "EDF", "Ref.df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Leaf Total Carbon
+
+### Fit the GAMs
+
+\vspace{10pt}
+
+```{r Leaf Total Carbon GAMs, echo TRUE}
+## Leaf total carbon
+# Distance
+leaf.total.C.by.distance.GAM <- gam(
+	Leaf_Total_Carbon ~ s(Distance, bs = "ts", k = 10),
+	data = carbon.nitrogen.data,
+	method = "REML"
+)
+# HII
+leaf.total.C.by.HII.GAM <- gam(
+	Leaf_Total_Carbon ~ s(Human_Influence_Index, bs = "ts", k = 10),
+	data = carbon.nitrogen.data,
+	method = "REML"
+)
+# ISC
+leaf.total.C.by.ISC.GAM <- gam(
+	Leaf_Total_Carbon ~ s(Mean_ISC, bs = "ts", k = 10),
+	data = carbon.nitrogen.data,
+	method = "REML"
+)
+```
+
+\vspace{10pt}
+
+### Check Model Assumptions
+
+```{r performance Diagnostics: Leaf Total Carbon GAMs, echo = TRUE, eval = FALSE}
+## Leaf total carbon-by-distance model diagnostics
+check_model(leaf.total.C.by.distance.GAM)
+# Visual check = assumptions met
+
+## Leaf total carbon-by-HII model diagnostics
+check_model(leaf.total.C.by.HII.GAM)
+# Visual check = assumptions met
+
+## Leaf total carbon-by-ISC model diagnostics
+check_model(leaf.total.C.by.ISC.GAM)
+# Visual check = assumptions met
+```
+
+
+
+\newpage
+### ANOVAs
+
+\vspace{10pt}
+
+```{r ANOVA Table: Leaf Total Carbon-by-Distance GAM, echo = FALSE}
+kable(
+  tidy(leaf.total.C.by.distance.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the leaf total carbon-by-distance GAM. Adjusted R-squared < 0.001, deviance = 0.001.",
+  col.names = c("Term", "EDF", "Ref.df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Leaf Total Carbon-by-HII GAM, echo = FALSE}
+kable(
+  tidy(leaf.total.C.by.HII.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the leaf total carbon-by-HII GAM. Adjusted R-squared < 0.001, deviance < 0.001.",
+  col.names = c("Term", "EDF", "Ref.df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Leaf Total Carbon-by-ISC GAM, echo = FALSE}
+kable(
+  tidy(leaf.total.C.by.ISC.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the leaf total carbon-by-ISC GAM. Adjusted R-squared = 0.188, deviance = 23.2.",
+  col.names = c("Term", "EDF", "Ref.df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Soil Delta 13C
+
+### Fit the GAMs
+
+\vspace{10pt}
+
+```{r Soil Delta 13C GAMs, echo TRUE}
+## Soil delta 13C
+# Distance
+soil.delta.13C.by.distance.GAM <- gam(
+	Soil_Delta_13C ~ s(Distance, bs = "ts", k = 10),
+	data = carbon.nitrogen.data,
+	method = "REML"
+)
+# HII
+soil.delta.13C.by.HII.GAM <- gam(
+	Soil_Delta_13C ~ s(Human_Influence_Index, bs = "ts", k = 10),
+	data = carbon.nitrogen.data,
+	method = "REML"
+)
+# ISC
+soil.delta.13C.by.ISC.GAM <- gam(
+	Soil_Delta_13C ~ s(Mean_ISC, bs = "ts", k = 10),
+	data = carbon.nitrogen.data,
+	method = "REML"
+)
+```
+
+\vspace{10pt}
+
+### Check Model Assumptions
+
+```{r performance Diagnostics: Soil Delta 13C GAMs, echo = TRUE, eval = FALSE}
+## Soil delta 13C-by-distance model diagnostics
+check_model(soil.delta.13C.by.distance.GAM)
+# Visual check = assumptions met
+
+## Soil delta 13C-by-HII model diagnostics
+check_model(soil.delta.13C.by.HII.GAM)
+# Visual check = assumptions met
+
+## Soil delta 13C-by-ISC model diagnostics
+check_model(soil.delta.13C.by.ISC.GAM)
+# Visual check = assumptions met
+```
+
+
+
+\newpage
+### ANOVAs
+
+\vspace{10pt}
+
+```{r ANOVA Table: Soil Delta 13C-by-Distance GAM, echo = FALSE}
+kable(
+  tidy(soil.delta.13C.by.distance.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the soil delta 13C-by-distance GAM. Adjusted R-squared = 0.362, deviance = 38.1.",
+  col.names = c("Term", "EDF", "Ref.df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Soil Delta 13C-by-HII GAM, echo = FALSE}
+kable(
+  tidy(soil.delta.13C.by.HII.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the soil delta 13C-by-HII GAM. Adjusted R-squared = 0.216, deviance = 23.7.",
+  col.names = c("Term", "EDF", "Ref.df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Soil Delta 13C-by-ISC GAM, echo = FALSE}
+kable(
+  tidy(soil.delta.13C.by.ISC.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the soil delta 13C-by-ISC GAM. Adjusted R-squared = 0.202, deviance = 22.4.",
+  col.names = c("Term", "EDF", "Ref.df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Leaf Delta 13C
+
+### Fit the GAMs
+
+\vspace{10pt}
+
+```{r Leaf Delta 13C GAMs, echo TRUE}
+## Leaf delta 13C
+# Distance
+leaf.delta.13C.by.distance.GAM <- gam(
+	Leaf_Delta_13C ~ s(Distance, bs = "ts", k = 10),
+	data = carbon.nitrogen.data,
+	method = "REML"
+)
+# HII
+leaf.delta.13C.by.HII.GAM <- gam(
+	Leaf_Delta_13C ~ s(Human_Influence_Index, bs = "ts", k = 10),
+	data = carbon.nitrogen.data,
+	method = "REML"
+)
+# ISC
+leaf.delta.13C.by.ISC.GAM <- gam(
+	Leaf_Delta_13C ~ s(Mean_ISC, bs = "ts", k = 10),
+	data = carbon.nitrogen.data,
+	method = "REML"
+)
+```
+
+\vspace{10pt}
+
+### Check Model Assumptions
+
+```{r performance Diagnostics: Leaf Delta 13C GAMs, echo = TRUE, eval = FALSE}
+## Leaf delta 13C-by-distance model diagnostics
+check_model(leaf.delta.13C.by.distance.GAM)
+# Visual check = assumptions met
+
+## Leaf delta 13C-by-HII model diagnostics
+check_model(leaf.delta.13C.by.HII.GAM)
+# Visual check = assumptions met
+
+## Leaf delta 13C-by-ISC model diagnostics
+check_model(leaf.delta.13C.by.ISC.GAM)
+# Visual check = assumptions met
+```
+
+
+
+\newpage
+### ANOVAs
+
+\vspace{10pt}
+
+```{r ANOVA Table: Leaf Delta 13C-by-Distance GAM, echo = FALSE}
+kable(
+  tidy(leaf.delta.13C.by.distance.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the leaf delta 13C-by-distance GAM. Adjusted R-squared = 0.069, deviance = 8.9.",
+  col.names = c("Term", "EDF", "Ref.df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Leaf Delta 13C-by-HII GAM, echo = FALSE}
+kable(
+  tidy(leaf.delta.13C.by.HII.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the leaf delta 13C-by-HII GAM. Adjusted R-squared = 0.011, deviance = 1.9.",
+  col.names = c("Term", "EDF", "Ref.df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Leaf Delta 13C-by-ISC GAM, echo = FALSE}
+kable(
+  tidy(leaf.delta.13C.by.ISC.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the leaf delta 13C-by-ISC GAM. Adjusted R-squared = 0.023, deviance = 3.5.",
+  col.names = c("Term", "EDF", "Ref.df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+
+
+
+
+
+\newpage
+# Nitrogen Analyses 
+
+\vspace{10pt}
+
+## Soil Total Nitrogen
+
+### Fit the GAMs
+
+\vspace{10pt}
+
+```{r Soil Total Nitrogen GAMs, echo TRUE}
+## Soil total carbon
+# Distance
+soil.total.N.by.distance.GAM <- gam(
+	Soil_Total_Nitrogen ~ s(Distance, bs = "ts", k = 10),
+	data = carbon.nitrogen.data,
+	method = "REML"
+)
+# HII
+soil.total.N.by.HII.GAM <- gam(
+	Soil_Total_Nitrogen ~ s(Human_Influence_Index, bs = "ts", k = 10),
+	data = carbon.nitrogen.data,
+	method = "REML"
+)
+# ISC
+soil.total.N.by.ISC.GAM <- gam(
+	Soil_Total_Nitrogen ~ s(Mean_ISC, bs = "ts", k = 10),
+	data = carbon.nitrogen.data,
+	method = "REML"
+)
+```
+
+\vspace{10pt}
+
+### Check Model Assumptions
+
+```{r performance Diagnostics: Soil Total Nitrogen GAMs, echo = TRUE, eval = FALSE}
+## Soil total carbon-by-distance model diagnostics
+check_model(soil.total.N.by.distance.GAM)
+# Visual check = assumptions met
+
+## Soil total carbon-by-HII model diagnostics
+check_model(soil.total.N.by.HII.GAM)
+# Visual check = assumptions met
+
+## Soil total carbon-by-ISC model diagnostics
+check_model(soil.total.N.by.ISC.GAM)
+# Visual check = assumptions met
+```
+
+
+
+\newpage
+### ANOVAs
+
+\vspace{10pt}
+
+```{r ANOVA Table: Soil Total Nitrogen-by-Distance GAM, echo = FALSE}
+kable(
+  tidy(soil.total.N.by.distance.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the soil total nitrogen-by-distance GAM. Adjusted R-squared = 0.126, deviance = 14.8.",
+  col.names = c("Term", "EDF", "Ref.df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Soil Total Nitrogen-by-HII GAM, echo = FALSE}
+kable(
+  tidy(soil.total.N.by.HII.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the soil total nitrogen-by-HII GAM. Adjusted R-squared = 0.006, deviance = 1.2.",
+  col.names = c("Term", "EDF", "Ref.df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Soil Total Nitrogen-by-ISC GAM, echo = FALSE}
+kable(
+  tidy(soil.total.N.by.ISC.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the soil total nitrogen-by-ISC GAM. Adjusted R-squared = 0.036, deviance = 5.2.",
+  col.names = c("Term", "EDF", "Ref.df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Leaf Total Nitrogen
+
+### Fit the GAMs
+
+\vspace{10pt}
+
+```{r Leaf Total Nitrogen GAMs, echo TRUE}
+## Leaf total carbon
+# Distance
+leaf.total.N.by.distance.GAM <- gam(
+	Leaf_Total_Nitrogen ~ s(Distance, bs = "ts", k = 10),
+	data = carbon.nitrogen.data,
+	method = "REML"
+)
+# HII
+leaf.total.N.by.HII.GAM <- gam(
+	Leaf_Total_Nitrogen ~ s(Human_Influence_Index, bs = "ts", k = 10),
+	data = carbon.nitrogen.data,
+	method = "REML"
+)
+# ISC
+leaf.total.N.by.ISC.GAM <- gam(
+	Leaf_Total_Nitrogen ~ s(Mean_ISC, bs = "ts", k = 10),
+	data = carbon.nitrogen.data,
+	method = "REML"
+)
+```
+
+\vspace{10pt}
+
+### Check Model Assumptions
+
+```{r performance Diagnostics: Leaf Total Nitrogen GAMs, echo = TRUE, eval = FALSE}
+## Leaf total carbon-by-distance model diagnostics
+check_model(leaf.total.N.by.distance.GAM)
+# Visual check = assumptions met
+
+## Leaf total carbon-by-HII model diagnostics
+check_model(leaf.total.N.by.HII.GAM)
+# Visual check = assumptions met
+
+## Leaf total carbon-by-ISC model diagnostics
+check_model(leaf.total.N.by.ISC.GAM)
+# Visual check = assumptions met
+```
+
+
+
+\newpage
+### ANOVAs
+
+\vspace{10pt}
+
+```{r ANOVA Table: Leaf Total Nitrogen-by-Distance GAM, echo = FALSE}
+kable(
+  tidy(leaf.total.N.by.distance.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the leaf total nitrogen-by-distance GAM. Adjusted R-squared = 0.448, deviance = 49.8.",
+  col.names = c("Term", "EDF", "Ref.df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Leaf Total Nitrogen-by-HII GAM, echo = FALSE}
+kable(
+  tidy(leaf.total.N.by.HII.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the leaf total nitrogen-by-HII GAM. Adjusted R-squared = 0.008, deviance = 1.4.",
+  col.names = c("Term", "EDF", "Ref.df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Leaf Total Nitrogen-by-ISC GAM, echo = FALSE}
+kable(
+  tidy(leaf.total.N.by.ISC.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the leaf total nitrogen-by-ISC GAM. Adjusted R-squared = 0.265, deviance = 30.7.",
+  col.names = c("Term", "EDF", "Ref.df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Soil Delta 15N
+
+### Fit the GAMs
+
+\vspace{10pt}
+
+```{r Soil Delta 15N GAMs, echo TRUE}
+## Soil delta 15N
+# Distance
+soil.delta.15N.by.distance.GAM <- gam(
+	Soil_Delta_15N ~ s(Distance, bs = "ts", k = 10),
+	data = carbon.nitrogen.data,
+	method = "REML"
+)
+# HII
+soil.delta.15N.by.HII.GAM <- gam(
+	Soil_Delta_15N ~ s(Human_Influence_Index, bs = "ts", k = 10),
+	data = carbon.nitrogen.data,
+	method = "REML"
+)
+# ISC
+soil.delta.15N.by.ISC.GAM <- gam(
+	Soil_Delta_15N ~ s(Mean_ISC, bs = "ts", k = 10),
+	data = carbon.nitrogen.data,
+	method = "REML"
+)
+```
+
+\vspace{10pt}
+
+### Check Model Assumptions
+
+```{r performance Diagnostics: Soil Delta 15N GAMs, echo = TRUE, eval = FALSE}
+## Soil delta 15N-by-distance model diagnostics
+check_model(soil.delta.15N.by.distance.GAM)
+# Visual check = assumptions met
+
+## Soil delta 15N-by-HII model diagnostics
+check_model(soil.delta.15N.by.HII.GAM)
+# Visual check = assumptions met
+
+## Soil delta 15N-by-ISC model diagnostics
+check_model(soil.delta.15N.by.ISC.GAM)
+# Visual check = assumptions met
+```
+
+
+
+\newpage
+### ANOVAs
+
+\vspace{10pt}
+
+```{r ANOVA Table: Soil Delta 15N-by-Distance GAM, echo = FALSE}
+kable(
+  tidy(soil.delta.15N.by.distance.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the soil delta 15N-by-distance GAM. Adjusted R-squared = 0.257, deviance = 27.8.",
+  col.names = c("Term", "EDF", "Ref.df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Soil Delta 15N-by-HII GAM, echo = FALSE}
+kable(
+  tidy(soil.delta.15N.by.HII.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the soil delta 15N-by-HII GAM. Adjusted R-squared = 0.216, deviance = 23.7.",
+  col.names = c("Term", "EDF", "Ref.df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Soil Delta 15N-by-ISC GAM, echo = FALSE}
+kable(
+  tidy(soil.delta.15N.by.ISC.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the soil delta 15N-by-ISC GAM. Adjusted R-squared = 0.240, deviance = 26.1.",
+  col.names = c("Term", "EDF", "Ref.df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Leaf Delta 15N
+
+### Fit the GAMs
+
+\vspace{10pt}
+
+```{r Leaf Delta 15N GAMs, echo TRUE}
+## Leaf delta 15N
+# Distance
+leaf.delta.15N.by.distance.GAM <- gam(
+	Leaf_Delta_15N ~ s(Distance, bs = "ts", k = 10),
+	data = carbon.nitrogen.data,
+	method = "REML"
+)
+# HII
+leaf.delta.15N.by.HII.GAM <- gam(
+	Leaf_Delta_15N ~ s(Human_Influence_Index, bs = "ts", k = 10),
+	data = carbon.nitrogen.data,
+	method = "REML"
+)
+# ISC
+leaf.delta.15N.by.ISC.GAM <- gam(
+	Leaf_Delta_15N ~ s(Mean_ISC, bs = "ts", k = 10),
+	data = carbon.nitrogen.data,
+	method = "REML"
+)
+```
+
+\vspace{10pt}
+
+### Check Model Assumptions
+
+```{r performance Diagnostics: Leaf Delta 15N GAMs, echo = TRUE, eval = FALSE}
+## Leaf delta 15N-by-distance model diagnostics
+check_model(leaf.delta.15N.by.distance.GAM)
+# Visual check = assumptions met
+
+## Leaf delta 15N-by-HII model diagnostics
+check_model(leaf.delta.15N.by.HII.GAM)
+# Visual check = assumptions met
+
+## Leaf delta 15N-by-ISC model diagnostics
+check_model(leaf.delta.15N.by.ISC.GAM)
+# Visual check = assumptions met
+```
+
+
+
+\newpage
+### ANOVAs
+
+\vspace{10pt}
+
+```{r ANOVA Table: Leaf Delta 15N-by-Distance GAM, echo = FALSE}
+kable(
+  tidy(leaf.delta.15N.by.distance.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the leaf delta 15N-by-distance GAM. Adjusted R-squared = 0.023, deviance = 3.6.",
+  col.names = c("Term", "EDF", "Ref.df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Leaf Delta 15N-by-HII GAM, echo = FALSE}
+kable(
+  tidy(leaf.delta.15N.by.HII.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the leaf delta 15N-by-HII GAM. Adjusted R-squared = 0.007, deviance = 1.3.",
+  col.names = c("Term", "EDF", "Ref.df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Leaf Delta 15N-by-ISC GAM, echo = FALSE}
+kable(
+  tidy(leaf.delta.15N.by.ISC.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the leaf delta 15N-by-ISC GAM. Adjusted R-squared = 0.033, deviance = 4.8.",
+  col.names = c("Term", "EDF", "Ref.df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+
+
+
+
+
+\newpage
+# Save the workspace
+
+\vspace{10pt}
+
+```{r Save Workspace, include = FALSE}
+save.image("data_analysis/6-carbon_nitrogen_analyses/carbon_nitrogen-workspace.RData")
+```
+
+\vspace{10pt}
+
+# R Session Information
+
+```{r R Packages, echo = FALSE}
+df_session_packages <- devtools::session_info()$packages %>%
+  as.data.frame(.) %>%
+  filter(attached == TRUE) %>%
+  dplyr::select(loadedversion, date) %>%
+  rownames_to_column()
+
+colnames(df_session_packages) <- c("Package", "Loaded Version", "Date")
+
+kable(
+  df_session_packages,
+  booktabs = TRUE,
+  caption = "Packages required for data management and analysis."
+) %>%
+  kable_styling(
+    full_width = FALSE,
+    latex_options = c("HOLD_position", "striped")
+  )
+```

@@ -1,0 +1,257 @@
+---
+title: "TRhizo-urbanMicrobiome"
+subtitle: "Differential Abundance"
+author: "David Murray-Stoker"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 5
+    fig_caption: yes
+    latex_engine: xelatex
+always_allow_html: true
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(results = "hold", fig.pos = "H", fig.align = "center", out.width = "92.5%")
+options(knitr.graphics.error = FALSE)
+kableExtra::usepackage_latex("float")
+```
+
+```{r Load Packages for R Markdown, include = FALSE}
+library(kableExtra)
+library(knitr)
+```
+
+
+
+
+
+\newpage
+# Load Packages
+
+\vspace{10pt}
+
+```{r Load Packages, include = FALSE}
+## Package for differential abundance analyses
+library(ANCOMBC)
+
+## Packages for analyses
+library(BiocParallel)
+library(broom)
+library(phyloseq)
+library(tidyamplicons)
+
+## Load the tidyverse
+library(tidyverse)
+```
+
+
+
+
+
+\newpage
+# Load Data
+
+\vspace{10pt}
+
+```{r Load Data, echo = TRUE}
+## Microbiome tidyamplicons
+microbiome.tidyamplicon.reference <- read_rds(
+	file = "data/microbiome_tidyamplicon_reference.rds"
+)
+
+## Microbiome phyloseq
+microbiome.phyloseq.reference <- read_rds(
+	file = "data/microbiome_phyloseq_reference.rds"
+)
+
+## Load the urbanization data
+urbanization.data <- read_rds(
+	file = "data/urbanization_data.rds"
+)
+```
+
+\vspace{10pt}
+
+```{r Phyloseq Preparation, echo = TRUE, results = "hide"}
+## Set the sample metadata
+sample.metadata <- samples(microbiome.tidyamplicon.reference) %>%
+	select(sample, Population:Compartment) %>%
+	left_join(urbanization.data, by = "Population")
+
+## Remove excess columns from sample metadata
+sample.metadata.cleaned <- sample.metadata %>%
+	select(Population:Compartment, Distance:Mean_ISC)
+
+## Set factor order for comparisons
+sample.metadata.cleaned$Compartment <- factor(
+	sample.metadata.cleaned$Compartment, levels = c("Soil", "Root")
+)
+
+## Convert to phyloseq
+sample.metadata.cleaned.phyloseq <- sample_data(sample.metadata.cleaned)
+
+## Add sample ID as rownames
+rownames(sample.metadata.cleaned.phyloseq) <- sample.metadata$sample
+
+## Update sample data in the phyloseq reference
+sample_data(microbiome.phyloseq.reference) <- sample.metadata.cleaned.phyloseq
+
+## Agglomerate taxa at the same taxonomic rank
+microbiome.phyloseq.by.genus <- tax_glom(
+	microbiome.phyloseq.reference,
+	taxrank = "Genus"
+)
+```
+
+
+
+
+
+\newpage
+# ANCOMBC
+
+\vspace{10pt}
+
+## Data Management
+
+\vspace{10pt}
+
+```{r Data Management: ANCOMBC, echo = TRUE, results = "hide"}
+## Convert phyloseq to SummarizedExperiment
+ANCOMBC.summarized.experiment <- mia::makeTreeSummarizedExperimentFromPhyloseq(
+	microbiome.phyloseq.by.genus
+)
+```
+
+\vspace{10pt}
+
+## ANCOMBC Analyses
+
+\vspace{10pt}
+
+```{r ANCOMBC Analyses, echo = TRUE}
+## ANCOMBC analyses
+# Distance
+ANCOMBC.distance.analysis <- ancombc2(
+	data = ANCOMBC.summarized.experiment,
+	assay_name = "counts",
+	tax_level = "Genus",
+	fix_formula = "Compartment + Distance + Compartment:Distance",
+	p_adj_method = "fdr",
+	prv_cut = 0.10,
+	n_cl = 4
+)
+
+# HII
+ANCOMBC.HII.analysis <- ancombc2(
+	data = ANCOMBC.summarized.experiment,
+	assay_name = "counts",
+	tax_level = "Genus",
+	fix_formula = "Compartment + Human_Influence_Index + Compartment:Human_Influence_Index",
+	p_adj_method = "fdr",
+	prv_cut = 0.10,
+	n_cl = 4
+)
+
+# ISC
+ANCOMBC.ISC.analysis <- ancombc2(
+	data = ANCOMBC.summarized.experiment,
+	assay_name = "counts",
+	tax_level = "Genus",
+	fix_formula = "Compartment + Mean_ISC + Compartment:Mean_ISC",
+	p_adj_method = "fdr",
+	prv_cut = 0.10,
+	n_cl = 4
+)
+```
+
+\vspace{10pt}
+
+```{r ANCOMBC Results, echo = TRUE}
+## Extract results from each ANCOMBC analysis
+# Distance
+ANCOMBC.distance.results <- ANCOMBC.distance.analysis$res %>%
+	rownames_to_column(var = "Genus")
+
+# HII
+ANCOMBC.HII.results <- ANCOMBC.HII.analysis$res %>%
+	rownames_to_column(var = "Genus")
+
+# ISC
+ANCOMBC.ISC.results <- ANCOMBC.ISC.analysis$res %>%
+	rownames_to_column(var = "Genus")
+```
+
+
+
+
+
+\newpage
+# Export Data
+
+\vspace{10pt}
+
+```{r Export Data, echo = TRUE}
+## ANCOMBC results
+# Distance
+write_csv(
+	ANCOMBC.distance.results,
+	file = "differential_abundance_results/ANCOMBC_distance_results.csv"
+)
+# HII
+write_csv(
+	ANCOMBC.HII.results,
+	file = "differential_abundance_results/ANCOMBC_HII_results.csv"
+)
+# ISC
+write_csv(
+	ANCOMBC.ISC.results,
+	file = "differential_abundance_results/ANCOMBC_ISC_results.csv"
+)
+
+## Differential abundance results
+save(
+	ANCOMBC.distance.results, ANCOMBC.HII.results, ANCOMBC.ISC.results, microbiome.phyloseq.by.genus,
+	file = "data_analysis/9-differential_abundance/differential_abundance-reduced_workspace.RData"
+)
+```
+
+\vspace{10pt}
+
+```{r Save Workspace, include = FALSE}
+save.image("data_analysis/9-differential_abundance/differential_abundance-workspace.RData")
+```
+
+
+
+
+
+
+
+
+
+
+\newpage
+# R Session Information
+
+```{r R Packages, echo = FALSE}
+df_session_packages <- devtools::session_info()$packages %>%
+  as.data.frame(.) %>%
+  filter(attached == TRUE) %>%
+  dplyr::select(loadedversion, date) %>%
+  rownames_to_column()
+
+colnames(df_session_packages) <- c("Package", "Loaded Version", "Date")
+
+kable(
+  df_session_packages,
+  booktabs = TRUE,
+  caption = "Packages required for data management and analysis."
+) %>%
+  kable_styling(
+    full_width = FALSE,
+    latex_options = c("HOLD_position", "striped")
+  )
+```

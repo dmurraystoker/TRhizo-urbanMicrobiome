@@ -1,0 +1,2 @@
+load("/Users/evoeco/Desktop/DMS/TRhizo-urbanMicrobiome/data_analysis/phylogenetic_tree_trial.RData")
+load("/Users/evoeco/Desktop/DMS/TRhizo-urbanMicrobiome/data_analysis/clustal_omega_alignment.rds")

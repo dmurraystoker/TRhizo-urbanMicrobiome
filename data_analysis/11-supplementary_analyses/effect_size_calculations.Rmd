@@ -1,0 +1,6488 @@
+---
+title: "TRhizo-urbanMicrobiome"
+subtitle: "Effect Size Calculations"
+author: "David Murray-Stoker"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 5
+    fig_caption: yes
+    latex_engine: xelatex
+always_allow_html: true
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(results = "hold", fig.pos = "H", fig.align = "center", out.width = "92.5%")
+options(knitr.graphics.error = FALSE)
+kableExtra::usepackage_latex("float")
+```
+
+```{r Load Packages for R Markdown, include = FALSE}
+library(kableExtra)
+library(knitr)
+```
+
+
+
+
+
+\newpage
+# Load Packages & Data
+
+\vspace{10pt}
+
+```{r Load Packages, include = FALSE}
+## Load the tidyverse
+library(tidyverse)
+
+## Packages for analyses
+library(easystats)
+library(mgcv)
+
+## Load the workspaces
+# Diversity and composition analyses
+load("data_analysis/7-diversity_composition_analyses/diversity_composition-workspace.RData")
+# Mutualistic bacteria analyses
+load("data_analysis/10-bacterial_functional_groups/mutualistic_bacteria-workspace.RData")
+# Pathogenic bacteria analyses
+load("data_analysis/10-bacterial_functional_groups/pathogenic_bacteria-workspace.RData")
+# Ecosystem function bacteria analyses
+load("data_analysis/10-bacterial_functional_groups/ecosystem_function_bacteria-workspace.RData")
+# Carbon and nitrogen analyses
+load("data_analysis/6-carbon_nitrogen_analyses/carbon_nitrogen-workspace.RData")
+```
+
+
+
+
+
+\newpage
+# Alpha Diversity Effect Sizes
+
+## ASV Richness
+
+### Distance
+
+```{r Effect Size Calculations: ASV Richness by Distance, echo = TRUE}
+## Get model residuals
+ASV.richness.by.distance.residual.df <- df.residual(
+  ASV.richness.by.distance.GAMM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+ASV.richness.by.distance.compartment.eta.squared <- F_to_eta2(
+  652.9, 1, ASV.richness.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+ASV.richness.by.distance.root.eta.squared <- F_to_eta2(
+  0.087, 0.411, ASV.richness.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+ASV.richness.by.distance.soil.eta.squared <- F_to_eta2(
+  2.848, 2.939, ASV.richness.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of population random effect
+ASV.richness.by.distance.population.eta.squared <- F_to_eta2(
+  0.292, 7.687, ASV.richness.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+ASV.richness.by.distance.effect.sizes <- tibble(
+  Compartment = ASV.richness.by.distance.compartment.eta.squared,
+  Smooth_by_Root = ASV.richness.by.distance.root.eta.squared,
+  Smooth_by_Soil = ASV.richness.by.distance.soil.eta.squared,
+  Population = ASV.richness.by.distance.population.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: ASV Richness by HII, echo = TRUE}
+## Get model residuals
+ASV.richness.by.HII.residual.df <- df.residual(
+  ASV.richness.by.HII.GAMM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+ASV.richness.by.HII.compartment.eta.squared <- F_to_eta2(
+  637.2, 1, ASV.richness.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+ASV.richness.by.HII.root.HII.eta.squared <- F_to_eta2(
+  0.138, 0.505, ASV.richness.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+ASV.richness.by.HII.soil.HII.eta.squared <- F_to_eta2(
+  1.336, 0.896, ASV.richness.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of population random effect
+ASV.richness.by.HII.population.eta.squared <- F_to_eta2(
+  0.411, 9.908, ASV.richness.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+ASV.richness.by.ISC.effect.sizes <- tibble(
+  Compartment = ASV.richness.by.HII.compartment.eta.squared,
+  Smooth_by_Root = ASV.richness.by.HII.root.HII.eta.squared,
+  Smooth_by_Soil = ASV.richness.by.HII.soil.HII.eta.squared,
+  Population = ASV.richness.by.HII.population.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: ASV Richness by ISC, echo = TRUE}
+## Get model residuals
+ASV.richness.by.ISC.residual.df <- df.residual(
+  ASV.richness.by.ISC.GAMM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+ASV.richness.by.ISC.compartment.eta.squared <- F_to_eta2(
+  665.2, 1, ASV.richness.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+ASV.richness.by.ISC.root.ISC.eta.squared <- F_to_eta2(
+  0.135, 0.551, ASV.richness.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+ASV.richness.by.ISC.soil.ISC.eta.squared <- F_to_eta2(
+  4.582, 5.933, ASV.richness.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of population random effect
+ASV.richness.by.ISC.population.eta.squared <- F_to_eta2(
+  0.003, 0.092, ASV.richness.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+ASV.richness.by.HII.effect.sizes <- tibble(
+  Compartment = ASV.richness.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = ASV.richness.by.ISC.root.ISC.eta.squared,
+  Smooth_by_Soil = ASV.richness.by.ISC.soil.ISC.eta.squared,
+  Population = ASV.richness.by.ISC.population.eta.squared
+)
+```
+
+
+
+\newpage
+### ASV Richness Effect Size Summary
+
+```{r ASV Richness Effect Size Summary Table, echo = FALSE}
+ASV.richness.effect.sizes <- bind_rows(
+  ASV.richness.by.distance.effect.sizes,
+  ASV.richness.by.HII.effect.sizes,
+  ASV.richness.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Population)
+
+kable(
+  ASV.richness.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the ASV richness GAMMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Inverse Simpson
+
+### Distance
+
+```{r Effect Size Calculations: Inverse Simpson by Distance, echo = TRUE}
+## Get model residuals
+inverse.simpson.by.distance.residual.df <- df.residual(
+  inverse.simpson.by.distance.GAMM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+inverse.simpson.by.distance.compartment.eta.squared <- F_to_eta2(
+  1331, 1, inverse.simpson.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+inverse.simpson.by.distance.root.eta.squared <- F_to_eta2(
+  0.0001, 0.002, inverse.simpson.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+inverse.simpson.by.distance.soil.eta.squared <- F_to_eta2(
+  10.988, 4.038, inverse.simpson.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of population random effect
+inverse.simpson.by.distance.population.eta.squared <- F_to_eta2(
+  3.694, 26.605, inverse.simpson.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+inverse.simpson.by.distance.effect.sizes <- tibble(
+  Compartment = inverse.simpson.by.distance.compartment.eta.squared,
+  Smooth_by_Root = inverse.simpson.by.distance.root.eta.squared,
+  Smooth_by_Soil = inverse.simpson.by.distance.soil.eta.squared,
+  Population = inverse.simpson.by.distance.population.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: Inverse Simpson by HII, echo = TRUE}
+## Get model residuals
+inverse.simpson.by.HII.residual.df <- df.residual(
+  inverse.simpson.by.HII.GAMM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+inverse.simpson.by.HII.compartment.eta.squared <- F_to_eta2(
+  1347, 1, inverse.simpson.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+inverse.simpson.by.HII.root.HII.eta.squared <- F_to_eta2(
+  0.00001, 0.001, inverse.simpson.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+inverse.simpson.by.HII.soil.HII.eta.squared <- F_to_eta2(
+  14.595, 4.233, inverse.simpson.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of population random effect
+inverse.simpson.by.HII.population.eta.squared <- F_to_eta2(
+  2.925, 25.114, inverse.simpson.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+inverse.simpson.by.ISC.effect.sizes <- tibble(
+  Compartment = inverse.simpson.by.HII.compartment.eta.squared,
+  Smooth_by_Root = inverse.simpson.by.HII.root.HII.eta.squared,
+  Smooth_by_Soil = inverse.simpson.by.HII.soil.HII.eta.squared,
+  Population = inverse.simpson.by.HII.population.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: Inverse Simpson by ISC, echo = TRUE}
+## Get model residuals
+inverse.simpson.by.ISC.residual.df <- df.residual(
+  inverse.simpson.by.ISC.GAMM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+inverse.simpson.by.ISC.compartment.eta.squared <- F_to_eta2(
+  1324, 1, inverse.simpson.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+inverse.simpson.by.ISC.root.ISC.eta.squared <- F_to_eta2(
+  0.00001, 0.002, inverse.simpson.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+inverse.simpson.by.ISC.soil.ISC.eta.squared <- F_to_eta2(
+  10.431, 4.372, inverse.simpson.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of population random effect
+inverse.simpson.by.ISC.population.eta.squared <- F_to_eta2(
+  3.523, 26.064, inverse.simpson.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+inverse.simpson.by.HII.effect.sizes <- tibble(
+  Compartment = inverse.simpson.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = inverse.simpson.by.ISC.root.ISC.eta.squared,
+  Smooth_by_Soil = inverse.simpson.by.ISC.soil.ISC.eta.squared,
+  Population = inverse.simpson.by.ISC.population.eta.squared
+)
+```
+
+
+
+\newpage
+### Inverse Simpson Effect Size Summary
+
+```{r Inverse Simpson Effect Size Summary Table, echo = FALSE}
+inverse.simpson.effect.sizes <- bind_rows(
+  inverse.simpson.by.distance.effect.sizes,
+  inverse.simpson.by.HII.effect.sizes,
+  inverse.simpson.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Population)
+
+kable(
+  inverse.simpson.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the inverse Simpson GAMMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## ASV Evenness
+
+### Distance
+
+```{r Effect Size Calculations: ASV Evenness by Distance, echo = TRUE}
+## Get model residuals
+ASV.evenness.by.distance.residual.df <- df.residual(
+  ASV.evenness.by.distance.GAMM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+ASV.evenness.by.distance.compartment.eta.squared <- F_to_eta2(
+  476.1, 1, ASV.evenness.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+ASV.evenness.by.distance.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, ASV.evenness.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+ASV.evenness.by.distance.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, ASV.evenness.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of population random effect
+ASV.evenness.by.distance.population.eta.squared <- F_to_eta2(
+  2.787, 25.038, ASV.evenness.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+ASV.evenness.by.distance.effect.sizes <- tibble(
+  Compartment = ASV.evenness.by.distance.compartment.eta.squared,
+  Smooth_by_Root = ASV.evenness.by.distance.root.eta.squared,
+  Smooth_by_Soil = ASV.evenness.by.distance.soil.eta.squared,
+  Population = ASV.evenness.by.distance.population.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: ASV Evenness by HII, echo = TRUE}
+## Get model residuals
+ASV.evenness.by.HII.residual.df <- df.residual(
+  ASV.evenness.by.HII.GAMM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+ASV.evenness.by.HII.compartment.eta.squared <- F_to_eta2(
+  637.2, 1, ASV.evenness.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+ASV.evenness.by.HII.root.HII.eta.squared <- F_to_eta2(
+  0.006, 0.043, ASV.evenness.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+ASV.evenness.by.HII.soil.HII.eta.squared <- F_to_eta2(
+  0.00001, 0.001, ASV.evenness.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of population random effect
+ASV.evenness.by.HII.population.eta.squared <- F_to_eta2(
+  2.786, 25.031, ASV.evenness.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+ASV.evenness.by.ISC.effect.sizes <- tibble(
+  Compartment = ASV.evenness.by.HII.compartment.eta.squared,
+  Smooth_by_Root = ASV.evenness.by.HII.root.HII.eta.squared,
+  Smooth_by_Soil = ASV.evenness.by.HII.soil.HII.eta.squared,
+  Population = ASV.evenness.by.HII.population.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: ASV Evenness by ISC, echo = TRUE}
+## Get model residuals
+ASV.evenness.by.ISC.residual.df <- df.residual(
+  ASV.evenness.by.ISC.GAMM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+ASV.evenness.by.ISC.compartment.eta.squared <- F_to_eta2(
+  476.5, 1, ASV.evenness.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+ASV.evenness.by.ISC.root.ISC.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, ASV.evenness.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+ASV.evenness.by.ISC.soil.ISC.eta.squared <- F_to_eta2(
+  0.173, 0.414, ASV.evenness.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of population random effect
+ASV.evenness.by.ISC.population.eta.squared <- F_to_eta2(
+  2.737, 24.884, ASV.evenness.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+ASV.evenness.by.HII.effect.sizes <- tibble(
+  Compartment = ASV.evenness.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = ASV.evenness.by.ISC.root.ISC.eta.squared,
+  Smooth_by_Soil = ASV.evenness.by.ISC.soil.ISC.eta.squared,
+  Population = ASV.evenness.by.ISC.population.eta.squared
+)
+```
+
+
+
+\newpage
+### ASV Evenness Effect Size Summary
+
+```{r ASV Evenness Effect Size Summary Table, echo = FALSE}
+ASV.evenness.effect.sizes <- bind_rows(
+  ASV.evenness.by.distance.effect.sizes,
+  ASV.evenness.by.HII.effect.sizes,
+  ASV.evenness.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Population)
+
+kable(
+  ASV.evenness.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the ASV evenness GAMMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Faith's PD
+
+### Distance
+
+```{r Effect Size Calculations: Faiths PD by Distance, echo = TRUE}
+## Get model residuals
+faiths.PD.by.distance.residual.df <- df.residual(
+  faiths.PD.by.distance.GAMM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+faiths.PD.by.distance.compartment.eta.squared <- F_to_eta2(
+  809.2, 1, faiths.PD.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+faiths.PD.by.distance.root.eta.squared <- F_to_eta2(
+  0.151, 0.533, faiths.PD.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+faiths.PD.by.distance.soil.eta.squared <- F_to_eta2(
+  4.837, 3.636, faiths.PD.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of population random effect
+faiths.PD.by.distance.population.eta.squared <- F_to_eta2(
+  0.374, 9.280, faiths.PD.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+faiths.PD.by.distance.effect.sizes <- tibble(
+  Compartment = faiths.PD.by.distance.compartment.eta.squared,
+  Smooth_by_Root = faiths.PD.by.distance.root.eta.squared,
+  Smooth_by_Soil = faiths.PD.by.distance.soil.eta.squared,
+  Population = faiths.PD.by.distance.population.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: Faiths PD by HII, echo = TRUE}
+## Get model residuals
+faiths.PD.by.HII.residual.df <- df.residual(
+  faiths.PD.by.HII.GAMM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+faiths.PD.by.HII.compartment.eta.squared <- F_to_eta2(
+  809.2, 1, faiths.PD.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+faiths.PD.by.HII.root.HII.eta.squared <- F_to_eta2(
+  0.332, 0.678, faiths.PD.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+faiths.PD.by.HII.soil.HII.eta.squared <- F_to_eta2(
+  2.258, 0.927, faiths.PD.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of population random effect
+faiths.PD.by.HII.population.eta.squared <- F_to_eta2(
+  0.593, 12.636, faiths.PD.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+faiths.PD.by.ISC.effect.sizes <- tibble(
+  Compartment = faiths.PD.by.HII.compartment.eta.squared,
+  Smooth_by_Root = faiths.PD.by.HII.root.HII.eta.squared,
+  Smooth_by_Soil = faiths.PD.by.HII.soil.HII.eta.squared,
+  Population = faiths.PD.by.HII.population.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: Faiths PD by ISC, echo = TRUE}
+## Get model residuals
+faiths.PD.by.ISC.residual.df <- df.residual(
+  faiths.PD.by.ISC.GAMM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+faiths.PD.by.ISC.compartment.eta.squared <- F_to_eta2(
+  856.4, 1, faiths.PD.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+faiths.PD.by.ISC.root.ISC.eta.squared <- F_to_eta2(
+  0.230, 0.678, faiths.PD.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+faiths.PD.by.ISC.soil.ISC.eta.squared <- F_to_eta2(
+  6.677, 6.443, faiths.PD.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of population random effect
+faiths.PD.by.ISC.population.eta.squared <- F_to_eta2(
+  0.035, 1.149, faiths.PD.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+faiths.PD.by.HII.effect.sizes <- tibble(
+  Compartment = faiths.PD.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = faiths.PD.by.ISC.root.ISC.eta.squared,
+  Smooth_by_Soil = faiths.PD.by.ISC.soil.ISC.eta.squared,
+  Population = faiths.PD.by.ISC.population.eta.squared
+)
+```
+
+
+
+\newpage
+### Faiths PD Effect Size Summary
+
+```{r Faiths PD Effect Size Summary Table, echo = FALSE}
+faiths.PD.effect.sizes <- bind_rows(
+  faiths.PD.by.distance.effect.sizes,
+  faiths.PD.by.HII.effect.sizes,
+  faiths.PD.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Population)
+
+kable(
+  faiths.PD.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the ASV richness GAMMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+
+
+
+
+
+\newpage
+# Beta Diversity Effect Sizes
+
+## Bray-Curtis Distance
+
+### Distance
+
+```{r Effect Size Calculations: BC Dispersion by Distance, echo = TRUE}
+## Get model residuals
+BC.multivariate.dispersion.by.distance.residual.df <- df.residual(
+  BC.multivariate.dispersion.by.distance.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+BC.dispersion.by.distance.compartment.eta.squared <- F_to_eta2(
+  109.6, 1, BC.multivariate.dispersion.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+BC.dispersion.by.distance.root.eta.squared <- F_to_eta2(
+  1.002, 2.226, BC.multivariate.dispersion.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+BC.dispersion.by.distance.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, BC.multivariate.dispersion.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+BC.dispersion.by.distance.effect.sizes <- tibble(
+  Compartment = BC.dispersion.by.distance.compartment.eta.squared,
+  Smooth_by_Root = BC.dispersion.by.distance.root.eta.squared,
+  Smooth_by_Soil = BC.dispersion.by.distance.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: BC Dispersion by HII, echo = TRUE}
+## Get model residuals
+BC.multivariate.dispersion.by.HII.residual.df <- df.residual(
+  BC.multivariate.dispersion.by.HII.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+BC.dispersion.by.HII.compartment.eta.squared <- F_to_eta2(
+  96.9, 1, BC.multivariate.dispersion.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+BC.dispersion.by.HII.root.eta.squared <- F_to_eta2(
+  0.016, 0.127, BC.multivariate.dispersion.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+BC.dispersion.by.HII.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, BC.multivariate.dispersion.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+BC.dispersion.by.HII.effect.sizes <- tibble(
+  Compartment = BC.dispersion.by.HII.compartment.eta.squared,
+  Smooth_by_Root = BC.dispersion.by.HII.root.eta.squared,
+  Smooth_by_Soil = BC.dispersion.by.HII.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: BC Dispersion by ISC, echo = TRUE}
+## Get model residuals
+BC.multivariate.dispersion.by.ISC.residual.df <- df.residual(
+  BC.multivariate.dispersion.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+BC.dispersion.by.ISC.compartment.eta.squared <- F_to_eta2(
+  96.7, 1, BC.multivariate.dispersion.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+BC.dispersion.by.ISC.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, BC.multivariate.dispersion.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+BC.dispersion.by.ISC.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, BC.multivariate.dispersion.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+BC.dispersion.by.ISC.effect.sizes <- tibble(
+  Compartment = BC.dispersion.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = BC.dispersion.by.ISC.root.eta.squared,
+  Smooth_by_Soil = BC.dispersion.by.ISC.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Bray-Curtis Multivariate Dispersion Effect Size Summary
+
+```{r BC Dispersion Effect Size Summary Table, echo = FALSE}
+BC.dispersion.effect.sizes <- bind_rows(
+  BC.dispersion.by.distance.effect.sizes,
+  BC.dispersion.by.HII.effect.sizes,
+  BC.dispersion.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Smooth_by_Soil)
+
+kable(
+  BC.dispersion.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the Bray-Curtis multivariate dispersion GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## UniFrac Distance
+
+### Distance
+
+```{r Effect Size Calculations: UniFrac Dispersion by Distance, echo = TRUE}
+## Get model residuals
+UniFrac.multivariate.dispersion.by.distance.residual.df <- df.residual(
+  UniFrac.multivariate.dispersion.by.distance.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+UniFrac.dispersion.by.distance.compartment.eta.squared <- F_to_eta2(
+  68.4, 1, UniFrac.multivariate.dispersion.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+UniFrac.dispersion.by.distance.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, UniFrac.multivariate.dispersion.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+UniFrac.dispersion.by.distance.soil.eta.squared <- F_to_eta2(
+  0.001, 0.012, UniFrac.multivariate.dispersion.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+UniFrac.dispersion.by.distance.effect.sizes <- tibble(
+  Compartment = UniFrac.dispersion.by.distance.compartment.eta.squared,
+  Smooth_by_Root = UniFrac.dispersion.by.distance.root.eta.squared,
+  Smooth_by_Soil = UniFrac.dispersion.by.distance.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: UniFrac Dispersion by HII, echo = TRUE}
+## Get model residuals
+UniFrac.multivariate.dispersion.by.HII.residual.df <- df.residual(
+  UniFrac.multivariate.dispersion.by.HII.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+UniFrac.dispersion.by.HII.compartment.eta.squared <- F_to_eta2(
+  71.7, 1, UniFrac.multivariate.dispersion.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+UniFrac.dispersion.by.HII.root.eta.squared <- F_to_eta2(
+  0.007, 0.063, UniFrac.multivariate.dispersion.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+UniFrac.dispersion.by.HII.soil.eta.squared <- F_to_eta2(
+  0.357, 0.763, UniFrac.multivariate.dispersion.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+UniFrac.dispersion.by.HII.effect.sizes <- tibble(
+  Compartment = UniFrac.dispersion.by.HII.compartment.eta.squared,
+  Smooth_by_Root = UniFrac.dispersion.by.HII.root.eta.squared,
+  Smooth_by_Soil = UniFrac.dispersion.by.HII.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: UniFrac Dispersion by ISC, echo = TRUE}
+## Get model residuals
+UniFrac.multivariate.dispersion.by.ISC.residual.df <- df.residual(
+  UniFrac.multivariate.dispersion.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+UniFrac.dispersion.by.ISC.compartment.eta.squared <- F_to_eta2(
+  68.4, 1, UniFrac.multivariate.dispersion.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+UniFrac.dispersion.by.ISC.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, UniFrac.multivariate.dispersion.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+UniFrac.dispersion.by.ISC.soil.eta.squared <- F_to_eta2(
+  0.933, 2.124, UniFrac.multivariate.dispersion.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+UniFrac.dispersion.by.ISC.effect.sizes <- tibble(
+  Compartment = UniFrac.dispersion.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = UniFrac.dispersion.by.ISC.root.eta.squared,
+  Smooth_by_Soil = UniFrac.dispersion.by.ISC.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### UniFrac Multivariate Dispersion Effect Size Summary
+
+```{r UniFrac Dispersion Effect Size Summary Table, echo = FALSE}
+UniFrac.dispersion.effect.sizes <- bind_rows(
+  UniFrac.dispersion.by.distance.effect.sizes,
+  UniFrac.dispersion.by.HII.effect.sizes,
+  UniFrac.dispersion.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Smooth_by_Soil)
+
+kable(
+  UniFrac.dispersion.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the UniFrac multivariate dispersion GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Weighted UniFrac Distance
+
+### Distance
+
+```{r Effect Size Calculations: Weighted UniFrac Dispersion by Distance, echo = TRUE}
+## Get model residuals
+weighted.UniFrac.multivariate.dispersion.by.distance.residual.df <- df.residual(
+  weighted.UniFrac.multivariate.dispersion.by.distance.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+weighted.UniFrac.dispersion.by.distance.compartment.eta.squared <- F_to_eta2(
+  122.4, 1, weighted.UniFrac.multivariate.dispersion.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+weighted.UniFrac.dispersion.by.distance.root.eta.squared <- F_to_eta2(
+  1.122, 2.255, weighted.UniFrac.multivariate.dispersion.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+weighted.UniFrac.dispersion.by.distance.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, weighted.UniFrac.multivariate.dispersion.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+weighted.UniFrac.dispersion.by.distance.effect.sizes <- tibble(
+  Compartment = weighted.UniFrac.dispersion.by.distance.compartment.eta.squared,
+  Smooth_by_Root = weighted.UniFrac.dispersion.by.distance.root.eta.squared,
+  Smooth_by_Soil = weighted.UniFrac.dispersion.by.distance.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: Weighted UniFrac Dispersion by HII, echo = TRUE}
+## Get model residuals
+weighted.UniFrac.multivariate.dispersion.by.HII.residual.df <- df.residual(
+  weighted.UniFrac.multivariate.dispersion.by.HII.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+weighted.UniFrac.dispersion.by.HII.compartment.eta.squared <- F_to_eta2(
+  106.6, 1, weighted.UniFrac.multivariate.dispersion.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+weighted.UniFrac.dispersion.by.HII.root.eta.squared <- F_to_eta2(
+  0.001, 0.00001, weighted.UniFrac.multivariate.dispersion.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+weighted.UniFrac.dispersion.by.HII.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, weighted.UniFrac.multivariate.dispersion.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+weighted.UniFrac.dispersion.by.HII.effect.sizes <- tibble(
+  Compartment = weighted.UniFrac.dispersion.by.HII.compartment.eta.squared,
+  Smooth_by_Root = weighted.UniFrac.dispersion.by.HII.root.eta.squared,
+  Smooth_by_Soil = weighted.UniFrac.dispersion.by.HII.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: Weighted UniFrac Dispersion by ISC, echo = TRUE}
+## Get model residuals
+weighted.UniFrac.multivariate.dispersion.by.ISC.residual.df <- df.residual(
+  weighted.UniFrac.multivariate.dispersion.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+weighted.UniFrac.dispersion.by.ISC.compartment.eta.squared <- F_to_eta2(
+  106.6, 1, weighted.UniFrac.multivariate.dispersion.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+weighted.UniFrac.dispersion.by.ISC.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, weighted.UniFrac.multivariate.dispersion.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+weighted.UniFrac.dispersion.by.ISC.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, weighted.UniFrac.multivariate.dispersion.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+weighted.UniFrac.dispersion.by.ISC.effect.sizes <- tibble(
+  Compartment = weighted.UniFrac.dispersion.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = weighted.UniFrac.dispersion.by.ISC.root.eta.squared,
+  Smooth_by_Soil = weighted.UniFrac.dispersion.by.ISC.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Weighted UniFrac Multivariate Dispersion Effect Size Summary
+
+```{r Weighted UniFrac Dispersion Effect Size Summary Table, echo = FALSE}
+weighted.UniFrac.dispersion.effect.sizes <- bind_rows(
+  weighted.UniFrac.dispersion.by.distance.effect.sizes,
+  weighted.UniFrac.dispersion.by.HII.effect.sizes,
+  weighted.UniFrac.dispersion.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Smooth_by_Soil)
+
+kable(
+  weighted.UniFrac.dispersion.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the weighted UniFrac multivariate dispersion GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+
+
+\newpage
+# Mutualistic Bacteria
+
+## Allorhizobium
+
+### Distance
+
+```{r Effect Size Calculations: Allorhizobium by Distance, echo = TRUE}
+## Get model residuals
+allorhizobium.by.distance.residual.df <- df.residual(
+  allorhizobium.by.distance.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+allorhizobium.by.distance.compartment.eta.squared <- F_to_eta2(
+  12.7, 1, allorhizobium.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+allorhizobium.by.distance.root.eta.squared <- F_to_eta2(
+  2.535, 2.644, allorhizobium.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+allorhizobium.by.distance.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, allorhizobium.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+allorhizobium.by.distance.effect.sizes <- tibble(
+  Compartment = allorhizobium.by.distance.compartment.eta.squared,
+  Smooth_by_Root = allorhizobium.by.distance.root.eta.squared,
+  Smooth_by_Soil = allorhizobium.by.distance.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: Allorhizobium by HII, echo = TRUE}
+## Get model residuals
+allorhizobium.by.HII.residual.df <- df.residual(
+  allorhizobium.by.HII.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+allorhizobium.by.HII.compartment.eta.squared <- F_to_eta2(
+  10.8, 1, allorhizobium.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+allorhizobium.by.HII.root.eta.squared <- F_to_eta2(
+  1.051, 0.905, allorhizobium.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+allorhizobium.by.HII.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, allorhizobium.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+allorhizobium.by.HII.effect.sizes <- tibble(
+  Compartment = allorhizobium.by.HII.compartment.eta.squared,
+  Smooth_by_Root = allorhizobium.by.HII.root.eta.squared,
+  Smooth_by_Soil = allorhizobium.by.HII.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: Allorhizobium by ISC, echo = TRUE}
+## Get model residuals
+allorhizobium.by.ISC.residual.df <- df.residual(
+  allorhizobium.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+allorhizobium.by.ISC.compartment.eta.squared <- F_to_eta2(
+  9.781, 1, allorhizobium.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+allorhizobium.by.ISC.root.eta.squared <- F_to_eta2(
+  0.215, 0.671, allorhizobium.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+allorhizobium.by.ISC.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, allorhizobium.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+allorhizobium.by.ISC.effect.sizes <- tibble(
+  Compartment = allorhizobium.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = allorhizobium.by.ISC.root.eta.squared,
+  Smooth_by_Soil = allorhizobium.by.ISC.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Allorhizobium Effect Size Summary
+
+```{r Allorhizobium Effect Size Summary Table, echo = FALSE}
+allorhizobium.effect.sizes <- bind_rows(
+  allorhizobium.by.distance.effect.sizes,
+  allorhizobium.by.HII.effect.sizes,
+  allorhizobium.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Smooth_by_Soil)
+
+kable(
+  allorhizobium.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the Allorhizobium abundance GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Bradyrhizobium
+
+### Distance
+
+```{r Effect Size Calculations: Bradyrhizobium by Distance, echo = TRUE}
+## Get model residuals
+bradyrhizobium.by.distance.residual.df <- df.residual(
+  bradyrhizobium.by.distance.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+bradyrhizobium.by.distance.compartment.eta.squared <- F_to_eta2(
+  36.4, 1, bradyrhizobium.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+bradyrhizobium.by.distance.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, bradyrhizobium.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+bradyrhizobium.by.distance.soil.eta.squared <- F_to_eta2(
+  0.589, 1.894, bradyrhizobium.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+bradyrhizobium.by.distance.effect.sizes <- tibble(
+  Compartment = bradyrhizobium.by.distance.compartment.eta.squared,
+  Smooth_by_Root = bradyrhizobium.by.distance.root.eta.squared,
+  Smooth_by_Soil = bradyrhizobium.by.distance.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: Bradyrhizobium by HII, echo = TRUE}
+## Get model residuals
+bradyrhizobium.by.HII.residual.df <- df.residual(
+  bradyrhizobium.by.HII.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+bradyrhizobium.by.HII.compartment.eta.squared <- F_to_eta2(
+  33.8, 1, bradyrhizobium.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+bradyrhizobium.by.HII.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, bradyrhizobium.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+bradyrhizobium.by.HII.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, bradyrhizobium.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+bradyrhizobium.by.HII.effect.sizes <- tibble(
+  Compartment = bradyrhizobium.by.HII.compartment.eta.squared,
+  Smooth_by_Root = bradyrhizobium.by.HII.root.eta.squared,
+  Smooth_by_Soil = bradyrhizobium.by.HII.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: Bradyrhizobium by ISC, echo = TRUE}
+## Get model residuals
+bradyrhizobium.by.ISC.residual.df <- df.residual(
+  bradyrhizobium.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+bradyrhizobium.by.ISC.compartment.eta.squared <- F_to_eta2(
+  36.6, 1, bradyrhizobium.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+bradyrhizobium.by.ISC.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, bradyrhizobium.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+bradyrhizobium.by.ISC.soil.eta.squared <- F_to_eta2(
+  0.634, 1.948, bradyrhizobium.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+bradyrhizobium.by.ISC.effect.sizes <- tibble(
+  Compartment = bradyrhizobium.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = bradyrhizobium.by.ISC.root.eta.squared,
+  Smooth_by_Soil = bradyrhizobium.by.ISC.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Bradyrhizobium Effect Size Summary
+
+```{r Bradyrhizobium Effect Size Summary Table, echo = FALSE}
+bradyrhizobium.effect.sizes <- bind_rows(
+  bradyrhizobium.by.distance.effect.sizes,
+  bradyrhizobium.by.HII.effect.sizes,
+  bradyrhizobium.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Smooth_by_Soil)
+
+kable(
+  bradyrhizobium.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the Bradyrhizobium abundance GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Mesorhizobium
+
+### Distance
+
+```{r Effect Size Calculations: Mesorhizobium by Distance, echo = TRUE}
+## Get model residuals
+mesorhizobium.by.distance.residual.df <- df.residual(
+  mesorhizobium.by.distance.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+mesorhizobium.by.distance.compartment.eta.squared <- F_to_eta2(
+  33.1, 1, mesorhizobium.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+mesorhizobium.by.distance.root.eta.squared <- F_to_eta2(
+  0.043, 0.278, mesorhizobium.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+mesorhizobium.by.distance.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, mesorhizobium.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+mesorhizobium.by.distance.effect.sizes <- tibble(
+  Compartment = mesorhizobium.by.distance.compartment.eta.squared,
+  Smooth_by_Root = mesorhizobium.by.distance.root.eta.squared,
+  Smooth_by_Soil = mesorhizobium.by.distance.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: Mesorhizobium by HII, echo = TRUE}
+## Get model residuals
+mesorhizobium.by.HII.residual.df <- df.residual(
+  mesorhizobium.by.HII.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+mesorhizobium.by.HII.compartment.eta.squared <- F_to_eta2(
+  37.0, 1, mesorhizobium.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+mesorhizobium.by.HII.root.eta.squared <- F_to_eta2(
+  0.005, 0.046, mesorhizobium.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+mesorhizobium.by.HII.soil.eta.squared <- F_to_eta2(
+  0.936, 2.229, mesorhizobium.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+mesorhizobium.by.HII.effect.sizes <- tibble(
+  Compartment = mesorhizobium.by.HII.compartment.eta.squared,
+  Smooth_by_Root = mesorhizobium.by.HII.root.eta.squared,
+  Smooth_by_Soil = mesorhizobium.by.HII.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: Mesorhizobium by ISC, echo = TRUE}
+## Get model residuals
+mesorhizobium.by.ISC.residual.df <- df.residual(
+  mesorhizobium.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+mesorhizobium.by.ISC.compartment.eta.squared <- F_to_eta2(
+  33.4, 1, mesorhizobium.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+mesorhizobium.by.ISC.root.eta.squared <- F_to_eta2(
+  0.11, 0.5, mesorhizobium.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+mesorhizobium.by.ISC.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, mesorhizobium.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+mesorhizobium.by.ISC.effect.sizes <- tibble(
+  Compartment = mesorhizobium.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = mesorhizobium.by.ISC.root.eta.squared,
+  Smooth_by_Soil = mesorhizobium.by.ISC.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mesorhizobium Effect Size Summary
+
+```{r Mesorhizobium Effect Size Summary Table, echo = FALSE}
+mesorhizobium.effect.sizes <- bind_rows(
+  mesorhizobium.by.distance.effect.sizes,
+  mesorhizobium.by.HII.effect.sizes,
+  mesorhizobium.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Smooth_by_Soil)
+
+kable(
+  mesorhizobium.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the Mesorhizobium abundance GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Pararhizobium
+
+### Distance
+
+```{r Effect Size Calculations: Pararhizobium by Distance, echo = TRUE}
+## Get model residuals
+pararhizobium.by.distance.residual.df <- df.residual(
+  pararhizobium.by.distance.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+pararhizobium.by.distance.compartment.eta.squared <- F_to_eta2(
+  142.8, 1, pararhizobium.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+pararhizobium.by.distance.root.eta.squared <- F_to_eta2(
+  0.172, 0.612, pararhizobium.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+pararhizobium.by.distance.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, pararhizobium.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+pararhizobium.by.distance.effect.sizes <- tibble(
+  Compartment = pararhizobium.by.distance.compartment.eta.squared,
+  Smooth_by_Root = pararhizobium.by.distance.root.eta.squared,
+  Smooth_by_Soil = pararhizobium.by.distance.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: Pararhizobium by HII, echo = TRUE}
+## Get model residuals
+pararhizobium.by.HII.residual.df <- df.residual(
+  pararhizobium.by.HII.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+pararhizobium.by.HII.compartment.eta.squared <- F_to_eta2(
+  141.2, 1, pararhizobium.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+pararhizobium.by.HII.root.eta.squared <- F_to_eta2(
+  0.082, 0.424, pararhizobium.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+pararhizobium.by.HII.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, pararhizobium.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+pararhizobium.by.HII.effect.sizes <- tibble(
+  Compartment = pararhizobium.by.HII.compartment.eta.squared,
+  Smooth_by_Root = pararhizobium.by.HII.root.eta.squared,
+  Smooth_by_Soil = pararhizobium.by.HII.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: Pararhizobium by ISC, echo = TRUE}
+## Get model residuals
+pararhizobium.by.ISC.residual.df <- df.residual(
+  pararhizobium.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+pararhizobium.by.ISC.compartment.eta.squared <- F_to_eta2(
+  140.8, 1, pararhizobium.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+pararhizobium.by.ISC.root.eta.squared <- F_to_eta2(
+  0.061, 0.357, pararhizobium.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+pararhizobium.by.ISC.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, pararhizobium.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+pararhizobium.by.ISC.effect.sizes <- tibble(
+  Compartment = pararhizobium.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = pararhizobium.by.ISC.root.eta.squared,
+  Smooth_by_Soil = pararhizobium.by.ISC.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Pararhizobium Effect Size Summary
+
+```{r Pararhizobium Effect Size Summary Table, echo = FALSE}
+pararhizobium.effect.sizes <- bind_rows(
+  pararhizobium.by.distance.effect.sizes,
+  pararhizobium.by.HII.effect.sizes,
+  pararhizobium.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Smooth_by_Soil)
+
+kable(
+  pararhizobium.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the Pararhizobium abundance GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+\newpage
+## Rhizobium
+
+### Distance
+
+```{r Effect Size Calculations: Rhizobium by Distance, echo = TRUE}
+## Get model residuals
+rhizobium.by.distance.residual.df <- df.residual(
+  rhizobium.by.distance.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+rhizobium.by.distance.compartment.eta.squared <- F_to_eta2(
+  109.3, 1, rhizobium.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+rhizobium.by.distance.root.eta.squared <- F_to_eta2(
+  1.956, 3.196, rhizobium.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+rhizobium.by.distance.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, rhizobium.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+rhizobium.by.distance.effect.sizes <- tibble(
+  Compartment = rhizobium.by.distance.compartment.eta.squared,
+  Smooth_by_Root = rhizobium.by.distance.root.eta.squared,
+  Smooth_by_Soil = rhizobium.by.distance.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: Rhizobium by HII, echo = TRUE}
+## Get model residuals
+rhizobium.by.HII.residual.df <- df.residual(
+  rhizobium.by.HII.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+rhizobium.by.HII.compartment.eta.squared <- F_to_eta2(
+  88.7, 1, rhizobium.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+rhizobium.by.HII.root.eta.squared <- F_to_eta2(
+  0.165, 0.598, rhizobium.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+rhizobium.by.HII.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, rhizobium.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+rhizobium.by.HII.effect.sizes <- tibble(
+  Compartment = rhizobium.by.HII.compartment.eta.squared,
+  Smooth_by_Root = rhizobium.by.HII.root.eta.squared,
+  Smooth_by_Soil = rhizobium.by.HII.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: Rhizobium by ISC, echo = TRUE}
+## Get model residuals
+rhizobium.by.ISC.residual.df <- df.residual(
+  rhizobium.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+rhizobium.by.ISC.compartment.eta.squared <- F_to_eta2(
+  145.6, 1, rhizobium.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+rhizobium.by.ISC.root.eta.squared <- F_to_eta2(
+  5.115, 5.959, rhizobium.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+rhizobium.by.ISC.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, rhizobium.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+rhizobium.by.ISC.effect.sizes <- tibble(
+  Compartment = rhizobium.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = rhizobium.by.ISC.root.eta.squared,
+  Smooth_by_Soil = rhizobium.by.ISC.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Rhizobium Effect Size Summary
+
+```{r Rhizobium Effect Size Summary Table, echo = FALSE}
+rhizobium.effect.sizes <- bind_rows(
+  rhizobium.by.distance.effect.sizes,
+  rhizobium.by.HII.effect.sizes,
+  rhizobium.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Smooth_by_Soil)
+
+kable(
+  rhizobium.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the Rhizobium abundance GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Shinella
+
+### Distance
+
+```{r Effect Size Calculations: Shinella by Distance, echo = TRUE}
+## Get model residuals
+shinella.by.distance.residual.df <- df.residual(
+  shinella.by.distance.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+shinella.by.distance.compartment.eta.squared <- F_to_eta2(
+  40.2, 1, shinella.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+shinella.by.distance.root.eta.squared <- F_to_eta2(
+  0.579, 0.869, shinella.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+shinella.by.distance.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, shinella.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+shinella.by.distance.effect.sizes <- tibble(
+  Compartment = shinella.by.distance.compartment.eta.squared,
+  Smooth_by_Root = shinella.by.distance.root.eta.squared,
+  Smooth_by_Soil = shinella.by.distance.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: Shinella by HII, echo = TRUE}
+## Get model residuals
+shinella.by.HII.residual.df <- df.residual(
+  shinella.by.HII.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+shinella.by.HII.compartment.eta.squared <- F_to_eta2(
+  42.9, 1, shinella.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+shinella.by.HII.root.eta.squared <- F_to_eta2(
+  1.138, 0.911, shinella.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+shinella.by.HII.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, shinella.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+shinella.by.HII.effect.sizes <- tibble(
+  Compartment = shinella.by.HII.compartment.eta.squared,
+  Smooth_by_Root = shinella.by.HII.root.eta.squared,
+  Smooth_by_Soil = shinella.by.HII.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: Shinella by ISC, echo = TRUE}
+## Get model residuals
+shinella.by.ISC.residual.df <- df.residual(
+  shinella.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+shinella.by.ISC.compartment.eta.squared <- F_to_eta2(
+  38.6, 1, shinella.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+shinella.by.ISC.root.eta.squared <- F_to_eta2(
+  0.250, 0.708, shinella.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+shinella.by.ISC.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, shinella.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+shinella.by.ISC.effect.sizes <- tibble(
+  Compartment = shinella.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = shinella.by.ISC.root.eta.squared,
+  Smooth_by_Soil = shinella.by.ISC.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Shinella Effect Size Summary
+
+```{r Shinella Effect Size Summary Table, echo = FALSE}
+shinella.effect.sizes <- bind_rows(
+  shinella.by.distance.effect.sizes,
+  shinella.by.HII.effect.sizes,
+  shinella.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Smooth_by_Soil)
+
+kable(
+  shinella.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the Shinella abundance GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+
+\newpage
+# Pathogenic Bacteria
+
+
+## Legionella
+
+### Distance
+
+```{r Effect Size Calculations: Legionella by Distance, echo = TRUE}
+## Get model residuals
+legionella.by.distance.residual.df <- df.residual(
+  legionella.by.distance.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+legionella.by.distance.compartment.eta.squared <- F_to_eta2(
+  32.59, 1, legionella.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+legionella.by.distance.root.eta.squared <- F_to_eta2(
+  0.166, 0.60, legionella.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+legionella.by.distance.soil.eta.squared <- F_to_eta2(
+  0.082, 0.43, legionella.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+legionella.by.distance.effect.sizes <- tibble(
+  Compartment = legionella.by.distance.compartment.eta.squared,
+  Smooth_by_Root = legionella.by.distance.root.eta.squared,
+  Smooth_by_Soil = legionella.by.distance.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: Legionella by HII, echo = TRUE}
+## Get model residuals
+legionella.by.HII.residual.df <- df.residual(
+  legionella.by.HII.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+legionella.by.HII.compartment.eta.squared <- F_to_eta2(
+  31.77, 1, legionella.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+legionella.by.HII.root.eta.squared <- F_to_eta2(
+  0.051, 0.313, legionella.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+legionella.by.HII.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.0002, legionella.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+legionella.by.HII.effect.sizes <- tibble(
+  Compartment = legionella.by.HII.compartment.eta.squared,
+  Smooth_by_Root = legionella.by.HII.root.eta.squared,
+  Smooth_by_Soil = legionella.by.HII.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: Legionella by ISC, echo = TRUE}
+## Get model residuals
+legionella.by.ISC.residual.df <- df.residual(
+  legionella.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+legionella.by.ISC.compartment.eta.squared <- F_to_eta2(
+  32.89, 1, legionella.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+legionella.by.ISC.root.eta.squared <- F_to_eta2(
+  0.138, 0.556, legionella.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+legionella.by.ISC.soil.eta.squared <- F_to_eta2(
+  0.182, 0.631, legionella.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+legionella.by.ISC.effect.sizes <- tibble(
+  Compartment = legionella.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = legionella.by.ISC.root.eta.squared,
+  Smooth_by_Soil = legionella.by.ISC.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Legionella Effect Size Summary
+
+```{r Legionella Effect Size Summary Table, echo = FALSE}
+legionella.effect.sizes <- bind_rows(
+  legionella.by.distance.effect.sizes,
+  legionella.by.HII.effect.sizes,
+  legionella.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Smooth_by_Soil)
+
+kable(
+  legionella.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the Legionella abundance GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Mycobacterium
+
+### Distance
+
+```{r Effect Size Calculations: Mycobacterium by Distance, echo = TRUE}
+## Get model residuals
+mycobacterium.by.distance.residual.df <- df.residual(
+  mycobacterium.by.distance.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+mycobacterium.by.distance.compartment.eta.squared <- F_to_eta2(
+  100, 1, mycobacterium.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+mycobacterium.by.distance.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, mycobacterium.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+mycobacterium.by.distance.soil.eta.squared <- F_to_eta2(
+  0.122, 0.526, mycobacterium.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+mycobacterium.by.distance.effect.sizes <- tibble(
+  Compartment = mycobacterium.by.distance.compartment.eta.squared,
+  Smooth_by_Root = mycobacterium.by.distance.root.eta.squared,
+  Smooth_by_Soil = mycobacterium.by.distance.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: Mycobacterium by HII, echo = TRUE}
+## Get model residuals
+mycobacterium.by.HII.residual.df <- df.residual(
+  mycobacterium.by.HII.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+mycobacterium.by.HII.compartment.eta.squared <- F_to_eta2(
+  99.4, 1, mycobacterium.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+mycobacterium.by.HII.root.eta.squared <- F_to_eta2(
+  0.058, 0.345, mycobacterium.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+mycobacterium.by.HII.soil.eta.squared <- F_to_eta2(
+  0.013, 0.105, mycobacterium.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+mycobacterium.by.HII.effect.sizes <- tibble(
+  Compartment = mycobacterium.by.HII.compartment.eta.squared,
+  Smooth_by_Root = mycobacterium.by.HII.root.eta.squared,
+  Smooth_by_Soil = mycobacterium.by.HII.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: Mycobacterium by ISC, echo = TRUE}
+## Get model residuals
+mycobacterium.by.ISC.residual.df <- df.residual(
+  mycobacterium.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+mycobacterium.by.ISC.compartment.eta.squared <- F_to_eta2(
+  98.5, 1, mycobacterium.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+mycobacterium.by.ISC.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, mycobacterium.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+mycobacterium.by.ISC.soil.eta.squared <- F_to_eta2(
+  0.008, 0.067, mycobacterium.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+mycobacterium.by.ISC.effect.sizes <- tibble(
+  Compartment = mycobacterium.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = mycobacterium.by.ISC.root.eta.squared,
+  Smooth_by_Soil = mycobacterium.by.ISC.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mycobacterium Effect Size Summary
+
+```{r Mycobacterium Effect Size Summary Table, echo = FALSE}
+mycobacterium.effect.sizes <- bind_rows(
+  mycobacterium.by.distance.effect.sizes,
+  mycobacterium.by.HII.effect.sizes,
+  mycobacterium.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Smooth_by_Soil)
+
+kable(
+  mycobacterium.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the Mycobacterium abundance GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Staphylococcus
+
+### Distance
+
+```{r Effect Size Calculations: Staphylococcus by Distance, echo = TRUE}
+## Get model residuals
+staphylococcus.by.distance.residual.df <- df.residual(
+  staphylococcus.by.distance.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+staphylococcus.by.distance.compartment.eta.squared <- F_to_eta2(
+  1.836, 1, staphylococcus.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+staphylococcus.by.distance.root.eta.squared <- F_to_eta2(
+  0.924, 1.91, staphylococcus.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+staphylococcus.by.distance.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, staphylococcus.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+staphylococcus.by.distance.effect.sizes <- tibble(
+  Compartment = staphylococcus.by.distance.compartment.eta.squared,
+  Smooth_by_Root = staphylococcus.by.distance.root.eta.squared,
+  Smooth_by_Soil = staphylococcus.by.distance.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: Staphylococcus by HII, echo = TRUE}
+## Get model residuals
+staphylococcus.by.HII.residual.df <- df.residual(
+  staphylococcus.by.HII.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+staphylococcus.by.HII.compartment.eta.squared <- F_to_eta2(
+  2.717, 1, staphylococcus.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+staphylococcus.by.HII.root.eta.squared <- F_to_eta2(
+  4.989, 3.523, staphylococcus.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+staphylococcus.by.HII.soil.eta.squared <- F_to_eta2(
+  0.936, 2.229, staphylococcus.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+staphylococcus.by.HII.effect.sizes <- tibble(
+  Compartment = staphylococcus.by.HII.compartment.eta.squared,
+  Smooth_by_Root = staphylococcus.by.HII.root.eta.squared,
+  Smooth_by_Soil = staphylococcus.by.HII.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: Staphylococcus by ISC, echo = TRUE}
+## Get model residuals
+staphylococcus.by.ISC.residual.df <- df.residual(
+  staphylococcus.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+staphylococcus.by.ISC.compartment.eta.squared <- F_to_eta2(
+  1.67, 1, staphylococcus.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+staphylococcus.by.ISC.root.eta.squared <- F_to_eta2(
+  0.154, 0.586, staphylococcus.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+staphylococcus.by.ISC.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, staphylococcus.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+staphylococcus.by.ISC.effect.sizes <- tibble(
+  Compartment = staphylococcus.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = staphylococcus.by.ISC.root.eta.squared,
+  Smooth_by_Soil = staphylococcus.by.ISC.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Staphylococcus Effect Size Summary
+
+```{r Staphylococcus Effect Size Summary Table, echo = FALSE}
+staphylococcus.effect.sizes <- bind_rows(
+  staphylococcus.by.distance.effect.sizes,
+  staphylococcus.by.HII.effect.sizes,
+  staphylococcus.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Smooth_by_Soil)
+
+kable(
+  staphylococcus.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the Staphylococcus abundance GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Stenotrophomonas
+
+### Distance
+
+```{r Effect Size Calculations: Stenotrophomonas by Distance, echo = TRUE}
+## Get model residuals
+stenotrophomonas.by.distance.residual.df <- df.residual(
+  stenotrophomonas.by.distance.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+stenotrophomonas.by.distance.compartment.eta.squared <- F_to_eta2(
+  21.2, 1, stenotrophomonas.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+stenotrophomonas.by.distance.root.eta.squared <- F_to_eta2(
+  0.404, 0.799, stenotrophomonas.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+stenotrophomonas.by.distance.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, stenotrophomonas.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+stenotrophomonas.by.distance.effect.sizes <- tibble(
+  Compartment = stenotrophomonas.by.distance.compartment.eta.squared,
+  Smooth_by_Root = stenotrophomonas.by.distance.root.eta.squared,
+  Smooth_by_Soil = stenotrophomonas.by.distance.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: Stenotrophomonas by HII, echo = TRUE}
+## Get model residuals
+stenotrophomonas.by.HII.residual.df <- df.residual(
+  stenotrophomonas.by.HII.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+stenotrophomonas.by.HII.compartment.eta.squared <- F_to_eta2(
+  20.3, 1, stenotrophomonas.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+stenotrophomonas.by.HII.root.eta.squared <- F_to_eta2(
+  0.165, 0.598, stenotrophomonas.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+stenotrophomonas.by.HII.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, stenotrophomonas.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+stenotrophomonas.by.HII.effect.sizes <- tibble(
+  Compartment = stenotrophomonas.by.HII.compartment.eta.squared,
+  Smooth_by_Root = stenotrophomonas.by.HII.root.eta.squared,
+  Smooth_by_Soil = stenotrophomonas.by.HII.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: Stenotrophomonas by ISC, echo = TRUE}
+## Get model residuals
+stenotrophomonas.by.ISC.residual.df <- df.residual(
+  stenotrophomonas.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+stenotrophomonas.by.ISC.compartment.eta.squared <- F_to_eta2(
+  20.8, 1, stenotrophomonas.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+stenotrophomonas.by.ISC.root.eta.squared <- F_to_eta2(
+  0.248, 0.697, stenotrophomonas.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+stenotrophomonas.by.ISC.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, stenotrophomonas.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+stenotrophomonas.by.ISC.effect.sizes <- tibble(
+  Compartment = stenotrophomonas.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = stenotrophomonas.by.ISC.root.eta.squared,
+  Smooth_by_Soil = stenotrophomonas.by.ISC.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Stenotrophomonas Effect Size Summary
+
+```{r Stenotrophomonas Effect Size Summary Table, echo = FALSE}
+stenotrophomonas.effect.sizes <- bind_rows(
+  stenotrophomonas.by.distance.effect.sizes,
+  stenotrophomonas.by.HII.effect.sizes,
+  stenotrophomonas.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Smooth_by_Soil)
+
+kable(
+  stenotrophomonas.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the Stenotrophomonas abundance GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Acinetobacter
+
+### Distance
+
+```{r Effect Size Calculations: Acinetobacter by Distance, echo = TRUE}
+## Get model residuals
+acinetobacter.by.distance.residual.df <- df.residual(
+  acinetobacter.by.distance.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+acinetobacter.by.distance.compartment.eta.squared <- F_to_eta2(
+  2.542, 1, acinetobacter.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+acinetobacter.by.distance.root.eta.squared <- F_to_eta2(
+  0.581, 0.864, acinetobacter.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+acinetobacter.by.distance.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.001, acinetobacter.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+acinetobacter.by.distance.effect.sizes <- tibble(
+  Compartment = acinetobacter.by.distance.compartment.eta.squared,
+  Smooth_by_Root = acinetobacter.by.distance.root.eta.squared,
+  Smooth_by_Soil = acinetobacter.by.distance.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: Acinetobacter by HII, echo = TRUE}
+## Get model residuals
+acinetobacter.by.HII.residual.df <- df.residual(
+  acinetobacter.by.HII.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+acinetobacter.by.HII.compartment.eta.squared <- F_to_eta2(
+  2.381, 1, acinetobacter.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+acinetobacter.by.HII.root.eta.squared <- F_to_eta2(
+  0.068, 0.379, acinetobacter.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+acinetobacter.by.HII.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.001, acinetobacter.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+acinetobacter.by.HII.effect.sizes <- tibble(
+  Compartment = acinetobacter.by.HII.compartment.eta.squared,
+  Smooth_by_Root = acinetobacter.by.HII.root.eta.squared,
+  Smooth_by_Soil = acinetobacter.by.HII.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: Acinetobacter by ISC, echo = TRUE}
+## Get model residuals
+acinetobacter.by.ISC.residual.df <- df.residual(
+  acinetobacter.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+acinetobacter.by.ISC.compartment.eta.squared <- F_to_eta2(
+  2.476, 1, acinetobacter.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+acinetobacter.by.ISC.root.eta.squared <- F_to_eta2(
+  0.369, 0.779, acinetobacter.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+acinetobacter.by.ISC.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, acinetobacter.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+acinetobacter.by.ISC.effect.sizes <- tibble(
+  Compartment = acinetobacter.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = acinetobacter.by.ISC.root.eta.squared,
+  Smooth_by_Soil = acinetobacter.by.ISC.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Acinetobacter Effect Size Summary
+
+```{r Acinetobacter Effect Size Summary Table, echo = FALSE}
+acinetobacter.effect.sizes <- bind_rows(
+  acinetobacter.by.distance.effect.sizes,
+  acinetobacter.by.HII.effect.sizes,
+  acinetobacter.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Smooth_by_Soil)
+
+kable(
+  acinetobacter.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the Acinetobacter abundance GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Clostridium
+
+### Distance
+
+```{r Effect Size Calculations: Clostridium by Distance, echo = TRUE}
+## Get model residuals
+clostridium.by.distance.residual.df <- df.residual(
+  clostridium.by.distance.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+clostridium.by.distance.compartment.eta.squared <- F_to_eta2(
+  68.9, 1, clostridium.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+clostridium.by.distance.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, clostridium.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+clostridium.by.distance.soil.eta.squared <- F_to_eta2(
+  0.771, 0.902, clostridium.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+clostridium.by.distance.effect.sizes <- tibble(
+  Compartment = clostridium.by.distance.compartment.eta.squared,
+  Smooth_by_Root = clostridium.by.distance.root.eta.squared,
+  Smooth_by_Soil = clostridium.by.distance.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: Clostridium by HII, echo = TRUE}
+## Get model residuals
+clostridium.by.HII.residual.df <- df.residual(
+  clostridium.by.HII.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+clostridium.by.HII.compartment.eta.squared <- F_to_eta2(
+  63.4, 1, clostridium.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+clostridium.by.HII.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, clostridium.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+clostridium.by.HII.soil.eta.squared <- F_to_eta2(
+  0.107, 0.492, clostridium.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+clostridium.by.HII.effect.sizes <- tibble(
+  Compartment = clostridium.by.HII.compartment.eta.squared,
+  Smooth_by_Root = clostridium.by.HII.root.eta.squared,
+  Smooth_by_Soil = clostridium.by.HII.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: Clostridium by ISC, echo = TRUE}
+## Get model residuals
+clostridium.by.ISC.residual.df <- df.residual(
+  clostridium.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+clostridium.by.ISC.compartment.eta.squared <- F_to_eta2(
+  66.9, 1, clostridium.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+clostridium.by.ISC.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, clostridium.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+clostridium.by.ISC.soil.eta.squared <- F_to_eta2(
+  0.522, 0.843, clostridium.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+clostridium.by.ISC.effect.sizes <- tibble(
+  Compartment = clostridium.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = clostridium.by.ISC.root.eta.squared,
+  Smooth_by_Soil = clostridium.by.ISC.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Clostridium Effect Size Summary
+
+```{r Clostridium Effect Size Summary Table, echo = FALSE}
+clostridium.effect.sizes <- bind_rows(
+  clostridium.by.distance.effect.sizes,
+  clostridium.by.HII.effect.sizes,
+  clostridium.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Smooth_by_Soil)
+
+kable(
+  clostridium.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the Clostridium abundance GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Paenibacillus
+
+### Distance
+
+```{r Effect Size Calculations: Paenibacillus by Distance, echo = TRUE}
+## Get model residuals
+paenibacillus.by.distance.residual.df <- df.residual(
+  paenibacillus.by.distance.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+paenibacillus.by.distance.compartment.eta.squared <- F_to_eta2(
+  39.8, 1, paenibacillus.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+paenibacillus.by.distance.root.eta.squared <- F_to_eta2(
+  0.00001, 0.0001, paenibacillus.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+paenibacillus.by.distance.soil.eta.squared <- F_to_eta2(
+  0.726, 0.892, paenibacillus.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+paenibacillus.by.distance.effect.sizes <- tibble(
+  Compartment = paenibacillus.by.distance.compartment.eta.squared,
+  Smooth_by_Root = paenibacillus.by.distance.root.eta.squared,
+  Smooth_by_Soil = paenibacillus.by.distance.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: Paenibacillus by HII, echo = TRUE}
+## Get model residuals
+paenibacillus.by.HII.residual.df <- df.residual(
+  paenibacillus.by.HII.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+paenibacillus.by.HII.compartment.eta.squared <- F_to_eta2(
+  39.2, 1, paenibacillus.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+paenibacillus.by.HII.root.eta.squared <- F_to_eta2(
+  0.179, 0.617, paenibacillus.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+paenibacillus.by.HII.soil.eta.squared <- F_to_eta2(
+  0.428, 0.794, paenibacillus.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+paenibacillus.by.HII.effect.sizes <- tibble(
+  Compartment = paenibacillus.by.HII.compartment.eta.squared,
+  Smooth_by_Root = paenibacillus.by.HII.root.eta.squared,
+  Smooth_by_Soil = paenibacillus.by.HII.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: Paenibacillus by ISC, echo = TRUE}
+## Get model residuals
+paenibacillus.by.ISC.residual.df <- df.residual(
+  paenibacillus.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+paenibacillus.by.ISC.compartment.eta.squared <- F_to_eta2(
+  36.9, 1, paenibacillus.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+paenibacillus.by.ISC.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, paenibacillus.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+paenibacillus.by.ISC.soil.eta.squared <- F_to_eta2(
+  0.121, 0.526, paenibacillus.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+paenibacillus.by.ISC.effect.sizes <- tibble(
+  Compartment = paenibacillus.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = paenibacillus.by.ISC.root.eta.squared,
+  Smooth_by_Soil = paenibacillus.by.ISC.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Paenibacillus Effect Size Summary
+
+```{r Paenibacillus Effect Size Summary Table, echo = FALSE}
+paenibacillus.effect.sizes <- bind_rows(
+  paenibacillus.by.distance.effect.sizes,
+  paenibacillus.by.HII.effect.sizes,
+  paenibacillus.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Smooth_by_Soil)
+
+kable(
+  paenibacillus.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the Paenibacillus abundance GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+\newpage
+## Williamsia
+
+### Distance
+
+```{r Effect Size Calculations: Williamsia by Distance, echo = TRUE}
+## Get model residuals
+williamsia.by.distance.residual.df <- df.residual(
+  williamsia.by.distance.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+williamsia.by.distance.compartment.eta.squared <- F_to_eta2(
+  0.914, 1, williamsia.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+williamsia.by.distance.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, williamsia.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+williamsia.by.distance.soil.eta.squared <- F_to_eta2(
+  0.312, 0.749, williamsia.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+williamsia.by.distance.effect.sizes <- tibble(
+  Compartment = williamsia.by.distance.compartment.eta.squared,
+  Smooth_by_Root = williamsia.by.distance.root.eta.squared,
+  Smooth_by_Soil = williamsia.by.distance.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: Williamsia by HII, echo = TRUE}
+## Get model residuals
+williamsia.by.HII.residual.df <- df.residual(
+  williamsia.by.HII.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+williamsia.by.HII.compartment.eta.squared <- F_to_eta2(
+  0.920, 1, williamsia.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+williamsia.by.HII.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, williamsia.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+williamsia.by.HII.soil.eta.squared <- F_to_eta2(
+  0.360, 0.764, williamsia.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+williamsia.by.HII.effect.sizes <- tibble(
+  Compartment = williamsia.by.HII.compartment.eta.squared,
+  Smooth_by_Root = williamsia.by.HII.root.eta.squared,
+  Smooth_by_Soil = williamsia.by.HII.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: Williamsia by ISC, echo = TRUE}
+## Get model residuals
+williamsia.by.ISC.residual.df <- df.residual(
+  williamsia.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+williamsia.by.ISC.compartment.eta.squared <- F_to_eta2(
+  0.901, 1, williamsia.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+williamsia.by.ISC.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, williamsia.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+williamsia.by.ISC.soil.eta.squared <- F_to_eta2(
+  0.193, 0.639, williamsia.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+williamsia.by.ISC.effect.sizes <- tibble(
+  Compartment = williamsia.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = williamsia.by.ISC.root.eta.squared,
+  Smooth_by_Soil = williamsia.by.ISC.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Williamsia Effect Size Summary
+
+```{r Williamsia Effect Size Summary Table, echo = FALSE}
+williamsia.effect.sizes <- bind_rows(
+  williamsia.by.distance.effect.sizes,
+  williamsia.by.HII.effect.sizes,
+  williamsia.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Smooth_by_Soil)
+
+kable(
+  williamsia.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the Williamsia abundance GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Sphingomonas
+
+### Distance
+
+```{r Effect Size Calculations: Sphingomonas by Distance, echo = TRUE}
+## Get model residuals
+sphingomonas.by.distance.residual.df <- df.residual(
+  sphingomonas.by.distance.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+sphingomonas.by.distance.compartment.eta.squared <- F_to_eta2(
+  76.4, 1, sphingomonas.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+sphingomonas.by.distance.root.eta.squared <- F_to_eta2(
+  2.365, 2.433, sphingomonas.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+sphingomonas.by.distance.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, sphingomonas.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+sphingomonas.by.distance.effect.sizes <- tibble(
+  Compartment = sphingomonas.by.distance.compartment.eta.squared,
+  Smooth_by_Root = sphingomonas.by.distance.root.eta.squared,
+  Smooth_by_Soil = sphingomonas.by.distance.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: Sphingomonas by HII, echo = TRUE}
+## Get model residuals
+sphingomonas.by.HII.residual.df <- df.residual(
+  sphingomonas.by.HII.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+sphingomonas.by.HII.compartment.eta.squared <- F_to_eta2(
+  58.2, 1, sphingomonas.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+sphingomonas.by.HII.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, sphingomonas.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+sphingomonas.by.HII.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, sphingomonas.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+sphingomonas.by.HII.effect.sizes <- tibble(
+  Compartment = sphingomonas.by.HII.compartment.eta.squared,
+  Smooth_by_Root = sphingomonas.by.HII.root.eta.squared,
+  Smooth_by_Soil = sphingomonas.by.HII.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: Sphingomonas by ISC, echo = TRUE}
+## Get model residuals
+sphingomonas.by.ISC.residual.df <- df.residual(
+  sphingomonas.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+sphingomonas.by.ISC.compartment.eta.squared <- F_to_eta2(
+  58.2, 1, sphingomonas.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+sphingomonas.by.ISC.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, sphingomonas.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+sphingomonas.by.ISC.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, sphingomonas.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+sphingomonas.by.ISC.effect.sizes <- tibble(
+  Compartment = sphingomonas.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = sphingomonas.by.ISC.root.eta.squared,
+  Smooth_by_Soil = sphingomonas.by.ISC.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Sphingomonas Effect Size Summary
+
+```{r Sphingomonas Effect Size Summary Table, echo = FALSE}
+sphingomonas.effect.sizes <- bind_rows(
+  sphingomonas.by.distance.effect.sizes,
+  sphingomonas.by.HII.effect.sizes,
+  sphingomonas.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Smooth_by_Soil)
+
+kable(
+  sphingomonas.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the Sphingomonas abundance GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Xanthomonas
+
+### Distance
+
+```{r Effect Size Calculations: Xanthomonas by Distance, echo = TRUE}
+## Get model residuals
+xanthomonas.by.distance.residual.df <- df.residual(
+  xanthomonas.by.distance.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+xanthomonas.by.distance.compartment.eta.squared <- F_to_eta2(
+  18.2, 1, xanthomonas.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+xanthomonas.by.distance.root.eta.squared <- F_to_eta2(
+  0.656, 0.886, xanthomonas.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+xanthomonas.by.distance.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, xanthomonas.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+xanthomonas.by.distance.effect.sizes <- tibble(
+  Compartment = xanthomonas.by.distance.compartment.eta.squared,
+  Smooth_by_Root = xanthomonas.by.distance.root.eta.squared,
+  Smooth_by_Soil = xanthomonas.by.distance.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: Xanthomonas by HII, echo = TRUE}
+## Get model residuals
+xanthomonas.by.HII.residual.df <- df.residual(
+  xanthomonas.by.HII.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+xanthomonas.by.HII.compartment.eta.squared <- F_to_eta2(
+  19.6, 1, xanthomonas.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+xanthomonas.by.HII.root.eta.squared <- F_to_eta2(
+  1.302, 0.922, xanthomonas.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+xanthomonas.by.HII.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, xanthomonas.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+xanthomonas.by.HII.effect.sizes <- tibble(
+  Compartment = xanthomonas.by.HII.compartment.eta.squared,
+  Smooth_by_Root = xanthomonas.by.HII.root.eta.squared,
+  Smooth_by_Soil = xanthomonas.by.HII.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: Xanthomonas by ISC, echo = TRUE}
+## Get model residuals
+xanthomonas.by.ISC.residual.df <- df.residual(
+  xanthomonas.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+xanthomonas.by.ISC.compartment.eta.squared <- F_to_eta2(
+  17.8, 1, xanthomonas.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+xanthomonas.by.ISC.root.eta.squared <- F_to_eta2(
+  0.480, 0.834, xanthomonas.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+xanthomonas.by.ISC.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, xanthomonas.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+xanthomonas.by.ISC.effect.sizes <- tibble(
+  Compartment = xanthomonas.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = xanthomonas.by.ISC.root.eta.squared,
+  Smooth_by_Soil = xanthomonas.by.ISC.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Xanthomonas Effect Size Summary
+
+```{r Xanthomonas Effect Size Summary Table, echo = FALSE}
+xanthomonas.effect.sizes <- bind_rows(
+  xanthomonas.by.distance.effect.sizes,
+  xanthomonas.by.HII.effect.sizes,
+  xanthomonas.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Smooth_by_Soil)
+
+kable(
+  xanthomonas.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the Xanthomonas abundance GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Rhizobacter
+
+### Distance
+
+```{r Effect Size Calculations: Rhizobacter by Distance, echo = TRUE}
+## Get model residuals
+rhizobacter.by.distance.residual.df <- df.residual(
+  rhizobacter.by.distance.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+rhizobacter.by.distance.compartment.eta.squared <- F_to_eta2(
+  115.9, 1, rhizobacter.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+rhizobacter.by.distance.root.eta.squared <- F_to_eta2(
+  1.684, 3.462, rhizobacter.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+rhizobacter.by.distance.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, rhizobacter.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+rhizobacter.by.distance.effect.sizes <- tibble(
+  Compartment = rhizobacter.by.distance.compartment.eta.squared,
+  Smooth_by_Root = rhizobacter.by.distance.root.eta.squared,
+  Smooth_by_Soil = rhizobacter.by.distance.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: Rhizobacter by HII, echo = TRUE}
+## Get model residuals
+rhizobacter.by.HII.residual.df <- df.residual(
+  rhizobacter.by.HII.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+rhizobacter.by.HII.compartment.eta.squared <- F_to_eta2(
+  97.8, 1, rhizobacter.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+rhizobacter.by.HII.root.eta.squared <- F_to_eta2(
+  0.245, 0.688, rhizobacter.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+rhizobacter.by.HII.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, rhizobacter.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+rhizobacter.by.HII.effect.sizes <- tibble(
+  Compartment = rhizobacter.by.HII.compartment.eta.squared,
+  Smooth_by_Root = rhizobacter.by.HII.root.eta.squared,
+  Smooth_by_Soil = rhizobacter.by.HII.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: Rhizobacter by ISC, echo = TRUE}
+## Get model residuals
+rhizobacter.by.ISC.residual.df <- df.residual(
+  rhizobacter.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+rhizobacter.by.ISC.compartment.eta.squared <- F_to_eta2(
+  97.4, 1, rhizobacter.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+rhizobacter.by.ISC.root.eta.squared <- F_to_eta2(
+  0.210, 0.660, rhizobacter.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+rhizobacter.by.ISC.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, rhizobacter.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+rhizobacter.by.ISC.effect.sizes <- tibble(
+  Compartment = rhizobacter.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = rhizobacter.by.ISC.root.eta.squared,
+  Smooth_by_Soil = rhizobacter.by.ISC.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Rhizobacter Effect Size Summary
+
+```{r Rhizobacter Effect Size Summary Table, echo = FALSE}
+rhizobacter.effect.sizes <- bind_rows(
+  rhizobacter.by.distance.effect.sizes,
+  rhizobacter.by.HII.effect.sizes,
+  rhizobacter.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Smooth_by_Soil)
+
+kable(
+  rhizobacter.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the Rhizobacter abundance GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+\newpage
+## Agrobacterium
+
+### Distance
+
+```{r Effect Size Calculations: Agrobacterium by Distance, echo = TRUE}
+## Get model residuals
+agrobacterium.by.distance.residual.df <- df.residual(
+  agrobacterium.by.distance.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+agrobacterium.by.distance.compartment.eta.squared <- F_to_eta2(
+  59.8, 1, agrobacterium.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+agrobacterium.by.distance.root.eta.squared <- F_to_eta2(
+  2.438, 2.650, agrobacterium.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+agrobacterium.by.distance.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, agrobacterium.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+agrobacterium.by.distance.effect.sizes <- tibble(
+  Compartment = agrobacterium.by.distance.compartment.eta.squared,
+  Smooth_by_Root = agrobacterium.by.distance.root.eta.squared,
+  Smooth_by_Soil = agrobacterium.by.distance.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: Agrobacterium by HII, echo = TRUE}
+## Get model residuals
+agrobacterium.by.HII.residual.df <- df.residual(
+  agrobacterium.by.HII.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+agrobacterium.by.HII.compartment.eta.squared <- F_to_eta2(
+  89.6, 1, agrobacterium.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+agrobacterium.by.HII.root.eta.squared <- F_to_eta2(
+  7.399, 4.810, agrobacterium.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+agrobacterium.by.HII.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, agrobacterium.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+agrobacterium.by.HII.effect.sizes <- tibble(
+  Compartment = agrobacterium.by.HII.compartment.eta.squared,
+  Smooth_by_Root = agrobacterium.by.HII.root.eta.squared,
+  Smooth_by_Soil = agrobacterium.by.HII.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: Agrobacterium by ISC, echo = TRUE}
+## Get model residuals
+agrobacterium.by.ISC.residual.df <- df.residual(
+  agrobacterium.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+agrobacterium.by.ISC.compartment.eta.squared <- F_to_eta2(
+  52.4, 1, agrobacterium.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+agrobacterium.by.ISC.root.eta.squared <- F_to_eta2(
+  1.189, 2.325, agrobacterium.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+agrobacterium.by.ISC.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, agrobacterium.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+agrobacterium.by.ISC.effect.sizes <- tibble(
+  Compartment = agrobacterium.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = agrobacterium.by.ISC.root.eta.squared,
+  Smooth_by_Soil = agrobacterium.by.ISC.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Agrobacterium Effect Size Summary
+
+```{r Agrobacterium Effect Size Summary Table, echo = FALSE}
+agrobacterium.effect.sizes <- bind_rows(
+  agrobacterium.by.distance.effect.sizes,
+  agrobacterium.by.HII.effect.sizes,
+  agrobacterium.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Smooth_by_Soil)
+
+kable(
+  agrobacterium.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the Agrobacterium abundance GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+
+
+
+
+\newpage
+# Ecosystem Function Bacteria
+
+\newpage
+## Nitrosomonas
+
+### Distance
+
+```{r Effect Size Calculations: Nitrosomonas by Distance, echo = TRUE}
+## Get model residuals
+nitrosomonas.by.distance.residual.df <- df.residual(
+  nitrosomonas.by.distance.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+nitrosomonas.by.distance.compartment.eta.squared <- F_to_eta2(
+  109.3, 1, nitrosomonas.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+nitrosomonas.by.distance.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, nitrosomonas.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+nitrosomonas.by.distance.soil.eta.squared <- F_to_eta2(
+  7.068, 2.644, nitrosomonas.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+nitrosomonas.by.distance.effect.sizes <- tibble(
+  Compartment = nitrosomonas.by.distance.compartment.eta.squared,
+  Smooth_by_Root = nitrosomonas.by.distance.root.eta.squared,
+  Smooth_by_Soil = nitrosomonas.by.distance.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: Nitrosomonas by HII, echo = TRUE}
+## Get model residuals
+nitrosomonas.by.HII.residual.df <- df.residual(
+  nitrosomonas.by.HII.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+nitrosomonas.by.HII.compartment.eta.squared <- F_to_eta2(
+  15.3, 1, nitrosomonas.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+nitrosomonas.by.HII.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, nitrosomonas.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+nitrosomonas.by.HII.soil.eta.squared <- F_to_eta2(
+  0.952, 0.896, nitrosomonas.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+nitrosomonas.by.HII.effect.sizes <- tibble(
+  Compartment = nitrosomonas.by.HII.compartment.eta.squared,
+  Smooth_by_Root = nitrosomonas.by.HII.root.eta.squared,
+  Smooth_by_Soil = nitrosomonas.by.HII.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: Nitrosomonas by ISC, echo = TRUE}
+## Get model residuals
+nitrosomonas.by.ISC.residual.df <- df.residual(
+  nitrosomonas.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+nitrosomonas.by.ISC.compartment.eta.squared <- F_to_eta2(
+  8.9, 1, nitrosomonas.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+nitrosomonas.by.ISC.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, nitrosomonas.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+nitrosomonas.by.ISC.soil.eta.squared <- F_to_eta2(
+  1.236, 0.960, nitrosomonas.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+nitrosomonas.by.ISC.effect.sizes <- tibble(
+  Compartment = nitrosomonas.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = nitrosomonas.by.ISC.root.eta.squared,
+  Smooth_by_Soil = nitrosomonas.by.ISC.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Nitrosomonas Effect Size Summary
+
+```{r Nitrosomonas Effect Size Summary Table, echo = FALSE}
+nitrosomonas.effect.sizes <- bind_rows(
+  nitrosomonas.by.distance.effect.sizes,
+  nitrosomonas.by.HII.effect.sizes,
+  nitrosomonas.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Smooth_by_Soil)
+
+kable(
+  nitrosomonas.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the Nitrosomonas abundance GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Nitrospira
+
+### Distance
+
+```{r Effect Size Calculations: Nitrospira by Distance, echo = TRUE}
+## Get model residuals
+nitrospira.by.distance.residual.df <- df.residual(
+  nitrospira.by.distance.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+nitrospira.by.distance.compartment.eta.squared <- F_to_eta2(
+  354.2, 1, nitrospira.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+nitrospira.by.distance.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, nitrospira.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+nitrospira.by.distance.soil.eta.squared <- F_to_eta2(
+  9.207, 2.403, nitrospira.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+nitrospira.by.distance.effect.sizes <- tibble(
+  Compartment = nitrospira.by.distance.compartment.eta.squared,
+  Smooth_by_Root = nitrospira.by.distance.root.eta.squared,
+  Smooth_by_Soil = nitrospira.by.distance.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: Nitrospira by HII, echo = TRUE}
+## Get model residuals
+nitrospira.by.HII.residual.df <- df.residual(
+  nitrospira.by.HII.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+nitrospira.by.HII.compartment.eta.squared <- F_to_eta2(
+  250.7, 1, nitrospira.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+nitrospira.by.HII.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, nitrospira.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+nitrospira.by.HII.soil.eta.squared <- F_to_eta2(
+  4.6160, 3.051, nitrospira.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+nitrospira.by.HII.effect.sizes <- tibble(
+  Compartment = nitrospira.by.HII.compartment.eta.squared,
+  Smooth_by_Root = nitrospira.by.HII.root.eta.squared,
+  Smooth_by_Soil = nitrospira.by.HII.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: Nitrospira by ISC, echo = TRUE}
+## Get model residuals
+nitrospira.by.ISC.residual.df <- df.residual(
+  nitrospira.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+nitrospira.by.ISC.compartment.eta.squared <- F_to_eta2(
+  201.7, 1, nitrospira.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+nitrospira.by.ISC.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, nitrospira.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+nitrospira.by.ISC.soil.eta.squared <- F_to_eta2(
+  2.240, 1.018, nitrospira.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+nitrospira.by.ISC.effect.sizes <- tibble(
+  Compartment = nitrospira.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = nitrospira.by.ISC.root.eta.squared,
+  Smooth_by_Soil = nitrospira.by.ISC.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Nitrospira Effect Size Summary
+
+```{r Nitrospira Effect Size Summary Table, echo = FALSE}
+nitrospira.effect.sizes <- bind_rows(
+  nitrospira.by.distance.effect.sizes,
+  nitrospira.by.HII.effect.sizes,
+  nitrospira.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Smooth_by_Soil)
+
+kable(
+  nitrospira.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the Nitrospira abundance GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Desulfuromonas
+
+### Distance
+
+```{r Effect Size Calculations: Desulfuromonas by Distance, echo = TRUE}
+## Get model residuals
+desulfuromonas.by.distance.residual.df <- df.residual(
+  desulfuromonas.by.distance.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+desulfuromonas.by.distance.compartment.eta.squared <- F_to_eta2(
+  38.8, 1, desulfuromonas.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+desulfuromonas.by.distance.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, desulfuromonas.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+desulfuromonas.by.distance.soil.eta.squared <- F_to_eta2(
+  2.346, 1.041, desulfuromonas.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+desulfuromonas.by.distance.effect.sizes <- tibble(
+  Compartment = desulfuromonas.by.distance.compartment.eta.squared,
+  Smooth_by_Root = desulfuromonas.by.distance.root.eta.squared,
+  Smooth_by_Soil = desulfuromonas.by.distance.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: Desulfuromonas by HII, echo = TRUE}
+## Get model residuals
+desulfuromonas.by.HII.residual.df <- df.residual(
+  desulfuromonas.by.HII.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+desulfuromonas.by.HII.compartment.eta.squared <- F_to_eta2(
+  34.6, 1, desulfuromonas.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+desulfuromonas.by.HII.root.eta.squared <- F_to_eta2(
+  0.0001, 0.00001, desulfuromonas.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+desulfuromonas.by.HII.soil.eta.squared <- F_to_eta2(
+  1.277, 0.920, desulfuromonas.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+desulfuromonas.by.HII.effect.sizes <- tibble(
+  Compartment = desulfuromonas.by.HII.compartment.eta.squared,
+  Smooth_by_Root = desulfuromonas.by.HII.root.eta.squared,
+  Smooth_by_Soil = desulfuromonas.by.HII.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: Desulfuromonas by ISC, echo = TRUE}
+## Get model residuals
+desulfuromonas.by.ISC.residual.df <- df.residual(
+  desulfuromonas.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+desulfuromonas.by.ISC.compartment.eta.squared <- F_to_eta2(
+  36.3, 1, desulfuromonas.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+desulfuromonas.by.ISC.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, desulfuromonas.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+desulfuromonas.by.ISC.soil.eta.squared <- F_to_eta2(
+  1.715, 1.003, desulfuromonas.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+desulfuromonas.by.ISC.effect.sizes <- tibble(
+  Compartment = desulfuromonas.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = desulfuromonas.by.ISC.root.eta.squared,
+  Smooth_by_Soil = desulfuromonas.by.ISC.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Desulfuromonas Effect Size Summary
+
+```{r Desulfuromonas Effect Size Summary Table, echo = FALSE}
+desulfuromonas.effect.sizes <- bind_rows(
+  desulfuromonas.by.distance.effect.sizes,
+  desulfuromonas.by.HII.effect.sizes,
+  desulfuromonas.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Smooth_by_Soil)
+
+kable(
+  desulfuromonas.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the Desulfuromonas abundance GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+\newpage
+## Aciditerrimonas
+
+### Distance
+
+```{r Effect Size Calculations: Aciditerrimonas by Distance, echo = TRUE}
+## Get model residuals
+aciditerrimonas.by.distance.residual.df <- df.residual(
+  aciditerrimonas.by.distance.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+aciditerrimonas.by.distance.compartment.eta.squared <- F_to_eta2(
+  42.2, 1, aciditerrimonas.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+aciditerrimonas.by.distance.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, aciditerrimonas.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+aciditerrimonas.by.distance.soil.eta.squared <- F_to_eta2(
+  4.109, 1.148, aciditerrimonas.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+aciditerrimonas.by.distance.effect.sizes <- tibble(
+  Compartment = aciditerrimonas.by.distance.compartment.eta.squared,
+  Smooth_by_Root = aciditerrimonas.by.distance.root.eta.squared,
+  Smooth_by_Soil = aciditerrimonas.by.distance.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: Aciditerrimonas by HII, echo = TRUE}
+## Get model residuals
+aciditerrimonas.by.HII.residual.df <- df.residual(
+  aciditerrimonas.by.HII.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+aciditerrimonas.by.HII.compartment.eta.squared <- F_to_eta2(
+  32.6, 1, aciditerrimonas.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+aciditerrimonas.by.HII.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, aciditerrimonas.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+aciditerrimonas.by.HII.soil.eta.squared <- F_to_eta2(
+  1.450, 0.929, aciditerrimonas.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+aciditerrimonas.by.HII.effect.sizes <- tibble(
+  Compartment = aciditerrimonas.by.HII.compartment.eta.squared,
+  Smooth_by_Root = aciditerrimonas.by.HII.root.eta.squared,
+  Smooth_by_Soil = aciditerrimonas.by.HII.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: Aciditerrimonas by ISC, echo = TRUE}
+## Get model residuals
+aciditerrimonas.by.ISC.residual.df <- df.residual(
+  aciditerrimonas.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+aciditerrimonas.by.ISC.compartment.eta.squared <- F_to_eta2(
+  30.8, 1, aciditerrimonas.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+aciditerrimonas.by.ISC.root.eta.squared <- F_to_eta2(
+  0.0001, 0.00001, aciditerrimonas.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+aciditerrimonas.by.ISC.soil.eta.squared <- F_to_eta2(
+  0.950, 0.931, aciditerrimonas.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+aciditerrimonas.by.ISC.effect.sizes <- tibble(
+  Compartment = aciditerrimonas.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = aciditerrimonas.by.ISC.root.eta.squared,
+  Smooth_by_Soil = aciditerrimonas.by.ISC.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Aciditerrimonas Effect Size Summary
+
+```{r Aciditerrimonas Effect Size Summary Table, echo = FALSE}
+aciditerrimonas.effect.sizes <- bind_rows(
+  aciditerrimonas.by.distance.effect.sizes,
+  aciditerrimonas.by.HII.effect.sizes,
+  aciditerrimonas.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Smooth_by_Soil)
+
+kable(
+  aciditerrimonas.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the Aciditerrimonas abundance GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+\newpage
+## Nitrosospira
+
+### Distance
+
+```{r Effect Size Calculations: Nitrosospira by Distance, echo = TRUE}
+## Get model residuals
+nitrosospira.by.distance.residual.df <- df.residual(
+  nitrosospira.by.distance.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+nitrosospira.by.distance.compartment.eta.squared <- F_to_eta2(
+  237.1, 1, nitrosospira.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+nitrosospira.by.distance.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, nitrosospira.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+nitrosospira.by.distance.soil.eta.squared <- F_to_eta2(
+  3.362, 3.494, nitrosospira.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+nitrosospira.by.distance.effect.sizes <- tibble(
+  Compartment = nitrosospira.by.distance.compartment.eta.squared,
+  Smooth_by_Root = nitrosospira.by.distance.root.eta.squared,
+  Smooth_by_Soil = nitrosospira.by.distance.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: Nitrosospira by HII, echo = TRUE}
+## Get model residuals
+nitrosospira.by.HII.residual.df <- df.residual(
+  nitrosospira.by.HII.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+nitrosospira.by.HII.compartment.eta.squared <- F_to_eta2(
+  171.3, 1, nitrosospira.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+nitrosospira.by.HII.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, nitrosospira.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+nitrosospira.by.HII.soil.eta.squared <- F_to_eta2(
+  0.334, 0.751, nitrosospira.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+nitrosospira.by.HII.effect.sizes <- tibble(
+  Compartment = nitrosospira.by.HII.compartment.eta.squared,
+  Smooth_by_Root = nitrosospira.by.HII.root.eta.squared,
+  Smooth_by_Soil = nitrosospira.by.HII.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: Nitrosospira by ISC, echo = TRUE}
+## Get model residuals
+nitrosospira.by.ISC.residual.df <- df.residual(
+  nitrosospira.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+nitrosospira.by.ISC.compartment.eta.squared <- F_to_eta2(
+  201.7, 1, nitrosospira.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+nitrosospira.by.ISC.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, nitrosospira.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+nitrosospira.by.ISC.soil.eta.squared <- F_to_eta2(
+  1.730, 1.002, nitrosospira.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+nitrosospira.by.ISC.effect.sizes <- tibble(
+  Compartment = nitrosospira.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = nitrosospira.by.ISC.root.eta.squared,
+  Smooth_by_Soil = nitrosospira.by.ISC.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Nitrosospira Effect Size Summary
+
+```{r Nitrosospira Effect Size Summary Table, echo = FALSE}
+nitrosospira.effect.sizes <- bind_rows(
+  nitrosospira.by.distance.effect.sizes,
+  nitrosospira.by.HII.effect.sizes,
+  nitrosospira.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Smooth_by_Soil)
+
+kable(
+  nitrosospira.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the Nitrosospira abundance GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Sphingopyxis
+
+### Distance
+
+```{r Effect Size Calculations: Sphingopyxis by Distance, echo = TRUE}
+## Get model residuals
+sphingopyxis.by.distance.residual.df <- df.residual(
+  sphingopyxis.by.distance.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+sphingopyxis.by.distance.compartment.eta.squared <- F_to_eta2(
+  84.7, 1, sphingopyxis.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+sphingopyxis.by.distance.root.eta.squared <- F_to_eta2(
+  0.087, 0.444, sphingopyxis.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+sphingopyxis.by.distance.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, sphingopyxis.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+sphingopyxis.by.distance.effect.sizes <- tibble(
+  Compartment = sphingopyxis.by.distance.compartment.eta.squared,
+  Smooth_by_Root = sphingopyxis.by.distance.root.eta.squared,
+  Smooth_by_Soil = sphingopyxis.by.distance.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: Sphingopyxis by HII, echo = TRUE}
+## Get model residuals
+sphingopyxis.by.HII.residual.df <- df.residual(
+  sphingopyxis.by.HII.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+sphingopyxis.by.HII.compartment.eta.squared <- F_to_eta2(
+  83.8, 1, sphingopyxis.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+sphingopyxis.by.HII.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, sphingopyxis.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+sphingopyxis.by.HII.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, sphingopyxis.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+sphingopyxis.by.HII.effect.sizes <- tibble(
+  Compartment = sphingopyxis.by.HII.compartment.eta.squared,
+  Smooth_by_Root = sphingopyxis.by.HII.root.eta.squared,
+  Smooth_by_Soil = sphingopyxis.by.HII.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: Sphingopyxis by ISC, echo = TRUE}
+## Get model residuals
+sphingopyxis.by.ISC.residual.df <- df.residual(
+  sphingopyxis.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+sphingopyxis.by.ISC.compartment.eta.squared <- F_to_eta2(
+  87.2, 1, sphingopyxis.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+sphingopyxis.by.ISC.root.eta.squared <- F_to_eta2(
+  0.311, 0.750, sphingopyxis.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+sphingopyxis.by.ISC.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, sphingopyxis.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+sphingopyxis.by.ISC.effect.sizes <- tibble(
+  Compartment = sphingopyxis.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = sphingopyxis.by.ISC.root.eta.squared,
+  Smooth_by_Soil = sphingopyxis.by.ISC.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Sphingopyxis Effect Size Summary
+
+```{r Sphingopyxis Effect Size Summary Table, echo = FALSE}
+sphingopyxis.effect.sizes <- bind_rows(
+  sphingopyxis.by.distance.effect.sizes,
+  sphingopyxis.by.HII.effect.sizes,
+  sphingopyxis.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Smooth_by_Soil)
+
+kable(
+  sphingopyxis.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the Sphingopyxis abundance GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+
+\newpage
+## Cytophaga
+
+### Distance
+
+```{r Effect Size Calculations: Cytophaga by Distance, echo = TRUE}
+## Get model residuals
+cytophaga.by.distance.residual.df <- df.residual(
+  cytophaga.by.distance.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+cytophaga.by.distance.compartment.eta.squared <- F_to_eta2(
+  34.1, 1, cytophaga.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+cytophaga.by.distance.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, cytophaga.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+cytophaga.by.distance.soil.eta.squared <- F_to_eta2(
+  5.849, 6.008, cytophaga.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+cytophaga.by.distance.effect.sizes <- tibble(
+  Compartment = cytophaga.by.distance.compartment.eta.squared,
+  Smooth_by_Root = cytophaga.by.distance.root.eta.squared,
+  Smooth_by_Soil = cytophaga.by.distance.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: Cytophaga by HII, echo = TRUE}
+## Get model residuals
+cytophaga.by.HII.residual.df <- df.residual(
+  cytophaga.by.HII.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+cytophaga.by.HII.compartment.eta.squared <- F_to_eta2(
+  25.5, 1, cytophaga.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+cytophaga.by.HII.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, cytophaga.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+cytophaga.by.HII.soil.eta.squared <- F_to_eta2(
+  2.483, 0.958, cytophaga.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+cytophaga.by.HII.effect.sizes <- tibble(
+  Compartment = cytophaga.by.HII.compartment.eta.squared,
+  Smooth_by_Root = cytophaga.by.HII.root.eta.squared,
+  Smooth_by_Soil = cytophaga.by.HII.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: Cytophaga by ISC, echo = TRUE}
+## Get model residuals
+cytophaga.by.ISC.residual.df <- df.residual(
+  cytophaga.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+cytophaga.by.ISC.compartment.eta.squared <- F_to_eta2(
+  29.8, 1, cytophaga.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+cytophaga.by.ISC.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, cytophaga.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+cytophaga.by.ISC.soil.eta.squared <- F_to_eta2(
+  4.148, 2.495, cytophaga.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+cytophaga.by.ISC.effect.sizes <- tibble(
+  Compartment = cytophaga.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = cytophaga.by.ISC.root.eta.squared,
+  Smooth_by_Soil = cytophaga.by.ISC.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Cytophaga Effect Size Summary
+
+```{r Cytophaga Effect Size Summary Table, echo = FALSE}
+cytophaga.effect.sizes <- bind_rows(
+  cytophaga.by.distance.effect.sizes,
+  cytophaga.by.HII.effect.sizes,
+  cytophaga.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Smooth_by_Soil)
+
+kable(
+  cytophaga.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the Cytophaga abundance GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Paracoccus
+
+### Distance
+
+```{r Effect Size Calculations: Paracoccus by Distance, echo = TRUE}
+## Get model residuals
+paracoccus.by.distance.residual.df <- df.residual(
+  paracoccus.by.distance.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+paracoccus.by.distance.compartment.eta.squared <- F_to_eta2(
+  6.6, 1, paracoccus.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+paracoccus.by.distance.root.eta.squared <- F_to_eta2(
+  1.064, 0.958, paracoccus.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+paracoccus.by.distance.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.001, paracoccus.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+paracoccus.by.distance.effect.sizes <- tibble(
+  Compartment = paracoccus.by.distance.compartment.eta.squared,
+  Smooth_by_Root = paracoccus.by.distance.root.eta.squared,
+  Smooth_by_Soil = paracoccus.by.distance.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: Paracoccus by HII, echo = TRUE}
+## Get model residuals
+paracoccus.by.HII.residual.df <- df.residual(
+  paracoccus.by.HII.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+paracoccus.by.HII.compartment.eta.squared <- F_to_eta2(
+  6.2, 1, paracoccus.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+paracoccus.by.HII.root.eta.squared <- F_to_eta2(
+  0.552, 0.832, paracoccus.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+paracoccus.by.HII.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.001, paracoccus.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+paracoccus.by.HII.effect.sizes <- tibble(
+  Compartment = paracoccus.by.HII.compartment.eta.squared,
+  Smooth_by_Root = paracoccus.by.HII.root.eta.squared,
+  Smooth_by_Soil = paracoccus.by.HII.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: Paracoccus by ISC, echo = TRUE}
+## Get model residuals
+paracoccus.by.ISC.residual.df <- df.residual(
+  paracoccus.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+paracoccus.by.ISC.compartment.eta.squared <- F_to_eta2(
+  7.2, 1, paracoccus.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+paracoccus.by.ISC.root.eta.squared <- F_to_eta2(
+  1.783, 1.021, paracoccus.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+paracoccus.by.ISC.soil.eta.squared <- F_to_eta2(
+  0.020, 0.152, paracoccus.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+paracoccus.by.ISC.effect.sizes <- tibble(
+  Compartment = paracoccus.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = paracoccus.by.ISC.root.eta.squared,
+  Smooth_by_Soil = paracoccus.by.ISC.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Paracoccus Effect Size Summary
+
+```{r Paracoccus Effect Size Summary Table, echo = FALSE}
+paracoccus.effect.sizes <- bind_rows(
+  paracoccus.by.distance.effect.sizes,
+  paracoccus.by.HII.effect.sizes,
+  paracoccus.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Smooth_by_Soil)
+
+kable(
+  paracoccus.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the Paracoccus abundance GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Novosphingobium
+
+### Distance
+
+```{r Effect Size Calculations: Novosphingobium by Distance, echo = TRUE}
+## Get model residuals
+novosphingobium.by.distance.residual.df <- df.residual(
+  novosphingobium.by.distance.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+novosphingobium.by.distance.compartment.eta.squared <- F_to_eta2(
+  296.5, 1, novosphingobium.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+novosphingobium.by.distance.root.eta.squared <- F_to_eta2(
+  0.279, 0.737, novosphingobium.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+novosphingobium.by.distance.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, novosphingobium.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+novosphingobium.by.distance.effect.sizes <- tibble(
+  Compartment = novosphingobium.by.distance.compartment.eta.squared,
+  Smooth_by_Root = novosphingobium.by.distance.root.eta.squared,
+  Smooth_by_Soil = novosphingobium.by.distance.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: Novosphingobium by HII, echo = TRUE}
+## Get model residuals
+novosphingobium.by.HII.residual.df <- df.residual(
+  novosphingobium.by.HII.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+novosphingobium.by.HII.compartment.eta.squared <- F_to_eta2(
+  285.9, 1, novosphingobium.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+novosphingobium.by.HII.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, novosphingobium.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+novosphingobium.by.HII.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, novosphingobium.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+novosphingobium.by.HII.effect.sizes <- tibble(
+  Compartment = novosphingobium.by.HII.compartment.eta.squared,
+  Smooth_by_Root = novosphingobium.by.HII.root.eta.squared,
+  Smooth_by_Soil = novosphingobium.by.HII.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: Novosphingobium by ISC, echo = TRUE}
+## Get model residuals
+novosphingobium.by.ISC.residual.df <- df.residual(
+  novosphingobium.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+novosphingobium.by.ISC.compartment.eta.squared <- F_to_eta2(
+  287.3, 1, novosphingobium.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+novosphingobium.by.ISC.root.eta.squared <- F_to_eta2(
+  0.036, 0.246, novosphingobium.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+novosphingobium.by.ISC.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, novosphingobium.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+novosphingobium.by.ISC.effect.sizes <- tibble(
+  Compartment = novosphingobium.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = novosphingobium.by.ISC.root.eta.squared,
+  Smooth_by_Soil = novosphingobium.by.ISC.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Novosphingobium Effect Size Summary
+
+```{r Novosphingobium Effect Size Summary Table, echo = FALSE}
+novosphingobium.effect.sizes <- bind_rows(
+  novosphingobium.by.distance.effect.sizes,
+  novosphingobium.by.HII.effect.sizes,
+  novosphingobium.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Smooth_by_Soil)
+
+kable(
+  novosphingobium.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the Novosphingobium abundance GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Devosia
+
+### Distance
+
+```{r Effect Size Calculations: Devosia by Distance, echo = TRUE}
+## Get model residuals
+devosia.by.distance.residual.df <- df.residual(
+  devosia.by.distance.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+devosia.by.distance.compartment.eta.squared <- F_to_eta2(
+  388.3, 1, devosia.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+devosia.by.distance.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, devosia.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+devosia.by.distance.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, devosia.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+devosia.by.distance.effect.sizes <- tibble(
+  Compartment = devosia.by.distance.compartment.eta.squared,
+  Smooth_by_Root = devosia.by.distance.root.eta.squared,
+  Smooth_by_Soil = devosia.by.distance.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: Devosia by HII, echo = TRUE}
+## Get model residuals
+devosia.by.HII.residual.df <- df.residual(
+  devosia.by.HII.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+devosia.by.HII.compartment.eta.squared <- F_to_eta2(
+  391.5, 1, devosia.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+devosia.by.HII.root.eta.squared <- F_to_eta2(
+  0.063, 0.361, devosia.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+devosia.by.HII.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, devosia.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+devosia.by.HII.effect.sizes <- tibble(
+  Compartment = devosia.by.HII.compartment.eta.squared,
+  Smooth_by_Root = devosia.by.HII.root.eta.squared,
+  Smooth_by_Soil = devosia.by.HII.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: Devosia by ISC, echo = TRUE}
+## Get model residuals
+devosia.by.ISC.residual.df <- df.residual(
+  devosia.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+devosia.by.ISC.compartment.eta.squared <- F_to_eta2(
+  388.3, 1, devosia.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+devosia.by.ISC.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, devosia.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+devosia.by.ISC.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, devosia.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+devosia.by.ISC.effect.sizes <- tibble(
+  Compartment = devosia.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = devosia.by.ISC.root.eta.squared,
+  Smooth_by_Soil = devosia.by.ISC.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Devosia Effect Size Summary
+
+```{r Devosia Effect Size Summary Table, echo = FALSE}
+devosia.effect.sizes <- bind_rows(
+  devosia.by.distance.effect.sizes,
+  devosia.by.HII.effect.sizes,
+  devosia.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Smooth_by_Soil)
+
+kable(
+  devosia.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the Devosia abundance GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+
+\newpage
+## Streptomyces
+
+### Distance
+
+```{r Effect Size Calculations: Streptomyces by Distance, echo = TRUE}
+## Get model residuals
+streptomyces.by.distance.residual.df <- df.residual(
+  streptomyces.by.distance.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+streptomyces.by.distance.compartment.eta.squared <- F_to_eta2(
+  78.2, 1, streptomyces.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+streptomyces.by.distance.root.eta.squared <- F_to_eta2(
+  0.192, 0.646, streptomyces.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+streptomyces.by.distance.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, streptomyces.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+streptomyces.by.distance.effect.sizes <- tibble(
+  Compartment = streptomyces.by.distance.compartment.eta.squared,
+  Smooth_by_Root = streptomyces.by.distance.root.eta.squared,
+  Smooth_by_Soil = streptomyces.by.distance.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: Streptomyces by HII, echo = TRUE}
+## Get model residuals
+streptomyces.by.HII.residual.df <- df.residual(
+  streptomyces.by.HII.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+streptomyces.by.HII.compartment.eta.squared <- F_to_eta2(
+  76.2, 1, streptomyces.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+streptomyces.by.HII.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, streptomyces.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+streptomyces.by.HII.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, streptomyces.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+streptomyces.by.HII.effect.sizes <- tibble(
+  Compartment = streptomyces.by.HII.compartment.eta.squared,
+  Smooth_by_Root = streptomyces.by.HII.root.eta.squared,
+  Smooth_by_Soil = streptomyces.by.HII.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: Streptomyces by ISC, echo = TRUE}
+## Get model residuals
+streptomyces.by.ISC.residual.df <- df.residual(
+  streptomyces.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+streptomyces.by.ISC.compartment.eta.squared <- F_to_eta2(
+  76.2, 1, streptomyces.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+streptomyces.by.ISC.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, streptomyces.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+streptomyces.by.ISC.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, streptomyces.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+streptomyces.by.ISC.effect.sizes <- tibble(
+  Compartment = streptomyces.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = streptomyces.by.ISC.root.eta.squared,
+  Smooth_by_Soil = streptomyces.by.ISC.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Streptomyces Effect Size Summary
+
+```{r Streptomyces Effect Size Summary Table, echo = FALSE}
+streptomyces.effect.sizes <- bind_rows(
+  streptomyces.by.distance.effect.sizes,
+  streptomyces.by.HII.effect.sizes,
+  streptomyces.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Smooth_by_Soil)
+
+kable(
+  streptomyces.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the Streptomyces abundance GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Sphingobium
+
+### Distance
+
+```{r Effect Size Calculations: Sphingobium by Distance, echo = TRUE}
+## Get model residuals
+sphingobium.by.distance.residual.df <- df.residual(
+  sphingobium.by.distance.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+sphingobium.by.distance.compartment.eta.squared <- F_to_eta2(
+  74.6, 1, sphingobium.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+sphingobium.by.distance.root.eta.squared <- F_to_eta2(
+  0.122, 0.528, sphingobium.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+sphingobium.by.distance.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, sphingobium.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+sphingobium.by.distance.effect.sizes <- tibble(
+  Compartment = sphingobium.by.distance.compartment.eta.squared,
+  Smooth_by_Root = sphingobium.by.distance.root.eta.squared,
+  Smooth_by_Soil = sphingobium.by.distance.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: Sphingobium by HII, echo = TRUE}
+## Get model residuals
+sphingobium.by.HII.residual.df <- df.residual(
+  sphingobium.by.HII.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+sphingobium.by.HII.compartment.eta.squared <- F_to_eta2(
+  75.1, 1, sphingobium.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+sphingobium.by.HII.root.eta.squared <- F_to_eta2(
+  0.176, 0.613, sphingobium.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+sphingobium.by.HII.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, sphingobium.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+sphingobium.by.HII.effect.sizes <- tibble(
+  Compartment = sphingobium.by.HII.compartment.eta.squared,
+  Smooth_by_Root = sphingobium.by.HII.root.eta.squared,
+  Smooth_by_Soil = sphingobium.by.HII.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: Sphingobium by ISC, echo = TRUE}
+## Get model residuals
+sphingobium.by.ISC.residual.df <- df.residual(
+  sphingobium.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+sphingobium.by.ISC.compartment.eta.squared <- F_to_eta2(
+  73.4, 1, sphingobium.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+sphingobium.by.ISC.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, sphingobium.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+sphingobium.by.ISC.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, sphingobium.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+sphingobium.by.ISC.effect.sizes <- tibble(
+  Compartment = sphingobium.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = sphingobium.by.ISC.root.eta.squared,
+  Smooth_by_Soil = sphingobium.by.ISC.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Sphingobium Effect Size Summary
+
+```{r Sphingobium Effect Size Summary Table, echo = FALSE}
+sphingobium.effect.sizes <- bind_rows(
+  sphingobium.by.distance.effect.sizes,
+  sphingobium.by.HII.effect.sizes,
+  sphingobium.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Smooth_by_Soil)
+
+kable(
+  sphingobium.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the Sphingobium abundance GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+
+\newpage
+## Desulfosporosinus
+
+### Distance
+
+```{r Effect Size Calculations: Desulfosporosinus by Distance, echo = TRUE}
+## Get model residuals
+desulfosporosinus.by.distance.residual.df <- df.residual(
+  desulfosporosinus.by.distance.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+desulfosporosinus.by.distance.compartment.eta.squared <- F_to_eta2(
+  50.0, 1, desulfosporosinus.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+desulfosporosinus.by.distance.root.eta.squared <- F_to_eta2(
+  0.00001, 0.001, desulfosporosinus.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+desulfosporosinus.by.distance.soil.eta.squared <- F_to_eta2(
+  0.632, 1.641, desulfosporosinus.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+desulfosporosinus.by.distance.effect.sizes <- tibble(
+  Compartment = desulfosporosinus.by.distance.compartment.eta.squared,
+  Smooth_by_Root = desulfosporosinus.by.distance.root.eta.squared,
+  Smooth_by_Soil = desulfosporosinus.by.distance.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: Desulfosporosinus by HII, echo = TRUE}
+## Get model residuals
+desulfosporosinus.by.HII.residual.df <- df.residual(
+  desulfosporosinus.by.HII.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+desulfosporosinus.by.HII.compartment.eta.squared <- F_to_eta2(
+  53.4, 1, desulfosporosinus.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+desulfosporosinus.by.HII.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, desulfosporosinus.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+desulfosporosinus.by.HII.soil.eta.squared <- F_to_eta2(
+  1.176, 2.957, desulfosporosinus.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+desulfosporosinus.by.HII.effect.sizes <- tibble(
+  Compartment = desulfosporosinus.by.HII.compartment.eta.squared,
+  Smooth_by_Root = desulfosporosinus.by.HII.root.eta.squared,
+  Smooth_by_Soil = desulfosporosinus.by.HII.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: Desulfosporosinus by ISC, echo = TRUE}
+## Get model residuals
+desulfosporosinus.by.ISC.residual.df <- df.residual(
+  desulfosporosinus.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+desulfosporosinus.by.ISC.compartment.eta.squared <- F_to_eta2(
+  65.2, 1, desulfosporosinus.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+desulfosporosinus.by.ISC.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, desulfosporosinus.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+desulfosporosinus.by.ISC.soil.eta.squared <- F_to_eta2(
+  3.111, 5.460, desulfosporosinus.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+desulfosporosinus.by.ISC.effect.sizes <- tibble(
+  Compartment = desulfosporosinus.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = desulfosporosinus.by.ISC.root.eta.squared,
+  Smooth_by_Soil = desulfosporosinus.by.ISC.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Desulfosporosinus Effect Size Summary
+
+```{r Desulfosporosinus Effect Size Summary Table, echo = FALSE}
+desulfosporosinus.effect.sizes <- bind_rows(
+  desulfosporosinus.by.distance.effect.sizes,
+  desulfosporosinus.by.HII.effect.sizes,
+  desulfosporosinus.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Smooth_by_Soil)
+
+kable(
+  desulfosporosinus.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the Desulfosporosinus abundance GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+
+\newpage
+## Desulfocapsa
+
+### Distance
+
+```{r Effect Size Calculations: Desulfocapsa by Distance, echo = TRUE}
+## Get model residuals
+desulfocapsa.by.distance.residual.df <- df.residual(
+  desulfocapsa.by.distance.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+desulfocapsa.by.distance.compartment.eta.squared <- F_to_eta2(
+  14.2, 1, desulfocapsa.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+desulfocapsa.by.distance.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, desulfocapsa.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+desulfocapsa.by.distance.soil.eta.squared <- F_to_eta2(
+  0.816, 0.920, desulfocapsa.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+desulfocapsa.by.distance.effect.sizes <- tibble(
+  Compartment = desulfocapsa.by.distance.compartment.eta.squared,
+  Smooth_by_Root = desulfocapsa.by.distance.root.eta.squared,
+  Smooth_by_Soil = desulfocapsa.by.distance.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: Desulfocapsa by HII, echo = TRUE}
+## Get model residuals
+desulfocapsa.by.HII.residual.df <- df.residual(
+  desulfocapsa.by.HII.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+desulfocapsa.by.HII.compartment.eta.squared <- F_to_eta2(
+  14.2, 1, desulfocapsa.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+desulfocapsa.by.HII.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, desulfocapsa.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+desulfocapsa.by.HII.soil.eta.squared <- F_to_eta2(
+  0.823, 0.881, desulfocapsa.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+desulfocapsa.by.HII.effect.sizes <- tibble(
+  Compartment = desulfocapsa.by.HII.compartment.eta.squared,
+  Smooth_by_Root = desulfocapsa.by.HII.root.eta.squared,
+  Smooth_by_Soil = desulfocapsa.by.HII.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: Desulfocapsa by ISC, echo = TRUE}
+## Get model residuals
+desulfocapsa.by.ISC.residual.df <- df.residual(
+  desulfocapsa.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+desulfocapsa.by.ISC.compartment.eta.squared <- F_to_eta2(
+  14.1, 1, desulfocapsa.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+desulfocapsa.by.ISC.root.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, desulfocapsa.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+desulfocapsa.by.ISC.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, desulfocapsa.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+desulfocapsa.by.ISC.effect.sizes <- tibble(
+  Compartment = desulfocapsa.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = desulfocapsa.by.ISC.root.eta.squared,
+  Smooth_by_Soil = desulfocapsa.by.ISC.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Desulfocapsa Effect Size Summary
+
+```{r Desulfocapsa Effect Size Summary Table, echo = FALSE}
+desulfocapsa.effect.sizes <- bind_rows(
+  desulfocapsa.by.distance.effect.sizes,
+  desulfocapsa.by.HII.effect.sizes,
+  desulfocapsa.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Smooth_by_Soil)
+
+kable(
+  desulfocapsa.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the Desulfocapsa abundance GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Phyllobacterium
+
+### Distance
+
+```{r Effect Size Calculations: Phyllobacterium by Distance, echo = TRUE}
+## Get model residuals
+phyllobacterium.by.distance.residual.df <- df.residual(
+  phyllobacterium.by.distance.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+phyllobacterium.by.distance.compartment.eta.squared <- F_to_eta2(
+  38.9, 1, phyllobacterium.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by root
+phyllobacterium.by.distance.root.eta.squared <- F_to_eta2(
+  0.056, 0.339, phyllobacterium.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of distance by soil
+phyllobacterium.by.distance.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, phyllobacterium.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+phyllobacterium.by.distance.effect.sizes <- tibble(
+  Compartment = phyllobacterium.by.distance.compartment.eta.squared,
+  Smooth_by_Root = phyllobacterium.by.distance.root.eta.squared,
+  Smooth_by_Soil = phyllobacterium.by.distance.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Human Influence Index
+
+```{r Effect Size Calculations: Phyllobacterium by HII, echo = TRUE}
+## Get model residuals
+phyllobacterium.by.HII.residual.df <- df.residual(
+  phyllobacterium.by.HII.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+phyllobacterium.by.HII.compartment.eta.squared <- F_to_eta2(
+  41.6, 1, phyllobacterium.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by root
+phyllobacterium.by.HII.root.eta.squared <- F_to_eta2(
+  0.574, 0.838, phyllobacterium.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of HII by soil
+phyllobacterium.by.HII.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, phyllobacterium.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+phyllobacterium.by.HII.effect.sizes <- tibble(
+  Compartment = phyllobacterium.by.HII.compartment.eta.squared,
+  Smooth_by_Root = phyllobacterium.by.HII.root.eta.squared,
+  Smooth_by_Soil = phyllobacterium.by.HII.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Mean ISC
+
+```{r Effect Size Calculations: Phyllobacterium by ISC, echo = TRUE}
+## Get model residuals
+phyllobacterium.by.ISC.residual.df <- df.residual(
+  phyllobacterium.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Compartment (parametric)
+phyllobacterium.by.ISC.compartment.eta.squared <- F_to_eta2(
+  41.2, 1, phyllobacterium.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by root
+phyllobacterium.by.ISC.root.eta.squared <- F_to_eta2(
+  0.487, 0.834, phyllobacterium.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# Smooth of ISC by soil
+phyllobacterium.by.ISC.soil.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, phyllobacterium.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+phyllobacterium.by.ISC.effect.sizes <- tibble(
+  Compartment = phyllobacterium.by.ISC.compartment.eta.squared,
+  Smooth_by_Root = phyllobacterium.by.ISC.root.eta.squared,
+  Smooth_by_Soil = phyllobacterium.by.ISC.soil.eta.squared
+)
+```
+
+
+
+\newpage
+### Phyllobacterium Effect Size Summary
+
+```{r Phyllobacterium Effect Size Summary Table, echo = FALSE}
+phyllobacterium.effect.sizes <- bind_rows(
+  phyllobacterium.by.distance.effect.sizes,
+  phyllobacterium.by.HII.effect.sizes,
+  phyllobacterium.by.ISC.effect.sizes
+) %>%
+  add_column(Urbanization_Metric = c("Distance", "HII", "ISC")) %>%
+  as_tibble() %>%
+  select(Urbanization_Metric, Compartment:Smooth_by_Soil)
+
+kable(
+  phyllobacterium.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the Phyllobacterium abundance GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+# Carbon & Nitrogen Effect Sizes
+
+## Soil Total Carbon
+
+```{r Effect Size Calculations: Soil Total Carbon, echo = TRUE}
+## Get model residuals
+# Distance
+soil.total.C.by.distance.residual.df <- df.residual(
+  soil.total.C.by.distance.GAM
+)
+# HII
+soil.total.C.by.HII.residual.df <- df.residual(
+  soil.total.C.by.HII.GAM
+)
+# ISC
+soil.total.C.by.ISC.residual.df <- df.residual(
+  soil.total.C.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Distance
+soil.total.C.by.distance.eta.squared <- F_to_eta2(
+  1.604, 2.518, soil.total.C.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# HII
+soil.total.C.by.HII.eta.squared <- F_to_eta2(
+  0.679, 0.859, soil.total.C.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# ISC
+soil.total.C.by.ISC.eta.squared <- F_to_eta2(
+  1.867, 2.452, soil.total.C.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+soil.total.C.effect.sizes <- tibble(
+  Distance = soil.total.C.by.distance.eta.squared,
+  HII = soil.total.C.by.HII.eta.squared,
+  ISC = soil.total.C.by.ISC.eta.squared
+)
+```
+
+\vspace{10pt}
+
+```{r Soil Total Carbon Effect Size Summary Table, echo = FALSE}
+kable(
+  soil.total.C.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the soil total C GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Soil Delta 13C
+
+```{r Effect Size Calculations: Soil Delta 13C, echo = TRUE}
+## Get model residuals
+# Distance
+soil.delta.13C.by.distance.residual.df <- df.residual(
+  soil.delta.13C.by.distance.GAM
+)
+# HII
+soil.delta.13C.by.HII.residual.df <- df.residual(
+  soil.delta.13C.by.HII.GAM
+)
+# ISC
+soil.delta.13C.by.ISC.residual.df <- df.residual(
+  soil.delta.13C.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Distance
+soil.delta.13C.by.distance.eta.squared <- F_to_eta2(
+  2.141, 1.039, soil.delta.13C.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# HII
+soil.delta.13C.by.HII.eta.squared <- F_to_eta2(
+  1.039, 0.904, soil.delta.13C.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# ISC
+soil.delta.13C.by.ISC.eta.squared <- F_to_eta2(
+  0.954, 0.939, soil.delta.13C.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+soil.delta.13C.effect.sizes <- tibble(
+  Distance = soil.delta.13C.by.distance.eta.squared,
+  HII = soil.delta.13C.by.HII.eta.squared,
+  ISC = soil.delta.13C.by.ISC.eta.squared
+)
+```
+
+\vspace{10pt}
+
+```{r Soil Delta 13C Effect Size Summary Table, echo = FALSE}
+kable(
+  soil.delta.13C.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the soil delta 13C GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+\newpage
+## Leaf Total Carbon
+
+```{r Effect Size Calculations: Leaf Total Carbon, echo = TRUE}
+## Get model residuals
+# Distance
+leaf.total.C.by.distance.residual.df <- df.residual(
+  leaf.total.C.by.distance.GAM
+)
+# HII
+leaf.total.C.by.HII.residual.df <- df.residual(
+  leaf.total.C.by.HII.GAM
+)
+# ISC
+leaf.total.C.by.ISC.residual.df <- df.residual(
+  leaf.total.C.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Distance
+leaf.total.C.by.distance.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, leaf.total.C.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# HII
+leaf.total.C.by.HII.eta.squared <- F_to_eta2(
+  0.00001, 0.00001, leaf.total.C.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# ISC
+leaf.total.C.by.ISC.eta.squared <- F_to_eta2(
+  0.872, 1.841, leaf.total.C.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+leaf.total.C.effect.sizes <- tibble(
+  Distance = leaf.total.C.by.distance.eta.squared,
+  HII = leaf.total.C.by.HII.eta.squared,
+  ISC = leaf.total.C.by.ISC.eta.squared
+)
+```
+
+\vspace{10pt}
+
+```{r Leaf Total Carbon Effect Size Summary Table, echo = FALSE}
+kable(
+  leaf.total.C.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the leaf total C GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Leaf Delta 13C
+
+```{r Effect Size Calculations: Leaf Delta 13C, echo = TRUE}
+## Get model residuals
+# Distance
+leaf.delta.13C.by.distance.residual.df <- df.residual(
+  leaf.delta.13C.by.distance.GAM
+)
+# HII
+leaf.delta.13C.by.HII.residual.df <- df.residual(
+  leaf.delta.13C.by.HII.GAM
+)
+# ISC
+leaf.delta.13C.by.ISC.residual.df <- df.residual(
+  leaf.delta.13C.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Distance
+leaf.delta.13C.by.distance.eta.squared <- F_to_eta2(
+  0.279, 0.730, leaf.delta.13C.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# HII
+leaf.delta.13C.by.HII.eta.squared <- F_to_eta2(
+  0.043, 0.278, leaf.delta.13C.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# ISC
+leaf.delta.13C.by.ISC.eta.squared <- F_to_eta2(
+  0.087, 0.442, leaf.delta.13C.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+leaf.delta.13C.effect.sizes <- tibble(
+  Distance = leaf.delta.13C.by.distance.eta.squared,
+  HII = leaf.delta.13C.by.HII.eta.squared,
+  ISC = leaf.delta.13C.by.ISC.eta.squared
+)
+```
+
+\vspace{10pt}
+
+```{r Leaf Delta 13C Effect Size Summary Table, echo = FALSE}
+kable(
+  leaf.delta.13C.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the leaf delta 13C GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Soil Total Nitrogen
+
+```{r Effect Size Calculations: Soil Total Nitrogen, echo = TRUE}
+## Get model residuals
+# Distance
+soil.total.N.by.distance.residual.df <- df.residual(
+  soil.total.N.by.distance.GAM
+)
+# HII
+soil.total.N.by.HII.residual.df <- df.residual(
+  soil.total.N.by.HII.GAM
+)
+# ISC
+soil.total.N.by.ISC.residual.df <- df.residual(
+  soil.total.N.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Distance
+soil.total.N.by.distance.eta.squared <- F_to_eta2(
+  0.546, 0.851, soil.total.N.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# HII
+soil.total.N.by.HII.eta.squared <- F_to_eta2(
+  0.024, 0.179, soil.total.N.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# ISC
+soil.total.N.by.ISC.eta.squared <- F_to_eta2(
+  0.141, 0.563, soil.total.N.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+soil.total.N.effect.sizes <- tibble(
+  Distance = soil.total.N.by.distance.eta.squared,
+  HII = soil.total.N.by.HII.eta.squared,
+  ISC = soil.total.N.by.ISC.eta.squared
+)
+```
+
+\vspace{10pt}
+
+```{r Soil Total Nitrogen Effect Size Summary Table, echo = FALSE}
+kable(
+  soil.total.N.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the soil total N GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Soil Delta 15N
+
+```{r Effect Size Calculations: Soil Delta 15N, echo = TRUE}
+## Get model residuals
+# Distance
+soil.delta.15N.by.distance.residual.df <- df.residual(
+  soil.delta.15N.by.distance.GAM
+)
+# HII
+soil.delta.15N.by.HII.residual.df <- df.residual(
+  soil.delta.15N.by.HII.GAM
+)
+# ISC
+soil.delta.15N.by.ISC.residual.df <- df.residual(
+  soil.delta.15N.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Distance
+soil.delta.15N.by.distance.eta.squared <- F_to_eta2(
+  1.306, 0.968, soil.delta.15N.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# HII
+soil.delta.15N.by.HII.eta.squared <- F_to_eta2(
+  1.521, 0.932, soil.delta.15N.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# ISC
+soil.delta.15N.by.ISC.eta.squared <- F_to_eta2(
+  1.192, 0.950, soil.delta.15N.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+soil.delta.15N.effect.sizes <- tibble(
+  Distance = soil.delta.15N.by.distance.eta.squared,
+  HII = soil.delta.15N.by.HII.eta.squared,
+  ISC = soil.delta.15N.by.ISC.eta.squared
+)
+```
+
+\vspace{10pt}
+
+```{r Soil Delta 15N Effect Size Summary Table, echo = FALSE}
+kable(
+  soil.delta.15N.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the soil delta 15N GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+\newpage
+## Leaf Total Nitrogen
+
+```{r Effect Size Calculations: Leaf Total Nitrogen, echo = TRUE}
+## Get model residuals
+# Distance
+leaf.total.N.by.distance.residual.df <- df.residual(
+  leaf.total.N.by.distance.GAM
+)
+# HII
+leaf.total.N.by.HII.residual.df <- df.residual(
+  leaf.total.N.by.HII.GAM
+)
+# ISC
+leaf.total.N.by.ISC.residual.df <- df.residual(
+  leaf.total.N.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Distance
+leaf.total.N.by.distance.eta.squared <- F_to_eta2(
+  3.065, 3.070, leaf.total.N.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# HII
+leaf.total.N.by.HII.eta.squared <- F_to_eta2(
+  0.029, 0.207, leaf.total.N.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# ISC
+leaf.total.N.by.ISC.eta.squared <- F_to_eta2(
+  1.364, 1.916, leaf.total.N.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+leaf.total.N.effect.sizes <- tibble(
+  Distance = leaf.total.N.by.distance.eta.squared,
+  HII = leaf.total.N.by.HII.eta.squared,
+  ISC = leaf.total.N.by.ISC.eta.squared
+)
+```
+
+\vspace{10pt}
+
+```{r Leaf Total Nitrogen Effect Size Summary Table, echo = FALSE}
+kable(
+  leaf.total.N.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the leaf total N GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Leaf Delta 15N
+
+```{r Effect Size Calculations: Leaf Delta 15N, echo = TRUE}
+## Get model residuals
+# Distance
+leaf.delta.15N.by.distance.residual.df <- df.residual(
+  leaf.delta.15N.by.distance.GAM
+)
+# HII
+leaf.delta.15N.by.HII.residual.df <- df.residual(
+  leaf.delta.15N.by.HII.GAM
+)
+# ISC
+leaf.delta.15N.by.ISC.residual.df <- df.residual(
+  leaf.delta.15N.by.ISC.GAM
+)
+
+## Calculate effect sizes
+# Distance
+leaf.delta.15N.by.distance.eta.squared <- F_to_eta2(
+  0.090, 0.450, leaf.delta.15N.by.distance.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# HII
+leaf.delta.15N.by.HII.eta.squared <- F_to_eta2(
+  0.028, 0.200, leaf.delta.15N.by.HII.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+# ISC
+leaf.delta.15N.by.ISC.eta.squared <- F_to_eta2(
+  0.127, 0.537, leaf.delta.15N.by.ISC.residual.df
+) %>%
+  select(Eta2_partial) %>%
+  as.numeric()
+
+## Set tibble of effect sizes
+leaf.delta.15N.effect.sizes <- tibble(
+  Distance = leaf.delta.15N.by.distance.eta.squared,
+  HII = leaf.delta.15N.by.HII.eta.squared,
+  ISC = leaf.delta.15N.by.ISC.eta.squared
+)
+```
+
+\vspace{10pt}
+
+```{r Leaf Delta 15N Effect Size Summary Table, echo = FALSE}
+kable(
+  leaf.delta.15N.effect.sizes,
+  booktabs = TRUE,
+  digits = 5,
+  caption = "Summary of effect sizes (partial eta-squared) for the leaf delta 15N GAMs."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+
+
+
+
+\newpage
+# R Session Information
+
+```{r R Packages, echo = FALSE}
+df_session_packages <- devtools::session_info()$packages %>%
+  as.data.frame(.) %>%
+  filter(attached == TRUE) %>%
+  dplyr::select(loadedversion, date) %>%
+  rownames_to_column()
+
+colnames(df_session_packages) <- c("Package", "Loaded Version", "Date")
+
+kable(
+  df_session_packages,
+  booktabs = TRUE,
+  caption = "Packages required for data management and analysis."
+) %>%
+  kable_styling(
+    full_width = FALSE,
+    latex_options = c("HOLD_position", "striped")
+  )
+```

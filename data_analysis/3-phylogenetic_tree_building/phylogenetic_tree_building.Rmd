@@ -1,0 +1,142 @@
+---
+title: "TRhizo-urbanMicrobiome"
+subtitle: "Phylogenetic Tree Building"
+author: "David Murray-Stoker"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 4
+    fig_caption: yes
+    latex_engine: xelatex
+always_allow_html: true
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(results = "hold", fig.pos = "H", fig.align = "center", out.width = "92.5%")
+options(knitr.graphics.error = FALSE)
+kableExtra::usepackage_latex("float")
+```
+
+```{r Load Packages for R Markdown, include = FALSE}
+library(kableExtra)
+library(knitr)
+```
+
+
+
+
+
+\newpage
+# Load Packages
+
+\vspace{10pt}
+
+```{r Load Packages & Data, include = FALSE}
+## Load the tidyverse
+library(tidyverse)
+
+# Loading required packages for the phylogenetic tree building
+library(ape)
+library(msa)
+library(seqinr)
+```
+
+
+
+
+
+\newpage
+# Microbiome Phylogenetic Tree
+
+\vspace{10pt}
+
+## Multiple Sequence Alignment
+
+\vspace{10pt}
+
+```{r Multiple Sequence Alignment: Microbiome, echo = TRUE, results = "hide"}
+## Read sequences from FASTA file
+microbiome.sequences <- readDNAStringSet(
+	"microbiome_phylogenetic_tree/microbiome_sequence_table.fasta",
+	use.names = TRUE
+)
+
+## Perform multiple sequence alignment
+microbiome.alignment <- msa(
+	microbiome.sequences,
+	method = "ClustalOmega"
+)
+
+# Export object
+write_rds(
+	microbiome.alignment,
+	file = "microbiome_phylogenetic_tree/microbiome_clustal_omega_alignment.rds"
+)
+```
+
+\vspace{10pt}
+
+## Distance Matrix
+
+\vspace{10pt}
+
+```{r Distance Matrix: Microbiome, echo = TRUE, results = "hide"}
+## Prepare alignment for distance matrix calculation
+microbiome.alignment.sequence <- msaConvert(
+	microbiome.alignment,
+	type = "seqinr::alignment"
+)
+
+## Calculate the pairwise distance alignment
+microbiome.distance.alignment <- dist.alignment(microbiome.alignment.sequence)
+```
+
+\vspace{10pt}
+
+## Neighbour-Joining Tree
+
+\vspace{10pt}
+
+```{r Neighbour Joining Tree: Microbiome, echo = TRUE, results = "hide"}
+## Quantify the neighbour-joining tree using the BIONJ algorithm
+microbiome.nj.tree <- bionj(microbiome.distance.alignment)
+
+# Export object
+write_rds(
+	nj_tree,
+	file = "microbiome_phylogenetic_tree/microbiome_NJ_tree.rds"
+)
+```
+
+
+
+
+
+
+
+
+
+
+\newpage
+# R Session Information
+
+```{r R Packages, echo = FALSE}
+df_session_packages <- devtools::session_info()$packages %>%
+  as.data.frame(.) %>%
+  filter(attached == TRUE) %>%
+  dplyr::select(loadedversion, date) %>%
+  rownames_to_column()
+
+colnames(df_session_packages) <- c("Package", "Loaded Version", "Date")
+
+kable(
+  df_session_packages,
+  booktabs = TRUE,
+  caption = "Packages required for data management and analysis."
+) %>%
+  kable_styling(
+    full_width = FALSE,
+    latex_options = c("HOLD_position", "striped")
+  )
+```

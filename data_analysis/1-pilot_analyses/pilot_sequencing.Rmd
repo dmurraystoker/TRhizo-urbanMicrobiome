@@ -1,0 +1,806 @@
+---
+title: "TRhizo-urbanMicrobiome"
+subtitle: "Pilot Sequencing"
+author: "David Murray-Stoker"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 4
+    fig_caption: yes
+    latex_engine: xelatex
+always_allow_html: true
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(results = "hold", fig.pos = "H", fig.align = "center", out.width = "92.5%")
+options(knitr.graphics.error = FALSE)
+kableExtra::usepackage_latex("float")
+```
+
+```{r Load Packages for R Markdown, include = FALSE}
+library(kableExtra)
+library(knitr)
+```
+
+
+
+
+
+\newpage
+# Load Packages
+
+\vspace{10pt}
+
+```{r Load Packages & Data, include = FALSE}
+## Load the tidyverse
+library(tidyverse)
+
+## Packages for analyses
+library(ape)
+library(Biostrings)
+library(dada2)
+library(phyloseq)
+
+## Load the workspace
+load("data_analysis/1-pilot_analyses/pilot_sequencing-workspace.Rdata")
+```
+
+
+
+
+
+\newpage
+# DADA2 Pipeline
+
+\vspace{10pt}
+
+## Initial Processing
+
+```{r Set File Path & Names, echo = TRUE}
+## Directory for fastq files
+fastq.path <- "urbanMicrobiome_sequences/pilot_sequences"
+
+## Set forward and reverse reads
+forward.reads <- sort(list.files(fastq.path, pattern = "_R1_001.fastq", full.names = TRUE))
+reverse.reads <- sort(list.files(fastq.path, pattern = "_R2_001.fastq", full.names = TRUE))
+
+## Extract sample names
+sample.names <- sapply(strsplit(basename(forward.reads), "_"), `[`, 1)
+```
+
+
+\newpage
+## Read Quality Profiles
+
+```{r Quality Profiles: Forward Reads, echo = FALSE, fig.cap = "Quality profile plots for the forward reads, including both soil (S) and root (R) samples. Forward reads have high quality scores (> 30) until approximately 210 bp, after which the sequence should be trimmed. The first 10 bp of the forward reads should also be trimmed."}
+## Examine quality profile plots for the forward reads
+plotQualityProfile(forward.reads)
+```
+
+\vspace{10pt}
+
+```{r Quality Profiles: Reverse Reads, echo = FALSE, fig.cap = "Quality profile plots for the reverse reads, including both soil (S) and root (R) samples. Reverse reads have high quality scores (> 30) until approximately 170 bp, after which the sequence should be trimmed. The first 10 bp of the reverse reads should also be trimmed."}
+## Examine quality profile plots for the reverse reads
+plotQualityProfile(reverse.reads)
+```
+
+
+\newpage
+## Filter & Trim Reads
+
+\vspace{10pt}
+
+```{r Set Directory & Names for Filtered Reads, echo = TRUE}
+## Set directories for filtered forward and reverse reads
+filtered.forward.reads <- file.path(
+  fastq.path, "filtered", paste0(sample.names, "_F_filt.fastq.gz")
+)
+filtered.reverse.reads <- file.path(
+  fastq.path, "filtered", paste0(sample.names, "_R_filt.fastq.gz")
+)
+
+## Set names for filtered reads
+names(filtered.forward.reads) <- sample.names
+names(filtered.reverse.reads) <- sample.names
+```
+
+\vspace{10pt}
+
+```{r Filter Reads, echo = TRUE}
+## Filter reads using standard parameters for the DADA2 pipeline
+read.filtering <- filterAndTrim(
+  fwd = forward.reads,
+  filt = filtered.forward.reads,
+  rev = reverse.reads,
+  filt.rev = filtered.reverse.reads,
+  truncLen = c(210, 170),
+  trimLeft = 10,
+  trimRight = 10,
+  maxN = 0,
+  maxEE = c(2, 2),
+  truncQ = 2,
+  rm.phix = TRUE,
+  compress = TRUE,
+  multithread = TRUE
+)
+```
+
+
+\newpage
+## Learn the Error Rates
+
+\vspace{10pt}
+
+```{r Learn Error Rates for Forward and Reverse Reads, echo = TRUE}
+## Learn error rate for froward reads
+forward.error.rate <- learnErrors(filtered.forward.reads, multithread = TRUE)
+
+## Learn error rate for reverse reads
+reverse.error.rate <- learnErrors(filtered.reverse.reads, multithread = TRUE)
+```
+
+\vspace{10pt}
+
+```{r Plot Error Rates: Forward Reads, echo = FALSE, fig.cap = "Plots of forward read error rates for each possible transition. Points are observed rates for each consensus quality score. The black line shows the estimate error rates from the machine-learning algorithm, while the red line shows the error rates based on Q-scores. There is a good fit between black lines and observed points."}
+plotErrors(forward.error.rate, nominalQ = TRUE)
+```
+
+\vspace{10pt}
+
+```{r Plot Error Rates: Reverse Reads, echo = FALSE, fig.cap = "Plots of reverse read error rates for each possible transition. Points are observed rates for each consensus quality score. The black line shows the estimate error rates from the machine-learning algorithm, while the red line shows the error rates based on Q-scores. There is a good fit between black lines and observed points."}
+plotErrors(reverse.error.rate, nominalQ = TRUE)
+```
+
+
+\newpage
+## Sample Inference with DADA2
+
+\vspace{10pt}
+
+```{r Sample Inference: Forward Reads, echo = TRUE}
+## Run the DADA algorithm on the forward reads with the learned error rate
+forward.DADA <- dada(
+  derep = filtered.forward.reads,
+  err = forward.error.rate,
+  multithread = TRUE
+)
+
+## Inspect the forward DADA object
+forward.DADA[[1]]
+# 549 sequence variants from 59751 input unique sequences
+```
+
+\vspace{10pt}
+
+```{r Sample Inference: Reverse Reads, echo = TRUE}
+## Run the DADA algorithm on the reverse reads with the learned error rate
+reverse.DADA <- dada(
+  derep = filtered.reverse.reads,
+  err = reverse.error.rate,
+  multithread = TRUE
+)
+
+## Inspect the reverse DADA object
+reverse.DADA[[1]]
+# 1615 sequence variants from 38270 input unique sequences
+```
+
+
+\newpage
+## Merge Paired Reads
+
+\vspace{10pt}
+
+```{r Merge Paired Reads, echo = TRUE}
+## Merge forward and reverse reads to obtain the full, denoised sequences
+merged.sequences <- mergePairs(
+  dadaF = forward.DADA,
+  derepF = filtered.forward.reads,
+  dadaR = reverse.DADA,
+  derepR = filtered.reverse.reads,
+  verbose = TRUE
+)
+```
+
+
+## Construct Sequence Table
+
+\vspace{10pt}
+
+```{r Construct Sequence Table from Merged Paired Reads, echo = TRUE}
+## Create an Amplicon Sequence Variant (ASV) table from merged paired reads
+sequence.table <- makeSequenceTable(merged.sequences)
+```
+
+
+## Remove Chimeras
+
+\vspace{10pt}
+
+```{r Remove Chimeras from the ASV Table, echo = TRUE, results = "hide"}
+## Identify chimeric sequences using standard DADA2 parameters
+sequence.table.filtered.for.chimeras <- removeBimeraDenovo(
+  unqs = sequence.table,
+  method = "consensus",
+  multithread = TRUE,
+  verbose = TRUE
+)
+
+## Relative frequency of chimeras
+sum(sequence.table.filtered.for.chimeras / sum(sequence.table))
+# Chimeras account for approximately 36.4% of all sequences
+```
+
+
+\newpage
+## Track Reads through the DADA2 Pipeline
+
+\vspace{10pt}
+
+```{r Track Reads, echo = TRUE}
+## Function to get unique reads
+get.N.uniques <- function(x) sum(getUniques(x))
+
+## Determine the number of reads at each step
+read.tracking <- tibble(
+  read.filtering,
+  sapply(forward.DADA, get.N.uniques),
+  sapply(reverse.DADA, get.N.uniques),
+  sapply(merged.sequences, get.N.uniques),
+  rowSums(sequence.table.filtered.for.chimeras)
+)
+
+## Set column names
+colnames(read.tracking) <- c(
+  "Filtered", "Forward_Denoised", "Reverse_Denoised",
+  "Merged_Sequences", "ASVs_No_Chimeras"
+)
+
+## Set row names
+rownames(read.tracking) <- sample.names
+```
+
+\vspace{10pt}
+
+```{r Table of Tracked Sequences, echo = FALSE}
+kable(
+  read.tracking,
+  booktabs = TRUE,
+  digits = 3,
+  caption = "Number of reads for each step through the bioinformatic pipeline for all samples."
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+\newpage
+## Taxonomy Assignment
+
+\vspace{10pt}
+
+```{r Assign Taxonomy Using the RDP, echo = TRUE}
+## Assign taxonomy using the RDP naive Bayesian classifier
+RDP.taxonomy.assignment <- assignTaxonomy(
+  seqs = sequence.table.filtered.for.chimeras,
+  refFasta = "rdp_train_set_18.fa.gz",
+  tryRC = TRUE,
+  taxLevels = c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species"),
+  multithread = TRUE
+)
+```
+
+\vspace{10pt}
+
+```{r Prepare Sequences for Phylogeny Construction, echo = TRUE}
+## Prepare sequences for phylogeny construction
+sequences <- getSequences(sequence.table.filtered.for.chimeras)
+sequence.names <- colnames(sequence.table.filtered.for.chimeras)
+
+## Export the fasta file
+seqinr::write.fasta(
+  as.list(sequences),
+  names = sequence.names,
+  file.out = "pilot_sequencing/pilot.sequences.fasta"
+)
+## Note: a phylogenetic tree was not generated for the pilot sequencing
+```
+
+
+
+
+
+\newpage
+# Basic Analyses
+
+## phyloseq Processing
+
+\vspace{10pt}
+
+```{r Initial Processing for Phyloseq, echo = TRUE}
+## Initial data processing for phyloseq
+meta.data <- tibble(sample.names) %>%
+  column_to_rownames(var = "sample.names")
+
+## Add Population and Compartment identifiers
+meta.data$UID <- sample.names
+meta.data$Population <- c("P23", "P24", "P34", "P35", "P49", "P50")
+meta.data$Compartment <- c("Soil", "Root", "Soil", "Root", "Root", "Soil")
+
+## Make UID, Population, and Compartment factors
+meta.data$UID <- as_factor(meta.data$UID)
+meta.data$Population <- as_factor(meta.data$Population)
+meta.data$Compartment <- as_factor(meta.data$Compartment)
+```
+
+\vspace{10pt}
+
+```{r Reference phyloseq Object, echo = TRUE}
+## Create a reference phyloseq object
+phyloseq.reference <- phyloseq(
+  otu_table(sequence.table.filtered.for.chimeras, taxa_are_rows = FALSE),
+  sample_data(meta.data),
+  tax_table(RDP.taxonomy.assignment)
+) %>%
+  subset_taxa(Kingdom == "Bacteria")
+
+## Rarefy to even sequencing depth
+phyloseq.reference.rarefied <- rarefy_even_depth(
+  phyloseq.reference,
+  rngseed = 9,
+  trimOTUs = TRUE
+)
+# Remove 380 ASVs
+
+## Check the number of usable reads is equal across samples
+sample_sums(phyloseq.reference.rarefied)
+```
+
+
+\newpage
+## Class
+
+\vspace{10pt}
+
+```{r phyloseq to Class, echo = TRUE, results = "hide"}
+## phyloseq object to Class
+phyloseq.by.class <- subset_taxa(phyloseq.reference.rarefied, !is.na(Class))
+
+## Create workable dataframe from phyloseq.by.class
+alpha.diversity.by.class <- as_tibble(
+  estimate_richness(phyloseq.by.class, measures = c("Observed", "Shannon", "Simpson"))
+)
+```
+
+
+### Alpha Diversity
+
+\vspace{10pt}
+
+```{r Plots of Alpha Diversity by Class, echo = FALSE, fig.cap = "Plots of the number of ASVs assigned to each Class (Observed), Shannon's evenness, and Simpson's diversity by compartment (root and soil), with Class used as the taxonomic classifcation."}
+plot_richness(
+  phyloseq.by.class,
+  x = "Compartment",
+  color = "Population",
+  measures = c("Observed", "Shannon", "Simpson")
+) +
+  geom_point(size = 5)
+```
+
+
+\newpage
+### Relative Abundances
+
+\vspace{10pt}
+
+```{r Calculate Relative Abundances by Class, echo = TRUE, results = "hide"}
+## Transform counts to relative abundances
+phyloseq.by.class.relativized <- transform_sample_counts(
+  phyloseq.by.class,
+  function(x) x / sum(x)
+)
+
+## Determine number of classes identified
+tax_glom(phyloseq.by.class.relativized, taxrank = "Class")
+# 57 Classes identified
+```
+
+\vspace{10pt}
+
+```{r Stacked Barplot of Relative Abundances by Class, echo = FALSE, fig.cap = "Plot of the relative abundance for each of the 57 identified Classes, with each bar representing a different sample with the population (number) and whether it represents a soil (S) or root (R) sample."}
+## Plot the relative abundance of all classes
+plot_bar(
+  phyloseq.by.class.relativized,
+  fill = "Class"
+) +
+  geom_bar(aes(color = Class, fill = Class), stat = "identity", position = "stack")
+```
+
+\vspace{10pt}
+
+```{r Stacked Barplot of Top 25 Relative Abundances by Class, echo = FALSE, fig.cap = "Plot of the top 25 ASVs assigned to Class in terms of relative abundance, with each bar representing a different sample with the population (number) and whether it represents a soil (S) or root (R) sample. Chunks represent different ASVs within the same classification."}
+## Determine the top 25 classes in terms of relative abundance
+top.25.abundances.by.class <- names(sort(taxa_sums(phyloseq.by.class.relativized), decreasing = TRUE))[1:25]
+
+## Filter the top 25 classes from the phyloseq.by.class.relativized
+phyloseq.by.class.top.25 <- prune_taxa(
+  taxa = top.25.abundances.by.class, x = phyloseq.by.class.relativized
+)
+
+## Plot the relative abundances of the top 25 classes
+plot_bar(
+  phyloseq.by.class.top.25,
+  x = "UID",
+  fill = "Class"
+) +
+  scale_x_discrete(limits = c("P23S", "P34S", "P50S", "P24R", "P35R", "P49R"))
+```
+
+
+\newpage
+### Ordination
+
+\vspace{10pt}
+
+```{r Ordination by Class, echo = TRUE, results = "hide"}
+## Ordinate the phyloseq.by.class.relativized taxa
+class.NMDS.BC.ordination <- ordinate(
+  phyloseq.by.class.relativized,
+  method = "NMDS", distance = "bray"
+)
+```
+
+\vspace{10pt}
+
+```{r Ordination Plot by Class, echo = FALSE, fig.cap = "Plot of the Bray-Curtis NMDS with ASVs assigned to Class, with points representing either soil or root compartments."}
+## Plot the ordination
+plot_ordination(
+  phyloseq.by.class.relativized,
+  class.NMDS.BC.ordination,
+  color = "Compartment",
+  title = "Bray-Curtis NMDS by Compartment: Class"
+) +
+  geom_point(size = 5)
+```
+
+
+
+
+
+\newpage
+## Order
+
+\vspace{10pt}
+
+```{r phyloseq to Order, echo = TRUE, results = "hide"}
+## phyloseq object to Order
+phyloseq.by.order <- subset_taxa(phyloseq.reference.rarefied, !is.na(Order))
+
+## Create workable dataframe from phyloseq.by.order
+alpha.diversity.by.order <- as_tibble(
+  estimate_richness(phyloseq.by.order, measures = c("Observed", "Shannon", "Simpson"))
+)
+```
+
+
+### Alpha Diversity
+
+\vspace{10pt}
+
+```{r Plots of Alpha Diversity by Order, echo = FALSE, fig.cap = "Plots of the number of ASVs assigned to each Order (Observed), Shannon's evenness, and Simpson's diversity by compartment (root and soil), with Order used as the taxonomic classifcation."}
+plot_richness(
+  phyloseq.by.order,
+  x = "Compartment",
+  color = "Population",
+  measures = c("Observed", "Shannon", "Simpson")
+) +
+  geom_point(size = 5)
+```
+
+
+\newpage
+### Relative Abundances
+
+\vspace{10pt}
+
+```{r Calculate Relative Abundances by Order, echo = TRUE, results = "hide"}
+## Transform counts to relative abundances
+phyloseq.by.order.relativized <- transform_sample_counts(
+  phyloseq.by.order,
+  function(x) x / sum(x)
+)
+
+## Determine number of orders identified
+tax_glom(phyloseq.by.order.relativized, taxrank = "Order")
+# 98 Orders identified
+```
+
+\vspace{10pt}
+
+```{r Stacked Barplot of Top 25 Relative Abundances by Order, echo = FALSE, fig.cap = "Plot of the top 25 ASVs assigned to Order in terms of relative abundance, with each bar representing a different sample with the population (number) and whether it represents a soil (S) or root (R) sample. Chunks represent different ASVs within the same classification."}
+## Determine the top 25 orders in terms of relative abundance
+top.25.abundances.by.order <- names(sort(taxa_sums(phyloseq.by.order.relativized), decreasing = TRUE))[1:25]
+
+## Filter the top 25 orders from the phyloseq.by.order.relativized
+phyloseq.by.order.top.25 <- prune_taxa(
+  taxa = top.25.abundances.by.order, x = phyloseq.by.order.relativized
+)
+
+## Plot the relative abundances of the top 25 orders
+plot_bar(
+  phyloseq.by.order.top.25,
+  x = "UID",
+  fill = "Order"
+) +
+  scale_x_discrete(limits = c("P23S", "P34S", "P50S", "P24R", "P35R", "P49R"))
+```
+
+
+\newpage
+### Ordination
+
+\vspace{10pt}
+
+```{r Ordination by Order, echo = TRUE, results = "hide"}
+## Ordinate the phyloseq.by.order.relativized taxa
+order.NMDS.BC.ordination <- ordinate(
+  phyloseq.by.order.relativized,
+  method = "NMDS", distance = "bray"
+)
+```
+
+\vspace{10pt}
+
+```{r Ordination Plot by Order, echo = FALSE, fig.cap = "Plot of the Bray-Curtis NMDS with ASVs assigned to Order, with points representing either soil or root compartments."}
+## Plot the ordination
+plot_ordination(
+  phyloseq.by.order.relativized,
+  order.NMDS.BC.ordination,
+  color = "Compartment",
+  title = "Bray-Curtis NMDS by Compartment: Order"
+) +
+  geom_point(size = 5)
+```
+
+
+
+
+
+\newpage
+## Family
+
+\vspace{10pt}
+
+```{r phyloseq to Family, echo = TRUE, results = "hide"}
+## phyloseq object to Family
+phyloseq.by.family <- subset_taxa(phyloseq.reference.rarefied, !is.na(Family))
+
+## Create workable dataframe from phyloseq.by.family
+alpha.diversity.by.family <- as_tibble(
+  estimate_richness(phyloseq.by.family, measures = c("Observed", "Shannon", "Simpson"))
+)
+```
+
+
+### Alpha Diversity
+
+\vspace{10pt}
+
+```{r Plots of Alpha Diversity by Family, echo = FALSE, fig.cap = "Plots of the number of ASVs assigned to each  Family (Observed), Shannon's evenness, and Simpson's diversity by compartment (root and soil), with Family used as the taxonomic classifcation."}
+plot_richness(
+  phyloseq.by.family,
+  x = "Compartment",
+  color = "Population",
+  measures = c("Observed", "Shannon", "Simpson")
+) +
+  geom_point(size = 5)
+```
+
+
+\newpage
+### Relative Abundances
+
+\vspace{10pt}
+
+```{r Calculate Relative Abundances by Family, echo = TRUE, results = "hide"}
+## Transform counts to relative abundances
+phyloseq.by.family.relativized <- transform_sample_counts(
+  phyloseq.by.family,
+  function(x) x / sum(x)
+)
+
+## Determine number of families identified
+tax_glom(phyloseq.by.family.relativized, taxrank = "Family")
+# 181 Families identified
+```
+
+\vspace{10pt}
+
+```{r Stacked Barplot of Top 25 Relative Abundances by Family, echo = FALSE, fig.cap = "Plot of the top 25 ASVs assigned to Family in terms of relative abundance, with each bar representing a different sample with the population (number) and whether it represents a soil (S) or root (R) sample. Chunks represent different ASVs within the same classification."}
+## Determine the top 25 families in terms of relative abundance
+top.25.abundances.by.family <- names(sort(taxa_sums(phyloseq.by.family.relativized), decreasing = TRUE))[1:25]
+
+## Filter the top 25 families from the phyloseq.by.family.relativized
+phyloseq.by.family.top.25 <- prune_taxa(
+  taxa = top.25.abundances.by.family, x = phyloseq.by.family.relativized
+)
+
+## Plot the relative abundances of the top 25 families
+plot_bar(
+  phyloseq.by.family.top.25,
+  x = "UID",
+  fill = "Family"
+) +
+  scale_x_discrete(limits = c("P23S", "P34S", "P50S", "P24R", "P35R", "P49R"))
+```
+
+
+\newpage
+### Ordination
+
+\vspace{10pt}
+
+```{r Ordination by Family, echo = TRUE, results = "hide"}
+## Ordinate the phyloseq.by.family.relativized taxa
+family.NMDS.BC.ordination <- ordinate(
+  phyloseq.by.family.relativized,
+  method = "NMDS", distance = "bray"
+)
+```
+
+\vspace{10pt}
+
+```{r Ordination Plot by Family, echo = FALSE, fig.cap = "Plot of the Bray-Curtis NMDS with ASVs assigned to Family, with points representing either soil or root compartments."}
+## Plot the ordination
+plot_ordination(
+  phyloseq.by.family.relativized,
+  family.NMDS.BC.ordination,
+  color = "Compartment",
+  title = "Bray-Curtis NMDS by Compartment: Family"
+) +
+  geom_point(size = 5)
+```
+
+
+
+
+
+\newpage
+## Genus
+
+\vspace{10pt}
+
+```{r phyloseq to Genus, echo = TRUE, results = "hide"}
+## phyloseq object to Genus
+phyloseq.by.genus <- subset_taxa(phyloseq.reference.rarefied, !is.na(Genus))
+
+## Create workable dataframe from phyloseq.by.genus
+alpha.diversity.by.genus <- as_tibble(
+  estimate_richness(phyloseq.by.genus, measures = c("Observed", "Shannon", "Simpson"))
+)
+```
+
+
+### Alpha Diversity
+
+\vspace{10pt}
+
+```{r Plots of Alpha Diversity by Genus, echo = FALSE, fig.cap = "Plots of the number of ASVs assigned to each  Genus (Observed), Shannon's evenness, and Simpson's diversity by compartment (root and soil), with Genus used as the taxonomic genusifcation."}
+plot_richness(
+  phyloseq.by.genus,
+  x = "Compartment",
+  color = "Population",
+  measures = c("Observed", "Shannon", "Simpson")
+) +
+  geom_point(size = 5)
+```
+
+
+\newpage
+### Relative Abundances
+
+\vspace{10pt}
+
+```{r Calculate Relative Abundances by Genus, echo = TRUE, results = "hide"}
+## Transform counts to relative abundances
+phyloseq.by.genus.relativized <- transform_sample_counts(
+  phyloseq.by.genus,
+  function(x) x / sum(x)
+)
+
+## Determine number of genera identified
+tax_glom(phyloseq.by.genus.relativized, taxrank = "Genus")
+# 364 Genera identified
+```
+
+\vspace{10pt}
+
+```{r Stacked Barplot of Top 25 Relative Abundances by Genus, echo = FALSE, fig.cap = "Plot of the top 25 ASVs assigned to Genus in terms of relative abundance, with each bar representing a different sample with the population (number) and whether it represents a soil (S) or root (R) sample. Chunks represent different ASVs within the same classification."}
+## Determine the top 25 genera in terms of relative abundance
+top.25.abundances.by.genus <- names(sort(taxa_sums(phyloseq.by.genus.relativized), decreasing = TRUE))[1:25]
+
+## Filter the top 25 genera from the phyloseq.by.genus.relativized
+phyloseq.by.genus.top.25 <- prune_taxa(
+  taxa = top.25.abundances.by.genus, x = phyloseq.by.genus.relativized
+)
+
+## Plot the relative abundances of the top 25 genera
+plot_bar(
+  phyloseq.by.genus.top.25,
+  x = "UID",
+  fill = "Genus"
+) +
+  scale_x_discrete(limits = c("P23S", "P34S", "P50S", "P24R", "P35R", "P49R"))
+```
+
+
+\newpage
+### Ordination
+
+\vspace{10pt}
+
+```{r Ordination by Genus, echo = TRUE, results = "hide"}
+## Ordinate the phyloseq.by.genus.relativized taxa
+genus.NMDS.BC.ordination <- ordinate(
+  phyloseq.by.genus.relativized,
+  method = "NMDS", distance = "bray"
+)
+```
+
+\vspace{10pt}
+
+```{r Ordination Plot by Genus, echo = FALSE, fig.cap = "Plot of the Bray-Curtis NMDS with ASVs assigned to Genus, with points representing either soil or root compartments."}
+## Plot the ordination
+plot_ordination(
+  phyloseq.by.genus.relativized,
+  genus.NMDS.BC.ordination,
+  color = "Compartment",
+  title = "Bray-Curtis NMDS by Compartment: Genus"
+) +
+  geom_point(size = 5)
+```
+
+
+
+
+
+
+
+
+
+
+\newpage
+# Save the Workspace
+
+\vspace{10pt}
+
+```{r Save Workspace, include = FALSE}
+save.image("data_analysis/1-pilot_analyses/pilot_sequencing-workspace.Rdata")
+```
+
+
+
+
+# R Session Information
+
+\vspace{10pt}
+
+```{r R Packages, echo = FALSE}
+df_session_packages <- devtools::session_info()$packages %>%
+  as.data.frame(.) %>%
+  filter(attached == TRUE) %>%
+  dplyr::select(loadedversion, date) %>%
+  rownames_to_column()
+
+colnames(df_session_packages) <- c("Package", "Loaded Version", "Date")
+
+kable(
+  df_session_packages,
+  booktabs = TRUE,
+  caption = "Packages required for data management and analysis."
+) %>%
+  kable_styling(
+    full_width = FALSE,
+    latex_options = c("HOLD_position", "striped")
+  )
+```

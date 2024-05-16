@@ -1,0 +1,439 @@
+---
+title: "TRhizo-urbanMicrobiome"
+subtitle: "Phyloseq Processing"
+author: "David Murray-Stoker"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 4
+    fig_caption: yes
+    latex_engine: xelatex
+always_allow_html: true
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(results = "hold", fig.pos = "H", fig.align = "center", out.width = "92.5%")
+options(knitr.graphics.error = FALSE)
+kableExtra::usepackage_latex("float")
+```
+
+```{r Load Packages for R Markdown, include = FALSE}
+library(kableExtra)
+library(knitr)
+```
+
+
+
+
+
+\newpage
+# Load Packages
+
+\vspace{10pt}
+
+```{r Load Packages, include = FALSE}
+## Load the tidyverse
+library(tidyverse)
+
+## Packages for analyses
+library(decontam)
+library(phyloseq)
+library(tidyamplicons)
+```
+
+```{r calculate_rarefaction_curves Function, include = FALSE}
+## Set the calculate_rarefaction_curves function
+calculate_rarefaction_curves <- function(psdata, measures, depths) {
+  require("plyr") # ldply
+  require("reshape2") # melt
+
+  estimate_rarified_richness <- function(psdata, measures, depth) {
+    if (max(sample_sums(psdata)) < depth) {
+      return()
+    }
+    psdata <- prune_samples(sample_sums(psdata) >= depth, psdata)
+
+    rarified_psdata <- rarefy_even_depth(psdata, depth, verbose = FALSE)
+
+    alpha_diversity <- estimate_richness(rarified_psdata, measures = measures)
+
+    # as.matrix forces the use of melt.array, which includes the Sample names (rownames)
+    molten_alpha_diversity <- melt(as.matrix(alpha_diversity),
+      varnames = c("Sample", "Measure"),
+      value.name = "Alpha_diversity"
+    )
+
+    molten_alpha_diversity
+  }
+
+  names(depths) <- depths # this enables automatic addition of the Depth to the output by ldply
+  rarefaction_curve_data <- ldply(
+    depths, estimate_rarified_richness,
+    psdata = psdata,
+    measures = measures,
+    .id = "Depth",
+    .progress = ifelse(interactive(), "text", "none")
+  )
+
+  # convert Depth from factor to numeric
+  rarefaction_curve_data$Depth <- as.numeric(levels(rarefaction_curve_data$Depth))[rarefaction_curve_data$Depth]
+
+  rarefaction_curve_data
+}
+```
+
+
+
+
+
+\newpage
+# Root Phyloseq & Decontam Processing
+
+\vspace{10pt}
+
+## Load Data
+
+\vspace{10pt}
+
+```{r Load Data: Root, echo = TRUE}
+## Load the root sample data
+root.microbiome.sample.data <- read_csv(
+  "data/urbanMicrobiome-sample_data-microbiome.csv",
+  show_col_types = FALSE
+) %>%
+  filter(Compartment == "Root")
+
+## Load the root ASV table
+root.ASV.table <- read_rds(
+  "data_analysis/2-DADA2_pipeline/root_ASV_abundance_table.rds"
+)
+
+## Load the root taxonomy table
+root.taxonomy.table <- read_rds(
+  "data_analysis/2-DADA2_pipeline/root_ASV_taxonomy_table.rds"
+)
+```
+
+
+\newpage
+## Phyloseq Processing
+
+\vspace{10pt}
+
+```{r Phyloseq Processing: Root, echo = TRUE}
+## Set sample metadata
+# Sample and treatment identifiers
+root.sample.metadata <- root.microbiome.sample.data
+# Set row names for phyloseq processing
+rownames(root.sample.metadata) <- root.microbiome.sample.data$Sequence_ID
+
+## Set phyloseq components
+# ASV
+root.ASV.table.phyloseq <- otu_table(root.ASV.table, taxa_are_rows = FALSE)
+# Taxonomy
+root.taxonomy.table.phyloseq <- tax_table(root.taxonomy.table)
+# Sample data
+root.sample.data.phyloseq <- sample_data(root.sample.metadata)
+rownames(root.sample.data.phyloseq) <- root.microbiome.sample.data$Sequence_ID
+
+## Assemble reference phyloseq object
+root.phyloseq.reference <- phyloseq(
+  otu_table(root.ASV.table.phyloseq, taxa_are_rows = FALSE),
+  sample_data(root.sample.data.phyloseq),
+  tax_table(root.taxonomy.table.phyloseq)
+) %>%
+  subset_taxa(Kingdom == "Bacteria")
+
+## Add number of reads to sample data
+sample_data(root.phyloseq.reference)$Usable_Reads <- sample_sums(
+  root.phyloseq.reference
+)
+```
+
+
+\newpage
+## Rarefaction
+
+\vspace{10pt}
+
+```{r Rarefaction: Root, echo = TRUE, results = "hide"}
+## Rarefy the reference phyloseq object at different sequencing depths
+root.phyloseq.rarefaction.curves <- calculate_rarefaction_curves(
+  psdata = root.phyloseq.reference,
+  measures = c("Observed", "Simpson"),
+  depths = c(100, 1000, 5000, 10000, 12500, 15000, 17500, 20000, 25000, 50000)
+)
+
+## Summarize alpha diversity
+root.phyloseq.rarefaction.summary <- plyr::ddply(
+  root.phyloseq.rarefaction.curves,
+  c("Depth", "Sample", "Measure"),
+  summarise,
+  Alpha_diversity_mean = mean(Alpha_diversity),
+  Alpha_diversity_sd = sd(Alpha_diversity)
+)
+
+## Plot rarefied alpha diversity
+root.rarefaction.curve.figure <- ggplot(
+  data = root.phyloseq.rarefaction.summary,
+  mapping = aes(
+    x = Depth, y = Alpha_diversity_mean,
+    ymin = Alpha_diversity_mean - Alpha_diversity_sd,
+    ymax = Alpha_diversity_mean + Alpha_diversity_sd,
+    colour = Sample
+  )
+) +
+  geom_line() +
+  geom_pointrange() +
+  facet_wrap(facets = ~Measure, scales = "free_y") +
+  theme_bw() +
+  theme(legend.position = "none")
+# Rarefaction to 15000 reads captures most of the richness
+# Simpson's index does not depend on sequencing depth
+
+root.sample.sums <- sample_sums(root.phyloseq.reference) %>%
+  as_tibble() %>%
+  filter(value > 15000)
+# Rarefaction threshold of 15000 leaves 161 samples
+```
+
+
+\newpage
+## decontam
+
+\vspace{10pt}
+
+```{r decontam: Root, echo = TRUE, results = "hide"}
+## Identify contaminants
+root.contaminant.frequency <- isContaminant(
+  root.phyloseq.reference,
+  method = "frequency",
+  conc = "DNA_Concentration"
+)
+
+## Check number of contaminants
+table(root.contaminant.frequency$contaminant)
+# 277 potential contaminants (16985 total ASVs)
+
+## Subset contaminant ASVs
+root.contaminant.ASVs <- root.contaminant.frequency %>%
+  filter(contaminant == TRUE) %>%
+  filter(p < 0.05) # 126 potential contaminants
+
+## Remove contaminants from the phyloseq object
+root.decontam.phyloseq.reference <- prune_taxa(
+  !root.contaminant.frequency$contaminant,
+  root.phyloseq.reference
+)
+```
+
+\vspace{10pt}
+
+## Phyloseq Export
+
+\vspace{10pt}
+
+```{r Phyloseq Export: Root, echo = TRUE}
+## Export phyloseq object
+write_rds(
+  root.decontam.phyloseq.reference,
+  file = "data/root_decontam_phyloseq_reference.rds"
+)
+```
+
+
+
+
+
+
+
+
+
+
+\newpage
+# Soil Phyloseq & Decontam Processing
+
+\vspace{10pt}
+
+## Load Data
+
+\vspace{10pt}
+
+```{r Load Data: Soil, echo = TRUE}
+## Load the soil sample data
+soil.microbiome.sample.data <- read_csv(
+  "data/urbanMicrobiome-sample_data-microbiome.csv",
+  show_col_types = FALSE
+) %>%
+  filter(Compartment == "Soil")
+
+## Load the soil ASV table
+soil.ASV.table <- read_rds(
+  "data_analysis/2-DADA2_pipeline/soil_ASV_abundance_table.rds"
+)
+
+## Load the soil taxonomy table
+soil.taxonomy.table <- read_rds(
+  "data_analysis/2-DADA2_pipeline/soil_ASV_taxonomy_table.rds"
+)
+```
+
+
+\newpage
+## Phyloseq Processing
+
+\vspace{10pt}
+
+```{r Phyloseq Processing: Soil, echo = TRUE}
+## Set sample metadata
+# Sample and treatment identifiers
+soil.sample.metadata <- soil.microbiome.sample.data
+# Set row names for phyloseq processing
+rownames(soil.sample.metadata) <- soil.microbiome.sample.data$Sequence_ID
+
+## Set phyloseq components
+# ASV
+soil.ASV.table.phyloseq <- otu_table(soil.ASV.table, taxa_are_rows = FALSE)
+# Taxonomy
+soil.taxonomy.table.phyloseq <- tax_table(soil.taxonomy.table)
+# Sample data
+soil.sample.data.phyloseq <- sample_data(soil.sample.metadata)
+rownames(soil.sample.data.phyloseq) <- soil.microbiome.sample.data$Sequence_ID
+
+## Assemble reference phyloseq object
+soil.phyloseq.reference <- phyloseq(
+  otu_table(soil.ASV.table.phyloseq, taxa_are_rows = FALSE),
+  sample_data(soil.sample.data.phyloseq),
+  tax_table(soil.taxonomy.table.phyloseq)
+) %>%
+  subset_taxa(Kingdom == "Bacteria")
+
+## Add number of reads to sample data
+sample_data(soil.phyloseq.reference)$Usable_Reads <- sample_sums(
+  soil.phyloseq.reference
+)
+```
+
+
+\newpage
+## Rarefaction
+
+\vspace{10pt}
+
+```{r Rarefaction: Soil, echo = TRUE, results = "hide"}
+## Rarefy the reference phyloseq object at different sequencing depths
+soil.phyloseq.rarefaction.curves <- calculate_rarefaction_curves(
+  psdata = soil.phyloseq.reference,
+  measures = c("Observed", "Simpson"),
+  depths = c(100, 1000, 5000, 10000, 12500, 15000, 17500, 20000, 25000, 50000)
+)
+
+## Summarize alpha diversity
+soil.phyloseq.rarefaction.summary <- plyr::ddply(
+  soil.phyloseq.rarefaction.curves,
+  c("Depth", "Sample", "Measure"),
+  summarise,
+  Alpha_diversity_mean = mean(Alpha_diversity),
+  Alpha_diversity_sd = sd(Alpha_diversity)
+)
+
+## Plot rarefied alpha diversity
+soil.rarefaction.curve.figure <- ggplot(
+  data = soil.phyloseq.rarefaction.summary,
+  mapping = aes(
+    x = Depth, y = Alpha_diversity_mean,
+    ymin = Alpha_diversity_mean - Alpha_diversity_sd,
+    ymax = Alpha_diversity_mean + Alpha_diversity_sd,
+    colour = Sample
+  )
+) +
+  geom_line() +
+  geom_pointrange() +
+  facet_wrap(facets = ~Measure, scales = "free_y") +
+  theme_bw() +
+  theme(legend.position = "none")
+# Rarefaction to 20000 reads captures most of the richness
+# Simpson's index does not depend on sequencing depth
+
+soil.sample.sums <- sample_sums(soil.phyloseq.reference) %>%
+  as_tibble() %>%
+  filter(value > 20000)
+# Rarefaction threshold of 15000 leaves 171 samples
+```
+
+
+\newpage
+## decontam
+
+\vspace{10pt}
+
+```{r decontam: Soil, echo = TRUE, results = "hide"}
+## Identify contaminants
+soil.contaminant.frequency <- isContaminant(
+  soil.phyloseq.reference,
+  method = "frequency",
+  conc = "DNA_Concentration"
+)
+
+## Check number of contaminants
+table(soil.contaminant.frequency$contaminant)
+# 46 potential contaminants (20566 total ASVs)
+
+## Subset contaminant ASVs
+soil.contaminant.ASVs <- soil.contaminant.frequency %>%
+  filter(contaminant == TRUE) %>%
+  filter(p < 0.05) # 19 potential contaminants
+
+## Remove contaminants from the phyloseq object
+soil.decontam.phyloseq.reference <- prune_taxa(
+  !soil.contaminant.frequency$contaminant,
+  soil.phyloseq.reference
+)
+```
+
+\vspace{10pt}
+
+## Phyloseq Export
+
+\vspace{10pt}
+
+```{r Phyloseq Export: Soil, echo = TRUE}
+## Export phyloseq object
+write_rds(
+  soil.decontam.phyloseq.reference,
+  file = "data/soil_decontam_phyloseq_reference.rds"
+)
+```
+
+
+
+
+
+
+
+
+
+
+\newpage
+# R Session Information
+
+```{r R Packages, echo = FALSE}
+df_session_packages <- devtools::session_info()$packages %>%
+  as.data.frame(.) %>%
+  filter(attached == TRUE) %>%
+  dplyr::select(loadedversion, date) %>%
+  rownames_to_column()
+
+colnames(df_session_packages) <- c("Package", "Loaded Version", "Date")
+
+kable(
+  df_session_packages,
+  booktabs = TRUE,
+  caption = "Packages required for data management and analysis."
+) %>%
+  kable_styling(
+    full_width = FALSE,
+    latex_options = c("HOLD_position", "striped")
+  )
+```

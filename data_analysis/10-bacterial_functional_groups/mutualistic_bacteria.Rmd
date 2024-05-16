@@ -1,0 +1,833 @@
+---
+title: "TRhizo-urbanMicrobiome"
+subtitle: "Mutualistic Bacteria"
+author: "David Murray-Stoker"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 5
+    fig_caption: yes
+    latex_engine: xelatex
+always_allow_html: true
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(results = "hold", fig.pos = "H", fig.align = "center", out.width = "92.5%")
+options(knitr.graphics.error = FALSE)
+kableExtra::usepackage_latex("float")
+```
+
+```{r Load Packages for R Markdown, include = FALSE}
+library(kableExtra)
+library(knitr)
+```
+
+
+
+
+
+\newpage
+# Load Packages
+
+\vspace{10pt}
+
+```{r Load Packages, include = FALSE}
+## Load the tidyverse
+library(tidyverse)
+
+## Packages for analyses
+library(broom)
+library(easystats)
+library(mgcv)
+library(tidyamplicons)
+```
+
+
+
+
+
+\newpage
+# Load Data
+
+\vspace{10pt}
+
+```{r Load Data, echo = TRUE}
+## Microbiome tidyamplicons
+microbiome.tidyamplicon.reference <- read_rds(
+  file = "data/microbiome_tidyamplicon_reference.rds"
+)
+
+## Load the urbanization data
+urbanization.data <- read_rds(
+  file = "data/urbanization_data.rds"
+)
+
+## Load the workspace
+load("data_analysis/10-bacterial_functional_groups/mutualistic_bacteria-workspace.RData")
+```
+
+
+
+
+
+
+
+\newpage
+# Data Management
+
+\vspace{10pt}
+
+```{r Data Management, echo = TRUE}
+## Set reference ASV abundance matrix
+ASV.abundance.matrix <- add_rel_abundance(microbiome.tidyamplicon.reference) %>%
+  abundances()
+
+## Set reference taxa matrix
+ASV.taxa.matrix <- taxa(microbiome.tidyamplicon.reference)
+
+## Set tibble of bacteria abundance
+bacteria.abundance.data <- ASV.abundance.matrix %>%
+  full_join(ASV.taxa.matrix, by = "taxon_id") %>%
+  full_join(microbiome.tidyamplicon.reference$samples, by = "sample_id") %>%
+  select(Population:Compartment, phylum:genus, abundance, rel_abundance) %>%
+  rename(
+    Phylum = phylum, Class = class, Order = order, Family = family, Genus = genus,
+    Abundance = abundance, Relative_Abundance = rel_abundance
+  )
+
+## Set aggregated sample data
+sample.data <- microbiome.tidyamplicon.reference$samples %>%
+  select(Population:Compartment) %>%
+  distinct()
+```
+
+
+
+
+
+\newpage
+# Filter Abundances
+
+\vspace{10pt}
+
+```{r Filter Abundances: Mutualistic Bacteria, echo = TRUE}
+## Set tibbles of abundances for different mutualistic bacteria
+# Rhizobium
+rhizobium.abundances <- bacteria.abundance.data %>%
+  filter(Genus == "Rhizobium") %>%
+  select(Population, Compartment, Abundance, Relative_Abundance) %>%
+  group_by(Population, Compartment) %>%
+  summarise(
+    Rhizobium_Abundance = sum(Abundance),
+    Rhizobium_Relative_Abundance = sum(Relative_Abundance),
+    .groups = "keep"
+  )
+
+# Allorhizobium
+allorhizobium.abundances <- bacteria.abundance.data %>%
+  filter(Genus == "Allorhizobium") %>%
+  select(Population, Compartment, Abundance, Relative_Abundance) %>%
+  group_by(Population, Compartment) %>%
+  summarise(
+    Allorhizobium_Abundance = sum(Abundance),
+    Allorhizobium_Relative_Abundance = sum(Relative_Abundance),
+    .groups = "keep"
+  )
+
+# Bradyrhizobium
+bradyrhizobium.abundances <- bacteria.abundance.data %>%
+  filter(Genus == "Bradyrhizobium") %>%
+  select(Population, Compartment, Abundance, Relative_Abundance) %>%
+  group_by(Population, Compartment) %>%
+  summarise(
+    Bradyrhizobium_Abundance = sum(Abundance),
+    Bradyrhizobium_Relative_Abundance = sum(Relative_Abundance),
+    .groups = "keep"
+  )
+
+# Mesorhizobium
+mesorhizobium.abundances <- bacteria.abundance.data %>%
+  filter(Genus == "Mesorhizobium") %>%
+  select(Population, Compartment, Abundance, Relative_Abundance) %>%
+  group_by(Population, Compartment) %>%
+  summarise(
+    Mesorhizobium_Abundance = sum(Abundance),
+    Mesorhizobium_Relative_Abundance = sum(Relative_Abundance),
+    .groups = "keep"
+  )
+
+# Pararhizobium
+pararhizobium.abundances <- bacteria.abundance.data %>%
+  filter(Genus == "Pararhizobium") %>%
+  select(Population, Compartment, Abundance, Relative_Abundance) %>%
+  group_by(Population, Compartment) %>%
+  summarise(
+    Pararhizobium_Abundance = sum(Abundance),
+    Pararhizobium_Relative_Abundance = sum(Relative_Abundance),
+    .groups = "keep"
+  )
+
+# Shinella
+shinella.abundances <- bacteria.abundance.data %>%
+  filter(Genus == "Shinella") %>%
+  select(Population, Compartment, Abundance, Relative_Abundance) %>%
+  group_by(Population, Compartment) %>%
+  summarise(
+    Shinella_Abundance = sum(Abundance),
+    Shinella_Relative_Abundance = sum(Relative_Abundance),
+    .groups = "keep"
+  )
+
+## Combine abundances into a tibble with urbanization metrics
+mutualistic.bacteria.data <- sample.data %>%
+  full_join(rhizobium.abundances, by = c("Population", "Compartment")) %>%
+  full_join(allorhizobium.abundances, by = c("Population", "Compartment")) %>%
+  full_join(bradyrhizobium.abundances, by = c("Population", "Compartment")) %>%
+  full_join(mesorhizobium.abundances, by = c("Population", "Compartment")) %>%
+  full_join(pararhizobium.abundances, by = c("Population", "Compartment")) %>%
+  full_join(shinella.abundances, by = c("Population", "Compartment")) %>%
+  replace(is.na(.), 0) %>%
+  full_join(urbanization.data, by = "Population") %>%
+  type_convert(col_types = c("ffnnnnnnnnnnnnnnnnn"))
+```
+
+
+
+
+
+\newpage
+# Rhizobium GAMs
+
+\vspace{10pt}
+
+```{r Rhizobium GAMs, echo TRUE}
+## Rhizobium by distance
+rhizobium.by.distance.GAM <- gam(
+  Rhizobium_Relative_Abundance ~ Compartment
+    + s(Distance, by = Compartment, bs = "ts", k = 10),
+  data = mutualistic.bacteria.data,
+  method = "REML"
+)
+
+## Rhizobium by HII
+rhizobium.by.HII.GAM <- gam(
+  Rhizobium_Relative_Abundance ~ Compartment
+    + s(Human_Influence_Index, by = Compartment, bs = "ts", k = 10),
+  data = mutualistic.bacteria.data,
+  method = "REML"
+)
+
+## Rhizobium by ISC
+rhizobium.by.ISC.GAM <- gam(
+  Rhizobium_Relative_Abundance ~ Compartment
+    + s(Mean_ISC, by = Compartment, bs = "ts", k = 10),
+  data = mutualistic.bacteria.data,
+  method = "REML"
+)
+```
+
+\vspace{10pt}
+
+## Check Model Assumptions
+
+```{r performance Diagnostics: Rhizobium GAMs, echo = TRUE, eval = FALSE}
+## Rhizobium abundance-by-distance model diagnostics
+check_model(rhizobium.by.distance.GAM)
+# Visual check = assumptions met
+
+## Rhizobium abundance-by-HII model diagnostics
+check_model(rhizobium.by.HII.GAM)
+# Visual check = assumptions met
+
+## Rhizobium abundance-by-ISC model diagnostics
+check_model(rhizobium.by.ISC.GAM)
+# Visual check = assumptions met
+```
+
+
+
+\newpage
+## ANOVAs
+
+\vspace{10pt}
+
+```{r ANOVA Table: Rhizobium Abundance-by-Distance GMM, echo = FALSE}
+kable(
+  tidy(rhizobium.by.distance.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Rhizobium relative abundance-by-distance GAM. Adjusted R-squared = 0.646, deviance = 66.8 Compartment: F = 109.3, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Rhizobium Abundance-by-HII GAM, echo = FALSE}
+kable(
+  tidy(rhizobium.by.HII.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Rhizobium relative abundance-by-HII GAM. Adjusted R-squared = 0.564, deviance = 57.4 Compartment: F = 88.7, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Rhizobium Abundance-by-ISC GAM, echo = FALSE}
+kable(
+  tidy(rhizobium.by.ISC.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Rhizobium relative abundance-by-ISC GAM. Adjusted R-squared = 0.734, deviance = 76.1 Compartment: F = 145.6, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+# Allorhizobium GAMs
+
+\vspace{10pt}
+
+```{r Allorhizobium GAMs, echo TRUE}
+## Allorhizobium by distance
+allorhizobium.by.distance.GAM <- gam(
+  Allorhizobium_Relative_Abundance ~ Compartment
+    + s(Distance, by = Compartment, bs = "ts", k = 10),
+  data = mutualistic.bacteria.data,
+  method = "REML"
+)
+
+## Allorhizobium by HII
+allorhizobium.by.HII.GAM <- gam(
+  Allorhizobium_Relative_Abundance ~ Compartment
+    + s(Human_Influence_Index, by = Compartment, bs = "ts", k = 10),
+  data = mutualistic.bacteria.data,
+  method = "REML"
+)
+
+## Allorhizobium by ISC
+allorhizobium.by.ISC.GAM <- gam(
+  Allorhizobium_Relative_Abundance ~ Compartment
+    + s(Mean_ISC, by = Compartment, bs = "ts", k = 10),
+  data = mutualistic.bacteria.data,
+  method = "REML"
+)
+```
+
+\vspace{10pt}
+
+## Check Model Assumptions
+
+```{r performance Diagnostics: Allorhizobium GAMs, echo = TRUE, eval = FALSE}
+## Allorhizobium abundance-by-distance model diagnostics
+check_model(allorhizobium.by.distance.GAM)
+# Visual check = assumptions met
+
+## Allorhizobium abundance-by-HII model diagnostics
+check_model(allorhizobium.by.HII.GAM)
+# Visual check = assumptions met
+
+## Allorhizobium abundance-by-ISC model diagnostics
+check_model(allorhizobium.by.ISC.GAM)
+# Visual check = assumptions met
+```
+
+
+
+\newpage
+## ANOVAs
+
+\vspace{10pt}
+
+```{r ANOVA Table: Allorhizobium Abundance-by-Distance GMM, echo = FALSE}
+kable(
+  tidy(allorhizobium.by.distance.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Allorhizobium relative abundance-by-distance GAM. Adjusted R-squared = 0.333, deviance = 36.9 Compartment: F = 12.7, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Allorhizobium Abundance-by-HII GAM, echo = FALSE}
+kable(
+  tidy(allorhizobium.by.HII.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Allorhizobium relative abundance-by-HII GAM. Adjusted R-squared = 0.218, deviance = 24.0 Compartment: F = 10.8, P = 0.002.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Allorhizobium Abundance-by-ISC GAM, echo = FALSE}
+kable(
+  tidy(allorhizobium.by.ISC.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Allorhizobium relative abundance-by-ISC GAM. Adjusted R-squared = 0.134, deviance = 15.5 Compartment: F = 9.781, P = 0.003.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+# Bradyrhizobium GAMs
+
+\vspace{10pt}
+
+```{r Bradyrhizobium GAMs, echo TRUE}
+## Bradyrhizobium by distance
+bradyrhizobium.by.distance.GAM <- gam(
+  Bradyrhizobium_Relative_Abundance ~ Compartment
+    + s(Distance, by = Compartment, bs = "ts", k = 10),
+  data = mutualistic.bacteria.data,
+  method = "REML"
+)
+
+## Bradyrhizobium by HII
+bradyrhizobium.by.HII.GAM <- gam(
+  Bradyrhizobium_Relative_Abundance ~ Compartment
+    + s(Human_Influence_Index, by = Compartment, bs = "ts", k = 10),
+  data = mutualistic.bacteria.data,
+  method = "REML"
+)
+
+## Bradyrhizobium by ISC
+bradyrhizobium.by.ISC.GAM <- gam(
+  Bradyrhizobium_Relative_Abundance ~ Compartment
+    + s(Mean_ISC, by = Compartment, bs = "ts", k = 10),
+  data = mutualistic.bacteria.data,
+  method = "REML"
+)
+```
+
+\vspace{10pt}
+
+## Check Model Assumptions
+
+```{r performance Diagnostics: Bradyrhizobium GAMs, echo = TRUE, eval = FALSE}
+## Bradyrhizobium abundance-by-distance model diagnostics
+check_model(bradyrhizobium.by.distance.GAM)
+# Visual check = assumptions met
+
+## Bradyrhizobium abundance-by-HII model diagnostics
+check_model(bradyrhizobium.by.HII.GAM)
+# Visual check = assumptions met
+
+## Bradyrhizobium abundance-by-ISC model diagnostics
+check_model(bradyrhizobium.by.ISC.GAM)
+# Visual check = assumptions met
+```
+
+
+
+\newpage
+## ANOVAs
+
+\vspace{10pt}
+
+```{r ANOVA Table: Bradyrhizobium Abundance-by-Distance GMM, echo = FALSE}
+kable(
+  tidy(bradyrhizobium.by.distance.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Bradyrhizobium relative abundance-by-distance GAM. Adjusted R-squared = 0.371, deviance = 39.7 Compartment: F = 36.4, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Bradyrhizobium Abundance-by-HII GAM, echo = FALSE}
+kable(
+  tidy(bradyrhizobium.by.HII.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Bradyrhizobium relative abundance-by-HII GAM. Adjusted R-squared = 0.322, deviance = 33.2 Compartment: F = 33.8, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Bradyrhizobium Abundance-by-ISC GAM, echo = FALSE}
+kable(
+  tidy(bradyrhizobium.by.ISC.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Bradyrhizobium relative abundance-by-ISC GAM. Adjusted R-squared = 0.374, deviance = 40.1 Compartment: F = 36.6, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+# Mesorhizobium GAMs
+
+\vspace{10pt}
+
+```{r Mesorhizobium GAMs, echo TRUE}
+## Mesorhizobium by distance
+mesorhizobium.by.distance.GAM <- gam(
+  Mesorhizobium_Relative_Abundance ~ Compartment
+    + s(Distance, by = Compartment, bs = "ts", k = 10),
+  data = mutualistic.bacteria.data,
+  method = "REML"
+)
+
+## Mesorhizobium by HII
+mesorhizobium.by.HII.GAM <- gam(
+  Mesorhizobium_Relative_Abundance ~ Compartment
+    + s(Human_Influence_Index, by = Compartment, bs = "ts", k = 10),
+  data = mutualistic.bacteria.data,
+  method = "REML"
+)
+
+## Mesorhizobium by ISC
+mesorhizobium.by.ISC.GAM <- gam(
+  Mesorhizobium_Relative_Abundance ~ Compartment
+    + s(Mean_ISC, by = Compartment, bs = "ts", k = 10),
+  data = mutualistic.bacteria.data,
+  method = "REML"
+)
+```
+
+\vspace{10pt}
+
+## Check Model Assumptions
+
+```{r performance Diagnostics: Mesorhizobium GAMs, echo = TRUE, eval = FALSE}
+## Mesorhizobium abundance-by-distance model diagnostics
+check_model(mesorhizobium.by.distance.GAM)
+# Visual check = assumptions met
+
+## Mesorhizobium abundance-by-HII model diagnostics
+check_model(mesorhizobium.by.HII.GAM)
+# Visual check = assumptions met
+
+## Mesorhizobium abundance-by-ISC model diagnostics
+check_model(mesorhizobium.by.ISC.GAM)
+# Visual check = assumptions met
+```
+
+
+
+\newpage
+## ANOVAs
+
+\vspace{10pt}
+
+```{r ANOVA Table: Mesorhizobium Abundance-by-Distance GMM, echo = FALSE}
+kable(
+  tidy(mesorhizobium.by.distance.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Mesorhizobium relative abundance-by-distance GAM. Adjusted R-squared = 0.320, deviance = 33.2 Compartment: F = 33.1, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Mesorhizobium Abundance-by-HII GAM, echo = FALSE}
+kable(
+  tidy(mesorhizobium.by.HII.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Mesorhizobium relative abundance-by-HII GAM. Adjusted R-squared = 0.392, deviance = 42.1 Compartment: F = 37.0, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Mesorhizobium Abundance-by-ISC GAM, echo = FALSE}
+kable(
+  tidy(mesorhizobium.by.ISC.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Mesorhizobium relative abundance-by-ISC GAM. Adjusted R-squared = 0.326, deviance = 34.1 Compartment: F = 33.4, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+# Pararhizobium GAMs
+
+\vspace{10pt}
+
+```{r Pararhizobium GAMs, echo TRUE}
+## Pararhizobium by distance
+pararhizobium.by.distance.GAM <- gam(
+  Pararhizobium_Relative_Abundance ~ Compartment
+    + s(Distance, by = Compartment, bs = "ts", k = 10),
+  data = mutualistic.bacteria.data,
+  method = "REML"
+)
+
+## Pararhizobium by HII
+pararhizobium.by.HII.GAM <- gam(
+  Pararhizobium_Relative_Abundance ~ Compartment
+    + s(Human_Influence_Index, by = Compartment, bs = "ts", k = 10),
+  data = mutualistic.bacteria.data,
+  method = "REML"
+)
+
+## Pararhizobium by ISC
+pararhizobium.by.ISC.GAM <- gam(
+  Pararhizobium_Relative_Abundance ~ Compartment
+    + s(Mean_ISC, by = Compartment, bs = "ts", k = 10),
+  data = mutualistic.bacteria.data,
+  method = "REML"
+)
+```
+
+\vspace{10pt}
+
+## Check Model Assumptions
+
+```{r performance Diagnostics: Pararhizobium GAMs, echo = TRUE, eval = FALSE}
+## Pararhizobium abundance-by-distance model diagnostics
+check_model(pararhizobium.by.distance.GAM)
+# Visual check = assumptions met
+
+## Pararhizobium abundance-by-HII model diagnostics
+check_model(pararhizobium.by.HII.GAM)
+# Visual check = assumptions met
+
+## Pararhizobium abundance-by-ISC model diagnostics
+check_model(pararhizobium.by.ISC.GAM)
+# Visual check = assumptions met
+```
+
+
+
+\newpage
+## ANOVAs
+
+\vspace{10pt}
+
+```{r ANOVA Table: Pararhizobium Abundance-by-Distance GMM, echo = FALSE}
+kable(
+  tidy(pararhizobium.by.distance.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Pararhizobium relative abundance-by-distance GAM. Adjusted R-squared = 0.675, deviance = 68.3 Compartment: F = 142.8, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Pararhizobium Abundance-by-HII GAM, echo = FALSE}
+kable(
+  tidy(pararhizobium.by.HII.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Pararhizobium relative abundance-by-HII GAM. Adjusted R-squared = 0.671, deviance = 67.8 Compartment: F = 141.2, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Pararhizobium Abundance-by-ISC GAM, echo = FALSE}
+kable(
+  tidy(pararhizobium.by.ISC.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Pararhizobium relative abundance-by-ISC GAM. Adjusted R-squared = 0.670, deviance = 67.7 Compartment: F = 140.8, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+# Shinella GAMs
+
+\vspace{10pt}
+
+```{r Shinella GAMs, echo TRUE}
+## Shinella by distance
+shinella.by.distance.GAM <- gam(
+  Shinella_Relative_Abundance ~ Compartment
+    + s(Distance, by = Compartment, bs = "ts", k = 10),
+  data = mutualistic.bacteria.data,
+  method = "REML"
+)
+
+## Shinella by HII
+shinella.by.HII.GAM <- gam(
+  Shinella_Relative_Abundance ~ Compartment
+    + s(Human_Influence_Index, by = Compartment, bs = "ts", k = 10),
+  data = mutualistic.bacteria.data,
+  method = "REML"
+)
+
+## Shinella by ISC
+shinella.by.ISC.GAM <- gam(
+  Shinella_Relative_Abundance ~ Compartment
+    + s(Mean_ISC, by = Compartment, bs = "ts", k = 10),
+  data = mutualistic.bacteria.data,
+  method = "REML"
+)
+```
+
+\vspace{10pt}
+
+## Check Model Assumptions
+
+```{r performance Diagnostics: Shinella GAMs, echo = TRUE, eval = FALSE}
+## Shinella abundance-by-distance model diagnostics
+check_model(shinella.by.distance.GAM)
+# Visual check = assumptions met
+
+## Shinella abundance-by-HII model diagnostics
+check_model(shinella.by.HII.GAM)
+# Visual check = assumptions met
+
+## Shinella abundance-by-ISC model diagnostics
+check_model(shinella.by.ISC.GAM)
+# Visual check = assumptions met
+```
+
+
+
+\newpage
+## ANOVAs
+
+\vspace{10pt}
+
+```{r ANOVA Table: Shinella Abundance-by-Distance GMM, echo = FALSE}
+kable(
+  tidy(shinella.by.distance.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Shinella relative abundance-by-distance GAM. Adjusted R-squared = 0.391, deviance = 40.8 Compartment: F = 40.2, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Shinella Abundance-by-HII GAM, echo = FALSE}
+kable(
+  tidy(shinella.by.HII.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Shinella relative abundance-by-HII GAM. Adjusted R-squared = 0.431, deviance = 44.6 Compartment: F = 42.9, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Shinella Abundance-by-ISC GAM, echo = FALSE}
+kable(
+  tidy(shinella.by.ISC.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Shinella relative abundance-by-ISC GAM. Adjusted R-squared = 0.366, deviance = 38.2 Compartment: F = 38.6, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+
+
+
+
+
+\newpage
+# Export Data
+
+```{r Export Data, echo = TRUE}
+## Mutualistic bacteria
+write_rds(
+  mutualistic.bacteria.data,
+  file = "data/mutualistic_bacteria_data.rds"
+)
+```
+
+\vspace{10pt}
+
+```{r Save Workspace, echo = TRUE}
+save.image("data_analysis/10-bacterial_functional_groups/mutualistic_bacteria-workspace.RData")
+```
+
+
+
+
+
+
+
+
+
+
+\newpage
+# R Session Information
+
+```{r R Packages, echo = FALSE}
+df_session_packages <- devtools::session_info()$packages %>%
+  as.data.frame(.) %>%
+  filter(attached == TRUE) %>%
+  dplyr::select(loadedversion, date) %>%
+  rownames_to_column()
+
+colnames(df_session_packages) <- c("Package", "Loaded Version", "Date")
+
+kable(
+  df_session_packages,
+  booktabs = TRUE,
+  caption = "Packages required for data management and analysis."
+) %>%
+  kable_styling(
+    full_width = FALSE,
+    latex_options = c("HOLD_position", "striped")
+  )
+```

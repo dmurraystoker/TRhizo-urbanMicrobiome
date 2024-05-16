@@ -1,0 +1,1487 @@
+---
+title: "TRhizo-urbanMicrobiome"
+subtitle: "Pathogenic Bacteria"
+author: "David Murray-Stoker"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 5
+    fig_caption: yes
+    latex_engine: xelatex
+always_allow_html: true
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(results = "hold", fig.pos = "H", fig.align = "center", out.width = "92.5%")
+options(knitr.graphics.error = FALSE)
+kableExtra::usepackage_latex("float")
+```
+
+```{r Load Packages for R Markdown, include = FALSE}
+library(kableExtra)
+library(knitr)
+```
+
+
+
+
+
+\newpage
+# Load Packages
+
+\vspace{10pt}
+
+```{r Load Packages, include = FALSE}
+## Load the tidyverse
+library(tidyverse)
+
+## Packages for analyses
+library(broom)
+library(easystats)
+library(mgcv)
+library(tidyamplicons)
+```
+
+
+
+
+
+\newpage
+# Load Data
+
+\vspace{10pt}
+
+```{r Load Data, echo = TRUE}
+## Microbiome tidyamplicons
+microbiome.tidyamplicon.reference <- read_rds(
+	file = "data/microbiome_tidyamplicon_reference.rds"
+)
+
+## Load the urbanization data
+urbanization.data <- read_rds(
+	file = "data/urbanization_data.rds"
+)
+
+## Load the workspace
+#load("data_analysis/10-bacterial_functional_groups/pathogenic_bacteria-workspace.RData")
+```
+
+
+
+
+
+
+
+\newpage
+# Data Management
+
+\vspace{10pt}
+
+```{r Data Management, echo = TRUE}
+## Set reference ASV abundance matrix
+ASV.abundance.matrix <- add_rel_abundance(microbiome.tidyamplicon.reference) %>%
+  abundances()
+
+## Set reference taxa matrix
+ASV.taxa.matrix <- taxa(microbiome.tidyamplicon.reference)
+
+## Set tibble of bacteria abundance
+bacteria.abundance.data <- ASV.abundance.matrix %>%
+  full_join(ASV.taxa.matrix, by = "taxon_id") %>%
+  full_join(microbiome.tidyamplicon.reference$samples, by = "sample_id") %>%
+  select(Population:Compartment, phylum:genus, abundance, rel_abundance) %>%
+  rename(
+    Phylum = phylum, Class = class, Order = order, Family = family, Genus = genus,
+    Abundance = abundance, Relative_Abundance = rel_abundance
+  )
+
+## Set aggregated sample data
+sample.data <- microbiome.tidyamplicon.reference$samples %>%
+	select(Population:Compartment) %>%
+	distinct()
+```
+
+
+
+
+
+\newpage
+# Filter Abundances
+
+\vspace{10pt}
+
+```{r Filter Abundances: Pathogenic Bacteria, echo = TRUE}
+## Set tibbles of abundances for different mutualistic bacteria
+# Mycobacterium
+mycobacterium.abundances <- bacteria.abundance.data %>%
+  filter(Genus == "Mycobacterium") %>%
+  select(Population, Compartment, Abundance, Relative_Abundance) %>%
+  group_by(Population, Compartment) %>%
+  summarise(
+    Mycobacterium_Abundance = sum(Abundance),
+    Mycobacterium_Relative_Abundance = sum(Relative_Abundance),
+    .groups = "keep"
+  )
+
+# Legionella
+legionella.abundances <- bacteria.abundance.data %>%
+  filter(Genus == "Legionella") %>%
+  select(Population, Compartment, Abundance, Relative_Abundance) %>%
+  group_by(Population, Compartment) %>%
+  summarise(
+    Legionella_Abundance = sum(Abundance),
+    Legionella_Relative_Abundance = sum(Relative_Abundance),
+    .groups = "keep"
+  )
+
+# Staphylococcus
+staphylococcus.abundances <- bacteria.abundance.data %>%
+  filter(Genus == "Staphylococcus") %>%
+  select(Population, Compartment, Abundance, Relative_Abundance) %>%
+  group_by(Population, Compartment) %>%
+  summarise(
+    Staphylococcus_Abundance = sum(Abundance),
+    Staphylococcus_Relative_Abundance = sum(Relative_Abundance),
+    .groups = "keep"
+  )
+
+# Stenotrophomonas
+stenotrophomonas.abundances <- bacteria.abundance.data %>%
+  filter(Genus == "Stenotrophomonas") %>%
+  select(Population, Compartment, Abundance, Relative_Abundance) %>%
+  group_by(Population, Compartment) %>%
+  summarise(
+    Stenotrophomonas_Abundance = sum(Abundance),
+    Stenotrophomonas_Relative_Abundance = sum(Relative_Abundance),
+    .groups = "keep"
+  )
+
+# Acinetobacter
+acinetobacter.abundances <- bacteria.abundance.data %>%
+  filter(Genus == "Acinetobacter") %>%
+  select(Population, Compartment, Abundance, Relative_Abundance) %>%
+  group_by(Population, Compartment) %>%
+  summarise(
+    Acinetobacter_Abundance = sum(Abundance),
+    Acinetobacter_Relative_Abundance = sum(Relative_Abundance),
+    .groups = "keep"
+  )
+
+# Clostridium
+clostridium.abundances <- bacteria.abundance.data %>%
+  filter(Genus == "Clostridium_sensu_stricto") %>%
+  select(Population, Compartment, Abundance, Relative_Abundance) %>%
+  group_by(Population, Compartment) %>%
+  summarise(
+    Clostridium_Abundance = sum(Abundance),
+    Clostridium_Relative_Abundance = sum(Relative_Abundance),
+    .groups = "keep"
+  )
+
+# Paenibacillus
+paenibacillus.abundances <- bacteria.abundance.data %>%
+  filter(Genus == "Paenibacillus") %>%
+  select(Population, Compartment, Abundance, Relative_Abundance) %>%
+  group_by(Population, Compartment) %>%
+  summarise(
+    Paenibacillus_Abundance = sum(Abundance),
+    Paenibacillus_Relative_Abundance = sum(Relative_Abundance),
+    .groups = "keep"
+  )
+
+# Williamsia
+williamsia.abundances <- bacteria.abundance.data %>%
+  filter(Genus == "Williamsia") %>%
+  select(Population, Compartment, Abundance, Relative_Abundance) %>%
+  group_by(Population, Compartment) %>%
+  summarise(
+    Williamsia_Abundance = sum(Abundance),
+    Williamsia_Relative_Abundance = sum(Relative_Abundance),
+    .groups = "keep"
+  )
+
+# Sphingomonas
+sphingomonas.abundances <- bacteria.abundance.data %>%
+  filter(Genus == "Sphingomonas") %>%
+  select(Population, Compartment, Abundance, Relative_Abundance) %>%
+  group_by(Population, Compartment) %>%
+  summarise(
+    Sphingomonas_Abundance = sum(Abundance),
+    Sphingomonas_Relative_Abundance = sum(Relative_Abundance),
+    .groups = "keep"
+  )
+
+# Xanthomonas
+xanthomonas.abundances <- bacteria.abundance.data %>%
+  filter(Genus == "Xanthomonas") %>%
+  select(Population, Compartment, Abundance, Relative_Abundance) %>%
+  group_by(Population, Compartment) %>%
+  summarise(
+    Xanthomonas_Abundance = sum(Abundance),
+    Xanthomonas_Relative_Abundance = sum(Relative_Abundance),
+    .groups = "keep"
+  )
+
+# Rhizobacter
+rhizobacter.abundances <- bacteria.abundance.data %>%
+  filter(Genus == "Rhizobacter") %>%
+  select(Population, Compartment, Abundance, Relative_Abundance) %>%
+  group_by(Population, Compartment) %>%
+  summarise(
+    Rhizobacter_Abundance = sum(Abundance),
+    Rhizobacter_Relative_Abundance = sum(Relative_Abundance),
+    .groups = "keep"
+  )
+
+# Agrobacterium
+agrobacterium.abundances <- bacteria.abundance.data %>%
+  filter(Genus == "Agrobacterium") %>%
+  select(Population, Compartment, Abundance, Relative_Abundance) %>%
+  group_by(Population, Compartment) %>%
+  summarise(
+    Agrobacterium_Abundance = sum(Abundance),
+    Agrobacterium_Relative_Abundance = sum(Relative_Abundance),
+    .groups = "keep"
+  )
+
+## Combine abundances into a single tibble with urbanization metrics
+pathogenic.bacteria.data <- sample.data %>%
+	full_join(mycobacterium.abundances, by = c("Population", "Compartment")) %>%
+	full_join(legionella.abundances, by = c("Population", "Compartment")) %>%
+	full_join(staphylococcus.abundances, by = c("Population", "Compartment")) %>%
+	full_join(stenotrophomonas.abundances, by = c("Population", "Compartment")) %>%
+	full_join(acinetobacter.abundances, by = c("Population", "Compartment")) %>%
+	full_join(clostridium.abundances, by = c("Population", "Compartment")) %>%
+	full_join(paenibacillus.abundances, by = c("Population", "Compartment")) %>%
+	full_join(williamsia.abundances, by = c("Population", "Compartment")) %>%
+	full_join(sphingomonas.abundances, by = c("Population", "Compartment")) %>%
+	full_join(xanthomonas.abundances, by = c("Population", "Compartment")) %>%
+	full_join(rhizobacter.abundances, by = c("Population", "Compartment")) %>%
+	full_join(agrobacterium.abundances, by = c("Population", "Compartment")) %>%
+	replace(is.na(.), 0) %>%
+	full_join(urbanization.data, by = "Population") %>%
+	type_convert(col_types = c("ffnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"))
+```
+
+
+
+
+
+\newpage
+# Mycobacterium GAMs
+
+\vspace{10pt}
+
+```{r Mycobacterium GAMs, echo TRUE}
+## Mycobacterium by distance
+mycobacterium.by.distance.GAM <- gam(
+	Mycobacterium_Relative_Abundance ~ Compartment
+	  + s(Distance, by = Compartment, bs = "ts", k = 10),
+	data = pathogenic.bacteria.data,
+	method = "REML"
+)
+
+## Mycobacterium by HII
+mycobacterium.by.HII.GAM <- gam(
+	Mycobacterium_Relative_Abundance ~ Compartment
+	  + s(Human_Influence_Index, by = Compartment, bs = "ts", k = 10),
+	data = pathogenic.bacteria.data,
+	method = "REML"
+)
+
+## Mycobacterium by ISC
+mycobacterium.by.ISC.GAM <- gam(
+	Mycobacterium_Relative_Abundance ~ Compartment
+	  + s(Mean_ISC, by = Compartment, bs = "ts", k = 10),
+	data = pathogenic.bacteria.data,
+	method = "REML"
+)
+```
+
+\vspace{10pt}
+
+## Check Model Assumptions
+
+```{r performance Diagnostics: Mycobacterium GAMs, echo = TRUE, eval = FALSE}
+## Mycobacterium abundance-by-distance model diagnostics
+check_model(mycobacterium.by.distance.GAM)
+# Visual check = assumptions met
+
+## Mycobacterium abundance-by-HII model diagnostics
+check_model(mycobacterium.by.HII.GAM)
+# Visual check = assumptions met
+
+## Mycobacterium abundance-by-ISC model diagnostics
+check_model(mycobacterium.by.ISC.GAM)
+# Visual check = assumptions met
+```
+
+
+
+\newpage
+## ANOVAs
+
+\vspace{10pt}
+
+```{r ANOVA Table: Mycobacterium Abundance-by-Distance GMM, echo = FALSE}
+kable(
+  tidy(mycobacterium.by.distance.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Mycobacterium relative abundance-by-distance GAM. Adjusted R-squared = 0.592, deviance = 60.1 Compartment: F = 100, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Mycobacterium Abundance-by-HII GAM, echo = FALSE}
+kable(
+  tidy(mycobacterium.by.HII.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Mycobacterium relative abundance-by-HII GAM. Adjusted R-squared = 0.589, deviance = 59.8 Compartment: F = 99.4, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Mycobacterium Abundance-by-ISC GAM, echo = FALSE}
+kable(
+  tidy(mycobacterium.by.ISC.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Mycobacterium relative abundance-by-ISC GAM. Adjusted R-squared = 0.586, deviance = 59.2 Compartment: F = 98.5, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+# Legionella GAMs
+
+\vspace{10pt}
+
+```{r Legionella GAMs, echo TRUE}
+## Legionella by distance
+legionella.by.distance.GAM <- gam(
+	Legionella_Relative_Abundance ~ Compartment
+	  + s(Distance, by = Compartment, bs = "ts", k = 10),
+	data = pathogenic.bacteria.data,
+	method = "REML"
+)
+
+## Legionella by HII
+legionella.by.HII.GAM <- gam(
+	Legionella_Relative_Abundance ~ Compartment
+	  + s(Human_Influence_Index, by = Compartment, bs = "ts", k = 10),
+	data = pathogenic.bacteria.data,
+	method = "REML"
+)
+
+## Legionella by ISC
+legionella.by.ISC.GAM <- gam(
+	Legionella_Relative_Abundance ~ Compartment
+	  + s(Mean_ISC, by = Compartment, bs = "ts", k = 10),
+	data = pathogenic.bacteria.data,
+	method = "REML"
+)
+```
+
+\vspace{10pt}
+
+## Check Model Assumptions
+
+```{r performance Diagnostics: Legionella GAMs, echo = TRUE, eval = FALSE}
+## Legionella abundance-by-distance model diagnostics
+check_model(legionella.by.distance.GAM)
+# Visual check = assumptions met
+
+## Legionella abundance-by-HII model diagnostics
+check_model(legionella.by.HII.GAM)
+# Visual check = assumptions met
+
+## Legionella abundance-by-ISC model diagnostics
+check_model(legionella.by.ISC.GAM)
+# Visual check = assumptions met
+```
+
+
+
+\newpage
+## ANOVAs
+
+\vspace{10pt}
+
+```{r ANOVA Table: Legionella Abundance-by-Distance GMM, echo = FALSE}
+kable(
+  tidy(legionella.by.distance.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Legionella relative abundance-by-distance GAM. Adjusted R-squared = 0.481, deviance = 49.4 Compartment: F = 62.6, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Legionella Abundance-by-HII GAM, echo = FALSE}
+kable(
+  tidy(legionella.by.HII.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Legionella relative abundance-by-HII GAM. Adjusted R-squared = 0.479, deviance = 49.2 Compartment: F = 62.4, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Legionella Abundance-by-ISC GAM, echo = FALSE}
+kable(
+  tidy(legionella.by.ISC.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Legionella relative abundance-by-ISC GAM. Adjusted R-squared = 0.478, deviance = 49.1 Compartment: F = 62.3, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+\newpage
+# Staphylococcus GAMs
+
+\vspace{10pt}
+
+```{r Staphylococcus GAMs, echo TRUE}
+## Staphylococcus by distance
+staphylococcus.by.distance.GAM <- gam(
+	Staphylococcus_Relative_Abundance ~ Compartment
+	  + s(Distance, by = Compartment, bs = "ts", k = 10),
+	data = pathogenic.bacteria.data,
+	method = "REML"
+)
+
+## Staphylococcus by HII
+staphylococcus.by.HII.GAM <- gam(
+	Staphylococcus_Relative_Abundance ~ Compartment
+	  + s(Human_Influence_Index, by = Compartment, bs = "ts", k = 10),
+	data = pathogenic.bacteria.data,
+	method = "REML"
+)
+
+## Staphylococcus by ISC
+staphylococcus.by.ISC.GAM <- gam(
+	Staphylococcus_Relative_Abundance ~ Compartment
+	  + s(Mean_ISC, by = Compartment, bs = "ts", k = 10),
+	data = pathogenic.bacteria.data,
+	method = "REML"
+)
+```
+
+\vspace{10pt}
+
+## Check Model Assumptions
+
+```{r performance Diagnostics: Staphylococcus GAMs, echo = TRUE, eval = FALSE}
+## Staphylococcus abundance-by-distance model diagnostics
+check_model(staphylococcus.by.distance.GAM)
+# Visual check = assumptions met
+
+## Staphylococcus abundance-by-HII model diagnostics
+check_model(staphylococcus.by.HII.GAM)
+# Visual check = assumptions met
+
+## Staphylococcus abundance-by-ISC model diagnostics
+check_model(staphylococcus.by.ISC.GAM)
+# Visual check = assumptions met
+```
+
+
+
+\newpage
+## ANOVAs
+
+\vspace{10pt}
+
+```{r ANOVA Table: Staphylococcus Abundance-by-Distance GMM, echo = FALSE}
+kable(
+  tidy(staphylococcus.by.distance.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Staphylococcus relative abundance-by-distance GAM. Adjusted R-squared = 0.117, deviance = 15.4 Compartment: F = 1.836, P = 0.180.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Staphylococcus Abundance-by-HII GAM, echo = FALSE}
+kable(
+  tidy(staphylococcus.by.HII.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Staphylococcus relative abundance-by-HII GAM. Adjusted R-squared = 0.403, deviance = 44.2 Compartment: F = 2.717, P = 0.104.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Staphylococcus Abundance-by-ISC GAM, echo = FALSE}
+kable(
+  tidy(staphylococcus.by.ISC.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Staphylococcus relative abundance-by-ISC GAM. Adjusted R-squared = 0.023, deviance = 5.1 Compartment: F = 1.67, P = 0.201.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+
+\newpage
+# Stenotrophomonas GAMs
+
+\vspace{10pt}
+
+```{r Stenotrophomonas GAMs, echo TRUE}
+## Stenotrophomonas by distance
+stenotrophomonas.by.distance.GAM <- gam(
+	Stenotrophomonas_Relative_Abundance ~ Compartment
+	  + s(Distance, by = Compartment, bs = "ts", k = 10),
+	data = pathogenic.bacteria.data,
+	method = "REML"
+)
+
+## Stenotrophomonas by HII
+stenotrophomonas.by.HII.GAM <- gam(
+	Stenotrophomonas_Relative_Abundance ~ Compartment
+	  + s(Human_Influence_Index, by = Compartment, bs = "ts", k = 10),
+	data = pathogenic.bacteria.data,
+	method = "REML"
+)
+
+## Stenotrophomonas by ISC
+stenotrophomonas.by.ISC.GAM <- gam(
+	Stenotrophomonas_Relative_Abundance ~ Compartment
+	  + s(Mean_ISC, by = Compartment, bs = "ts", k = 10),
+	data = pathogenic.bacteria.data,
+	method = "REML"
+)
+```
+
+\vspace{10pt}
+
+## Check Model Assumptions
+
+```{r performance Diagnostics: Stenotrophomonas GAMs, echo = TRUE, eval = FALSE}
+## Stenotrophomonas abundance-by-distance model diagnostics
+check_model(stenotrophomonas.by.distance.GAM)
+# Visual check = assumptions met
+
+## Stenotrophomonas abundance-by-HII model diagnostics
+check_model(stenotrophomonas.by.HII.GAM)
+# Visual check = assumptions met
+
+## Stenotrophomonas abundance-by-ISC model diagnostics
+check_model(stenotrophomonas.by.ISC.GAM)
+# Visual check = assumptions met
+```
+
+
+
+\newpage
+## ANOVAs
+
+\vspace{10pt}
+
+```{r ANOVA Table: Stenotrophomonas Abundance-by-Distance GMM, echo = FALSE}
+kable(
+  tidy(stenotrophomonas.by.distance.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Stenotrophomonas relative abundance-by-distance GAM. Adjusted R-squared = 0.257, deviance = 27.6 Compartment: F = 21.2, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Stenotrophomonas Abundance-by-HII GAM, echo = FALSE}
+kable(
+  tidy(stenotrophomonas.by.HII.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Stenotrophomonas relative abundance-by-HII GAM. Adjusted R-squared = 0.225, deviance = 24.1 Compartment: F = 20.3, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Stenotrophomonas Abundance-by-ISC GAM, echo = FALSE}
+kable(
+  tidy(stenotrophomonas.by.ISC.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Stenotrophomonas relative abundance-by-ISC GAM. Adjusted R-squared = 0.242, deviance = 26.1 Compartment: F = 20.8, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+# Acinetobacter GAMs
+
+\vspace{10pt}
+
+```{r Acinetobacter GAMs, echo TRUE}
+## Acinetobacter by distance
+acinetobacter.by.distance.GAM <- gam(
+	Acinetobacter_Relative_Abundance ~ Compartment
+	  + s(Distance, by = Compartment, bs = "ts", k = 10),
+	data = pathogenic.bacteria.data,
+	method = "REML"
+)
+
+## Acinetobacter by HII
+acinetobacter.by.HII.GAM <- gam(
+	Acinetobacter_Relative_Abundance ~ Compartment
+	  + s(Human_Influence_Index, by = Compartment, bs = "ts", k = 10),
+	data = pathogenic.bacteria.data,
+	method = "REML"
+)
+
+## Acinetobacter by ISC
+acinetobacter.by.ISC.GAM <- gam(
+	Acinetobacter_Relative_Abundance ~ Compartment
+	  + s(Mean_ISC, by = Compartment, bs = "ts", k = 10),
+	data = pathogenic.bacteria.data,
+	method = "REML"
+)
+```
+
+\vspace{10pt}
+
+## Check Model Assumptions
+
+```{r performance Diagnostics: Acinetobacter GAMs, echo = TRUE, eval = FALSE}
+## Acinetobacter abundance-by-distance model diagnostics
+check_model(acinetobacter.by.distance.GAM)
+# Visual check = assumptions met
+
+## Acinetobacter abundance-by-HII model diagnostics
+check_model(acinetobacter.by.HII.GAM)
+# Visual check = assumptions met
+
+## Acinetobacter abundance-by-ISC model diagnostics
+check_model(acinetobacter.by.ISC.GAM)
+# Visual check = assumptions met
+```
+
+
+
+\newpage
+## ANOVAs
+
+\vspace{10pt}
+
+```{r ANOVA Table: Acinetobacter Abundance-by-Distance GMM, echo = FALSE}
+kable(
+  tidy(acinetobacter.by.distance.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Acinetobacter relative abundance-by-distance GAM. Adjusted R-squared = 0.089, deviance = 11.4 Compartment: F = 2.542, P = 0.116.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Acinetobacter Abundance-by-HII GAM, echo = FALSE}
+kable(
+  tidy(acinetobacter.by.HII.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Acinetobacter relative abundance-by-HII GAM. Adjusted R-squared = 0.028, deviance = 4.8 Compartment: F = 2.381, P = 0.127.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Acinetobacter Abundance-by-ISC GAM, echo = FALSE}
+kable(
+  tidy(acinetobacter.by.ISC.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Acinetobacter relative abundance-by-ISC GAM. Adjusted R-squared = 0.065, deviance = 8.9 Compartment: F = 2.476, P = 0.120.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+# Clostridium GAMs
+
+\vspace{10pt}
+
+```{r Clostridium GAMs, echo TRUE}
+## Clostridium by distance
+clostridium.by.distance.GAM <- gam(
+	Clostridium_Relative_Abundance ~ Compartment
+	  + s(Distance, by = Compartment, bs = "ts", k = 10),
+	data = pathogenic.bacteria.data,
+	method = "REML"
+)
+
+## Clostridium by HII
+clostridium.by.HII.GAM <- gam(
+	Clostridium_Relative_Abundance ~ Compartment
+	  + s(Human_Influence_Index, by = Compartment, bs = "ts", k = 10),
+	data = pathogenic.bacteria.data,
+	method = "REML"
+)
+
+## Clostridium by ISC
+clostridium.by.ISC.GAM <- gam(
+	Clostridium_Relative_Abundance ~ Compartment
+	  + s(Mean_ISC, by = Compartment, bs = "ts", k = 10),
+	data = pathogenic.bacteria.data,
+	method = "REML"
+)
+```
+
+\vspace{10pt}
+
+## Check Model Assumptions
+
+```{r performance Diagnostics: Clostridium GAMs, echo = TRUE, eval = FALSE}
+## Clostridium abundance-by-distance model diagnostics
+check_model(clostridium.by.distance.GAM)
+# Visual check = assumptions met
+
+## Clostridium abundance-by-HII model diagnostics
+check_model(clostridium.by.HII.GAM)
+# Visual check = assumptions met
+
+## Clostridium abundance-by-ISC model diagnostics
+check_model(clostridium.by.ISC.GAM)
+# Visual check = assumptions met
+```
+
+
+
+\newpage
+## ANOVAs
+
+\vspace{10pt}
+
+```{r ANOVA Table: Clostridium Abundance-by-Distance GMM, echo = FALSE}
+kable(
+  tidy(clostridium.by.distance.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Clostridium relative abundance-by-distance GAM. Adjusted R-squared = 0.520, deviance = 53.4 Compartment: F = 68.9, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Clostridium Abundance-by-HII GAM, echo = FALSE}
+kable(
+  tidy(clostridium.by.HII.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Clostridium relative abundance-by-HII GAM. Adjusted R-squared = 0.479, deviance = 49.0 Compartment: F = 63.4, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Clostridium Abundance-by-ISC GAM, echo = FALSE}
+kable(
+  tidy(clostridium.by.ISC.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Clostridium relative abundance-by-ISC GAM. Adjusted R-squared = 0.506, deviance = 51.9 Compartment: F = 66.85, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+# Paenibacillus GAMs
+
+\vspace{10pt}
+
+```{r Paenibacillus GAMs, echo TRUE}
+## Paenibacillus by distance
+paenibacillus.by.distance.GAM <- gam(
+	Paenibacillus_Relative_Abundance ~ Compartment
+	  + s(Distance, by = Compartment, bs = "ts", k = 10),
+	data = pathogenic.bacteria.data,
+	method = "REML"
+)
+
+## Paenibacillus by HII
+paenibacillus.by.HII.GAM <- gam(
+	Paenibacillus_Relative_Abundance ~ Compartment
+	  + s(Human_Influence_Index, by = Compartment, bs = "ts", k = 10),
+	data = pathogenic.bacteria.data,
+	method = "REML"
+)
+
+## Paenibacillus by ISC
+paenibacillus.by.ISC.GAM <- gam(
+	Paenibacillus_Relative_Abundance ~ Compartment
+	  + s(Mean_ISC, by = Compartment, bs = "ts", k = 10),
+	data = pathogenic.bacteria.data,
+	method = "REML"
+)
+```
+
+\vspace{10pt}
+
+## Check Model Assumptions
+
+```{r performance Diagnostics: Paenibacillus GAMs, echo = TRUE, eval = FALSE}
+## Paenibacillus abundance-by-distance model diagnostics
+check_model(paenibacillus.by.distance.GAM)
+# Visual check = assumptions met
+
+## Paenibacillus abundance-by-HII model diagnostics
+check_model(paenibacillus.by.HII.GAM)
+# Visual check = assumptions met
+
+## Paenibacillus abundance-by-ISC model diagnostics
+check_model(paenibacillus.by.ISC.GAM)
+# Visual check = assumptions met
+```
+
+
+
+\newpage
+## ANOVAs
+
+\vspace{10pt}
+
+```{r ANOVA Table: Paenibacillus Abundance-by-Distance GMM, echo = FALSE}
+kable(
+  tidy(paenibacillus.by.distance.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Paenibacillus relative abundance-by-distance GAM. Adjusted R-squared = 0.396, deviance = 41.3 Compartment: F = 39.78, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Paenibacillus Abundance-by-HII GAM, echo = FALSE}
+kable(
+  tidy(paenibacillus.by.HII.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Paenibacillus relative abundance-by-HII GAM. Adjusted R-squared = 0.388, deviance = 40.9 Compartment: F = 39.21, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Paenibacillus Abundance-by-ISC GAM, echo = FALSE}
+kable(
+  tidy(paenibacillus.by.ISC.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Paenibacillus relative abundance-by-ISC GAM. Adjusted R-squared = 0.349, deviance = 36.3 Compartment: F = 36.87, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+# Williamsia GAMs
+
+\vspace{10pt}
+
+```{r Williamsia GAMs, echo TRUE}
+## Williamsia by distance
+williamsia.by.distance.GAM <- gam(
+	Williamsia_Relative_Abundance ~ Compartment
+	  + s(Distance, by = Compartment, bs = "ts", k = 10),
+	data = pathogenic.bacteria.data,
+	method = "REML"
+)
+
+## Williamsia by HII
+williamsia.by.HII.GAM <- gam(
+	Williamsia_Relative_Abundance ~ Compartment
+	  + s(Human_Influence_Index, by = Compartment, bs = "ts", k = 10),
+	data = pathogenic.bacteria.data,
+	method = "REML"
+)
+
+## Williamsia by ISC
+williamsia.by.ISC.GAM <- gam(
+	Williamsia_Relative_Abundance ~ Compartment
+	  + s(Mean_ISC, by = Compartment, bs = "ts", k = 10),
+	data = pathogenic.bacteria.data,
+	method = "REML"
+)
+```
+
+\vspace{10pt}
+
+## Check Model Assumptions
+
+```{r performance Diagnostics: Williamsia GAMs, echo = TRUE, eval = FALSE}
+## Williamsia abundance-by-distance model diagnostics
+check_model(williamsia.by.distance.GAM)
+# Visual check = assumptions met
+
+## Williamsia abundance-by-HII model diagnostics
+check_model(williamsia.by.HII.GAM)
+# Visual check = assumptions met
+
+## Williamsia abundance-by-ISC model diagnostics
+check_model(williamsia.by.ISC.GAM)
+# Visual check = assumptions met
+```
+
+
+
+\newpage
+## ANOVAs
+
+\vspace{10pt}
+
+```{r ANOVA Table: Williamsia Abundance-by-Distance GMM, echo = FALSE}
+kable(
+  tidy(williamsia.by.distance.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Williamsia relative abundance-by-distance GAM. Adjusted R-squared = 0.038, deviance = 6.24 Compartment: F = 0.914, P = 0.342.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Williamsia Abundance-by-HII GAM, echo = FALSE}
+kable(
+  tidy(williamsia.by.HII.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Williamsia relative abundance-by-HII GAM. Adjusted R-squared = 0.044, deviance = 6.83 Compartment: F = 0.920, P = 0.341.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Williamsia Abundance-by-ISC GAM, echo = FALSE}
+kable(
+  tidy(williamsia.by.ISC.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Williamsia relative abundance-by-ISC GAM. Adjusted R-squared = 0.023, deviance = 4.64 Compartment: F = 0.901, P = 0.346.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+# Sphingomonas GAMs
+
+\vspace{10pt}
+
+```{r Sphingomonas GAMs, echo TRUE}
+## Sphingomonas by distance
+sphingomonas.by.distance.GAM <- gam(
+	Sphingomonas_Relative_Abundance ~ Compartment
+	  + s(Distance, by = Compartment, bs = "ts", k = 10),
+	data = pathogenic.bacteria.data,
+	method = "REML"
+)
+
+## Sphingomonas by HII
+sphingomonas.by.HII.GAM <- gam(
+	Sphingomonas_Relative_Abundance ~ Compartment
+	  + s(Human_Influence_Index, by = Compartment, bs = "ts", k = 10),
+	data = pathogenic.bacteria.data,
+	method = "REML"
+)
+
+## Sphingomonas by ISC
+sphingomonas.by.ISC.GAM <- gam(
+	Sphingomonas_Relative_Abundance ~ Compartment
+	  + s(Mean_ISC, by = Compartment, bs = "ts", k = 10),
+	data = pathogenic.bacteria.data,
+	method = "REML"
+)
+```
+
+\vspace{10pt}
+
+## Check Model Assumptions
+
+```{r performance Diagnostics: Sphingomonas GAMs, echo = TRUE, eval = FALSE}
+## Sphingomonas abundance-by-distance model diagnostics
+check_model(sphingomonas.by.distance.GAM)
+# Visual check = assumptions met
+
+## Sphingomonas abundance-by-HII model diagnostics
+check_model(sphingomonas.by.HII.GAM)
+# Visual check = assumptions met
+
+## Sphingomonas abundance-by-ISC model diagnostics
+check_model(sphingomonas.by.ISC.GAM)
+# Visual check = assumptions met
+```
+
+
+
+\newpage
+## ANOVAs
+
+\vspace{10pt}
+
+```{r ANOVA Table: Sphingomonas Abundance-by-Distance GMM, echo = FALSE}
+kable(
+  tidy(sphingomonas.by.distance.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Sphingomonas relative abundance-by-distance GAM. Adjusted R-squared = 0.584, deviance = 60.4 Compartment: F = 76.42, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Sphingomonas Abundance-by-HII GAM, echo = FALSE}
+kable(
+  tidy(sphingomonas.by.HII.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Sphingomonas relative abundance-by-HII GAM. Adjusted R-squared = 0.453, deviance = 46.1 Compartment: F = 58.2, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Sphingomonas Abundance-by-ISC GAM, echo = FALSE}
+kable(
+  tidy(sphingomonas.by.ISC.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Sphingomonas relative abundance-by-ISC GAM. Adjusted R-squared = 0.453, deviance = 46.1 Compartment: F = 58.2, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+# Xanthomonas GAMs
+
+\vspace{10pt}
+
+```{r Xanthomonas GAMs, echo TRUE}
+## Xanthomonas by distance
+xanthomonas.by.distance.GAM <- gam(
+	Xanthomonas_Relative_Abundance ~ Compartment
+	  + s(Distance, by = Compartment, bs = "ts", k = 10),
+	data = pathogenic.bacteria.data,
+	method = "REML"
+)
+
+## Xanthomonas by HII
+xanthomonas.by.HII.GAM <- gam(
+	Xanthomonas_Relative_Abundance ~ Compartment
+	  + s(Human_Influence_Index, by = Compartment, bs = "ts", k = 10),
+	data = pathogenic.bacteria.data,
+	method = "REML"
+)
+
+## Xanthomonas by ISC
+xanthomonas.by.ISC.GAM <- gam(
+	Xanthomonas_Relative_Abundance ~ Compartment
+	  + s(Mean_ISC, by = Compartment, bs = "ts", k = 10),
+	data = pathogenic.bacteria.data,
+	method = "REML"
+)
+```
+
+\vspace{10pt}
+
+## Check Model Assumptions
+
+```{r performance Diagnostics: Xanthomonas GAMs, echo = TRUE, eval = FALSE}
+## Xanthomonas abundance-by-distance model diagnostics
+check_model(xanthomonas.by.distance.GAM)
+# Visual check = assumptions met
+
+## Xanthomonas abundance-by-HII model diagnostics
+check_model(xanthomonas.by.HII.GAM)
+# Visual check = assumptions met
+
+## Xanthomonas abundance-by-ISC model diagnostics
+check_model(xanthomonas.by.ISC.GAM)
+# Visual check = assumptions met
+```
+
+
+
+\newpage
+## ANOVAs
+
+\vspace{10pt}
+
+```{r ANOVA Table: Xanthomonas Abundance-by-Distance GMM, echo = FALSE}
+kable(
+  tidy(xanthomonas.by.distance.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Xanthomonas relative abundance-by-distance GAM. Adjusted R-squared = 0.251, deviance = 27.1 Compartment: F = 18.21, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Xanthomonas Abundance-by-HII GAM, echo = FALSE}
+kable(
+  tidy(xanthomonas.by.HII.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Xanthomonas relative abundance-by-HII GAM. Adjusted R-squared = 0.306, deviance = 32.5 Compartment: F = 19.64, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Xanthomonas Abundance-by-ISC GAM, echo = FALSE}
+kable(
+  tidy(xanthomonas.by.ISC.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Xanthomonas relative abundance-by-ISC GAM. Adjusted R-squared = 0.234, deviance = 25.5 Compartment: F = 17.82, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+# Rhizobacter GAMs
+
+\vspace{10pt}
+
+```{r Rhizobacter GAMs, echo TRUE}
+## Rhizobacter by distance
+rhizobacter.by.distance.GAM <- gam(
+	Rhizobacter_Relative_Abundance ~ Compartment
+	  + s(Distance, by = Compartment, bs = "ts", k = 10),
+	data = pathogenic.bacteria.data,
+	method = "REML"
+)
+
+## Rhizobacter by HII
+rhizobacter.by.HII.GAM <- gam(
+	Rhizobacter_Relative_Abundance ~ Compartment
+	  + s(Human_Influence_Index, by = Compartment, bs = "ts", k = 10),
+	data = pathogenic.bacteria.data,
+	method = "REML"
+)
+
+## Rhizobacter by ISC
+rhizobacter.by.ISC.GAM <- gam(
+	Rhizobacter_Relative_Abundance ~ Compartment
+	  + s(Mean_ISC, by = Compartment, bs = "ts", k = 10),
+	data = pathogenic.bacteria.data,
+	method = "REML"
+)
+```
+
+\vspace{10pt}
+
+## Check Model Assumptions
+
+```{r performance Diagnostics: Rhizobacter GAMs, echo = TRUE, eval = FALSE}
+## Rhizobacter abundance-by-distance model diagnostics
+check_model(rhizobacter.by.distance.GAM)
+# Visual check = assumptions met
+
+## Rhizobacter abundance-by-HII model diagnostics
+check_model(rhizobacter.by.HII.GAM)
+# Visual check = assumptions met
+
+## Rhizobacter abundance-by-ISC model diagnostics
+check_model(rhizobacter.by.ISC.GAM)
+# Visual check = assumptions met
+```
+
+
+
+\newpage
+## ANOVAs
+
+\vspace{10pt}
+
+```{r ANOVA Table: Rhizobacter Abundance-by-Distance GMM, echo = FALSE}
+kable(
+  tidy(rhizobacter.by.distance.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Rhizobacter relative abundance-by-distance GAM. Adjusted R-squared = 0.653, deviance = 67.6 Compartment: F = 115.9, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Rhizobacter Abundance-by-HII GAM, echo = FALSE}
+kable(
+  tidy(rhizobacter.by.HII.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Rhizobacter relative abundance-by-HII GAM. Adjusted R-squared = 0.589, deviance = 59.9 Compartment: F = 97.81, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Rhizobacter Abundance-by-ISC GAM, echo = FALSE}
+kable(
+  tidy(rhizobacter.by.ISC.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Rhizobacter relative abundance-by-ISC GAM. Adjusted R-squared = 0.587, deviance = 59.7 Compartment: F = 97.38, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+# Agrobacterium GAMs
+
+\vspace{10pt}
+
+```{r Agrobacterium GAMs, echo TRUE}
+## Agrobacterium by distance
+agrobacterium.by.distance.GAM <- gam(
+	Agrobacterium_Relative_Abundance ~ Compartment
+	  + s(Distance, by = Compartment, bs = "ts", k = 10),
+	data = pathogenic.bacteria.data,
+	method = "REML"
+)
+
+## Agrobacterium by HII
+agrobacterium.by.HII.GAM <- gam(
+	Agrobacterium_Relative_Abundance ~ Compartment
+	  + s(Human_Influence_Index, by = Compartment, bs = "ts", k = 10),
+	data = pathogenic.bacteria.data,
+	method = "REML"
+)
+
+## Agrobacterium by ISC
+agrobacterium.by.ISC.GAM <- gam(
+	Agrobacterium_Relative_Abundance ~ Compartment
+	  + s(Mean_ISC, by = Compartment, bs = "ts", k = 10),
+	data = pathogenic.bacteria.data,
+	method = "REML"
+)
+```
+
+\vspace{10pt}
+
+## Check Model Assumptions
+
+```{r performance Diagnostics: Agrobacterium GAMs, echo = TRUE, eval = FALSE}
+## Agrobacterium abundance-by-distance model diagnostics
+check_model(agrobacterium.by.distance.GAM)
+# Visual check = assumptions met
+
+## Agrobacterium abundance-by-HII model diagnostics
+check_model(agrobacterium.by.HII.GAM)
+# Visual check = assumptions met
+
+## Agrobacterium abundance-by-ISC model diagnostics
+check_model(agrobacterium.by.ISC.GAM)
+# Visual check = assumptions met
+```
+
+
+
+\newpage
+## ANOVAs
+
+\vspace{10pt}
+
+```{r ANOVA Table: Agrobacterium Abundance-by-Distance GMM, echo = FALSE}
+kable(
+  tidy(agrobacterium.by.distance.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Agrobacterium relative abundance-by-distance GAM. Adjusted R-squared = 0.539, deviance = 56.4 Compartment: F = 59.84, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Agrobacterium Abundance-by-HII GAM, echo = FALSE}
+kable(
+  tidy(agrobacterium.by.HII.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Agrobacterium relative abundance-by-HII GAM. Adjusted R-squared = 0.692, deviance = 71.8 Compartment: F = 89.55, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Agrobacterium Abundance-by-ISC GAM, echo = FALSE}
+kable(
+  tidy(agrobacterium.by.ISC.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the Agrobacterium relative abundance-by-ISC GAM. Adjusted R-squared = 0.474, deviance = 49.9 Compartment: F = 52.36, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+
+
+
+
+
+\newpage
+# Export Data
+
+```{r Export Data, echo = TRUE}
+## Pathogenic bacteria
+write_rds(
+	pathogenic.bacteria.data,
+	file = "data/pathogenic_bacteria_data.rds"
+)
+```
+
+\vspace{10pt}
+
+```{r Save Workspace, echo = TRUE}
+save.image("data_analysis/10-bacterial_functional_groups/pathogenic_bacteria-workspace.RData")
+```
+
+
+
+
+
+
+
+
+
+
+\newpage
+# R Session Information
+
+```{r R Packages, echo = FALSE}
+df_session_packages <- devtools::session_info()$packages %>%
+  as.data.frame(.) %>%
+  filter(attached == TRUE) %>%
+  dplyr::select(loadedversion, date) %>%
+  rownames_to_column()
+
+colnames(df_session_packages) <- c("Package", "Loaded Version", "Date")
+
+kable(
+  df_session_packages,
+  booktabs = TRUE,
+  caption = "Packages required for data management and analysis."
+) %>%
+  kable_styling(
+    full_width = FALSE,
+    latex_options = c("HOLD_position", "striped")
+  )
+```

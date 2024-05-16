@@ -1,0 +1,284 @@
+---
+title: "TRhizo-urbanMicrobiome"
+subtitle: "Microbiome Assembly Piecewise SEM"
+author: "David Murray-Stoker"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 4
+    fig_caption: yes
+    latex_engine: xelatex
+always_allow_html: true
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(results = "hold", fig.pos = "H", fig.align = "center", out.width = "92.5%")
+options(knitr.graphics.error = FALSE)
+kableExtra::usepackage_latex("float")
+```
+
+```{r Load Packages for R Markdown, include = FALSE}
+library(kableExtra)
+library(knitr)
+```
+
+
+
+
+
+\newpage
+# Load Packages
+
+\vspace{10pt}
+
+```{r Load Packages, include = FALSE}
+## Load the tidyverse
+library(tidyverse)
+
+## Packages for analyses
+library(performance)
+library(piecewiseSEM)
+```
+
+\vspace{10pt}
+
+# Load Data
+
+```{r Load Data, echo = TRUE}
+## Microbiome pSEM data
+microbiome.pSEM.data <- read_rds(
+	file = "data/microbiome_pSEM_data.rds"
+) %>%
+	select(
+		Population, Root_Weighted_UniFrac_PCoA_1, Root_Weighted_UniFrac_PCoA_2,
+		Soil_Weighted_UniFrac_PCoA_1, Soil_Weighted_UniFrac_PCoA_2,
+		Distance:Mean_ISC, Leaf_Total_Carbon, Leaf_Delta_13C, Soil_Total_Carbon, Soil_Delta_13C,
+		Leaf_Total_Nitrogen, Leaf_Delta_15N, Soil_Total_Nitrogen, Soil_Delta_15N
+	)
+```
+
+
+
+
+
+\newpage
+# Piecewise SEM
+
+## pSEM Specification
+
+\vspace{10pt}
+
+```{r Microbiome Assembly pSEM Specification, echo = TRUE}
+microbiome.pSEM.model.list <- psem(
+	## Urbanization metrics--------------------------------------------------
+	lm(
+		Mean_ISC ~ Distance,
+		data = microbiome.pSEM.data
+	),
+	lm(
+		Human_Influence_Index ~ Distance,
+		data = microbiome.pSEM.data
+	),
+	
+	# Correlations
+  Mean_ISC %~~% Human_Influence_Index,
+	
+	
+	## Soil Carbon-----------------------------------------------------------
+	lm(
+		Soil_Total_Carbon ~ Mean_ISC + Human_Influence_Index,
+		data = microbiome.pSEM.data
+	),
+	lm(
+		Soil_Delta_13C ~ Mean_ISC + Human_Influence_Index + Distance, # + Distance
+		data = microbiome.pSEM.data
+	),
+	
+	# Correlations
+	Soil_Total_Carbon %~~% Soil_Delta_13C,
+	Soil_Total_Carbon %~~% Soil_Total_Nitrogen,
+	
+	
+	## Soil Nitrogen---------------------------------------------------------
+	lm(
+		Soil_Total_Nitrogen ~ Mean_ISC + Human_Influence_Index + Distance, # + Distance
+		data = microbiome.pSEM.data
+	),
+	lm(
+		Soil_Delta_15N ~ Mean_ISC + Human_Influence_Index,
+		data = microbiome.pSEM.data
+	),
+	
+	# Correlations
+	Soil_Total_Nitrogen %~~% Soil_Delta_15N,
+	Soil_Total_Nitrogen %~~% Soil_Delta_13C, # Added following d-sep test
+	
+	
+	## Leaf Carbon-----------------------------------------------------------
+	lm(
+		Leaf_Total_Carbon ~ Mean_ISC + Human_Influence_Index
+		  + Root_Weighted_UniFrac_PCoA_1 + Root_Weighted_UniFrac_PCoA_2 + Soil_Delta_15N, # + Soil_Delta_15N
+		data = microbiome.pSEM.data
+	),
+	lm(
+		Leaf_Delta_13C ~ Mean_ISC + Human_Influence_Index
+		  + Root_Weighted_UniFrac_PCoA_1 + Root_Weighted_UniFrac_PCoA_2,
+		data = microbiome.pSEM.data
+	),
+	
+	# Correlations
+	Leaf_Total_Carbon %~~% Leaf_Delta_13C,
+	Leaf_Total_Carbon %~~% Leaf_Total_Nitrogen,
+	
+	
+	## Leaf Nitrogen---------------------------------------------------------
+	lm(
+		Leaf_Total_Nitrogen ~ Mean_ISC + Human_Influence_Index
+		  + Root_Weighted_UniFrac_PCoA_1 + Root_Weighted_UniFrac_PCoA_2
+		  + Soil_Total_Nitrogen + Soil_Delta_15N,
+		data = microbiome.pSEM.data
+	),
+	lm(
+		Leaf_Delta_15N ~ Mean_ISC + Human_Influence_Index
+		  + Root_Weighted_UniFrac_PCoA_1 + Root_Weighted_UniFrac_PCoA_2
+		  + Soil_Total_Nitrogen + Soil_Delta_15N,
+		data = microbiome.pSEM.data
+	),
+	
+	# Correlations
+	Leaf_Total_Nitrogen %~~% Leaf_Delta_15N,
+	
+	
+	## Soil microbiome-------------------------------------------------------
+	lm(
+		Soil_Weighted_UniFrac_PCoA_1 ~ Soil_Total_Carbon + Soil_Delta_13C
+		  + Soil_Total_Nitrogen + Soil_Delta_15N + Mean_ISC + Human_Influence_Index,
+		data = microbiome.pSEM.data
+	),
+	lm(
+		Soil_Weighted_UniFrac_PCoA_2 ~ Soil_Total_Carbon + Soil_Delta_13C
+		  + Soil_Total_Nitrogen + Soil_Delta_15N + Mean_ISC + Human_Influence_Index,
+		data = microbiome.pSEM.data
+	),
+	
+	# Correlations
+	Soil_Weighted_UniFrac_PCoA_1 %~~% Soil_Weighted_UniFrac_PCoA_2,
+	
+	
+	## Root Microbiome-------------------------------------------------------
+	lm(
+		Root_Weighted_UniFrac_PCoA_1 ~ Soil_Weighted_UniFrac_PCoA_1 + Soil_Weighted_UniFrac_PCoA_2
+		  + Soil_Total_Carbon + Soil_Delta_13C + Soil_Total_Nitrogen + Soil_Delta_15N
+		  + Mean_ISC + Human_Influence_Index,
+		data = microbiome.pSEM.data
+	),
+	lm(
+		Root_Weighted_UniFrac_PCoA_2 ~ Soil_Weighted_UniFrac_PCoA_1 + Soil_Weighted_UniFrac_PCoA_2
+		  + Soil_Total_Carbon + Soil_Delta_13C + Soil_Total_Nitrogen + Soil_Delta_15N
+		  + Mean_ISC + Human_Influence_Index,
+		data = microbiome.pSEM.data
+	),
+	
+	# Correlations
+	Root_Weighted_UniFrac_PCoA_1 %~~% Root_Weighted_UniFrac_PCoA_2
+)
+```
+
+\vspace{10pt}
+
+```{r Check Structural Equation Fit, echo = TRUE, eval = FALSE}
+## Fit component structural equation
+structural.equation.LM <- lm(
+	Y ~ X,
+	data = microbiome.pSEM.data
+)
+# Change the model formula for each structural equation in the pSEM list
+
+## Visual assessment of model fit
+check_model(structural.equation.LM)
+```
+
+
+
+\newpage
+## pSEM Evaluation
+
+\vspace{10pt}
+
+```{r Microbiome Assembly pSEM Evaluation, echo = TRUE, results = "hide"}
+## pSEM summary
+microbiome.pSEM.summary <- summary(
+	microbiome.pSEM.model.list,
+	conserve = TRUE
+)
+
+## Test of directed separation
+microbiome.pSEM.summary.directed.separation <- dSep(
+	microbiome.pSEM.model.list,
+	conserve = TRUE
+)
+
+## Get Fisher's C statistics of model fit
+fisherC(microbiome.pSEM.model.list, conserve = TRUE)
+# Fisher's C = 77.027, df = 68, P = 0.212
+
+## R-squared values for endogenous variables
+microbiome.pSEM.R.squared <- rsquared(
+	microbiome.pSEM.model.list
+)
+
+## Standardized coefficients
+microbiome.pSEM.path.coefficients <- coefs(
+	microbiome.pSEM.model.list,
+	standardize = "scale"
+)
+```
+
+
+
+\newpage
+## pSEM Path Coefficients
+
+```{r Microbiome Assembly pSEM Path Coefficients, echo = FALSE}
+kable(
+	microbiome.pSEM.path.coefficients %>% select(Response:Std.Error, Std.Estimate, P.Value),
+	booktabs = TRUE,
+	digits = 3,
+	caption = "Path coefficients for each causal and correlational pathway in the microbiome assembly piecewise SEM. Global model fit: Fisher's C = 77.027, df = 68, P = 0.212. $R^2$ values for endogenous variables: Mean ISC = 0.624, Human Influence Index = 0.627, Soil Total C = 0.218, Soil 13C = 0.378, Leaf Total C = 0.249, Leaf 13C = 0.191, Soil Total N = 0.192, Soil 15N = 0.335, Leaf Total N = 0.412, Leaf 15N = 0.236, Soil PCoA 1 = 0.184, Soil PCoA 2 = 0.623, Root PCoA 1 = 0.347, Root PCoA 2 = 0.358."
+	) %>%
+	kable_styling(latex_options = c("scale_down", "HOLD_position", "striped"), font_size = 8)
+```
+
+
+
+
+
+
+
+
+
+
+
+\newpage
+# R Session Information
+
+```{r R Packages, echo = FALSE}
+df_session_packages <- devtools::session_info()$packages %>%
+  as.data.frame(.) %>%
+  filter(attached == TRUE) %>%
+  dplyr::select(loadedversion, date) %>%
+  rownames_to_column()
+
+colnames(df_session_packages) <- c("Package", "Loaded Version", "Date")
+
+kable(
+  df_session_packages,
+  booktabs = TRUE,
+  caption = "Packages required for data management and analysis."
+) %>%
+  kable_styling(
+    full_width = FALSE,
+    latex_options = c("HOLD_position", "striped")
+  )
+```

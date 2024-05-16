@@ -1,0 +1,1403 @@
+---
+title: "TRhizo-urbanMicrobiome"
+subtitle: "Diversity & Composition Analyses"
+author: "David Murray-Stoker"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 5
+    fig_caption: yes
+    latex_engine: xelatex
+always_allow_html: true
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(results = "hold", fig.pos = "H", fig.align = "center", out.width = "92.5%")
+options(knitr.graphics.error = FALSE)
+kableExtra::usepackage_latex("float")
+```
+
+```{r Load Packages for R Markdown, include = FALSE}
+library(kableExtra)
+library(knitr)
+```
+
+
+
+
+
+\newpage
+# Load Packages
+
+\vspace{10pt}
+
+```{r Load Packages, include = FALSE}
+## Load the tidyverse
+library(tidyverse)
+
+## Packages for analyses
+library(broom)
+library(easystats)
+library(mgcv)
+library(phyloseq)
+library(picante)
+library(tidyamplicons)
+library(vegan)
+
+## Set contrasts for Type III sums-of-squares
+options(contrasts = c("contr.sum", "contr.sum"))
+
+## Set function to calculate relative abundances
+relative_abundance <- function(x) {
+  x / sum(x)
+}
+
+## Make the results reproducible
+set.seed(666)
+
+## Load the workspace
+load("data_analysis/7-diversity_composition_analyses/diversity_composition-workspace.RData")
+```
+
+
+
+
+
+\newpage
+# Load Data
+
+\vspace{10pt}
+
+```{r Load Data, echo = TRUE}
+## Load the root phyloseq object
+root.phyloseq.reference <- read_rds(
+  file = "data/root_decontam_phyloseq_reference.rds"
+)
+
+## Load the phyloseq object
+soil.phyloseq.reference <- read_rds(
+  file = "data/soil_decontam_phyloseq_reference.rds"
+)
+
+## Load the NJ tree
+microbiome.NJ.tree <- read_rds(
+  file = "microbiome_phylogenetic_tree/microbiome_NJ_tree.rds"
+)
+
+## Load the urbanization data
+urbanization.data <- read_rds(
+  file = "data/urbanization_data.rds"
+)
+
+## Load the carbon data
+carbon.data <- read_csv(
+  file = "data/urbanMicrobiome-carbon_data.csv",
+  col_types = c("fnnn"),
+  show_col_types = FALSE
+)
+
+## Load the nitrogen data
+nitrogen.data <- read_csv(
+  file = "data/urbanMicrobiome-nitrogen_data.csv",
+  col_types = c("fnnn"),
+  show_col_types = FALSE
+)
+```
+
+
+
+
+
+\newpage
+# Phyloseq Proccessing
+
+\vspace{10pt}
+
+```{r Phyloseq Processing: Root, echo = TRUE, results = "hide"}
+## Rarefy to even sequencing depth
+root.phyloseq.reference.rarefied <- rarefy_even_depth(
+  root.phyloseq.reference,
+  sample.size = 15000,
+  rngseed = 9,
+  trimOTUs = TRUE
+)
+# 2210 ASVs removed after being absent form all samples following rarefaction
+# 12 samples removed as they had < 15000 reads
+
+## Convert to tidyamplicons
+root.tidyamplicon.reference.rarefied <- as_tidyamplicons(root.phyloseq.reference.rarefied)
+```
+
+\vspace{10pt}
+
+```{r Phyloseq Processing: Soil, echo = TRUE, results = "hide"}
+## Rarefy to even sequencing depth
+soil.phyloseq.reference.rarefied <- rarefy_even_depth(
+  soil.phyloseq.reference,
+  sample.size = 20000,
+  rngseed = 9,
+  trimOTUs = TRUE
+)
+# 1700 ASVs removed after being absent form all samples following rarefaction
+# 4 samples removed as they had < 15000 reads
+
+## Convert to tidyamplicons
+soil.tidyamplicon.reference.rarefied <- as_tidyamplicons(soil.phyloseq.reference.rarefied)
+```
+
+\vspace{10pt}
+
+```{r Phyloseq Processing: Microbiome, echo = TRUE, results = "hide"}
+## Merge root and soil phyloseq objects with the full microbiome NJ tree
+microbiome.phyloseq.reference <- merge_phyloseq(
+  root.phyloseq.reference.rarefied,
+  soil.phyloseq.reference.rarefied,
+  microbiome.NJ.tree
+)
+
+## Convert to tidyamplicons
+microbiome.tidyamplicon.reference <- as_tidyamplicons(microbiome.phyloseq.reference)
+```
+
+
+
+
+
+\newpage
+# Alpha Diversity
+
+## Quantify Alpha Diversity
+
+\vspace{10pt}
+
+```{r Calculate Alpha Diversity Measures, echo = TRUE, results = "hide", eval = FALSE}
+## Extract the ASV abundance table
+ASV.abundance.matrix <- abundances_matrix(microbiome.tidyamplicon.reference)
+
+## Root ASV richness
+ASV.richness <- specnumber(
+  ASV.abundance.matrix
+) %>%
+  as.integer()
+
+## Root Inverse Simpson's index
+ASV.inverse.simpson <- diversity(
+  ASV.abundance.matrix,
+  index = "invsimpson"
+) %>%
+  as.numeric()
+
+## Root ASV evenness
+ASV.evenness <- ASV.inverse.simpson / ASV.richness %>%
+  as.numeric()
+
+## Root phylogenetic diversity
+phylogenetic.diversity <- pd(
+  ASV.abundance.matrix,
+  microbiome.NJ.tree,
+  include.root = FALSE
+)
+
+## Combine all alpha diversity estimates into one tibble
+alpha.diversity.data <- tibble(
+  Richness = ASV.richness,
+  Inverse_Simpson = ASV.inverse.simpson,
+  Evenness = ASV.evenness,
+  Faiths_PD = phylogenetic.diversity$PD
+)
+
+## Combine root sample metadata and alpha diversity
+alpha.diversity.cleaned.data <- samples(microbiome.tidyamplicon.reference) %>%
+  full_join(urbanization.data, by = "Population") %>%
+  bind_cols(alpha.diversity.data) %>%
+  select(-c("sample", "sample_id")) %>%
+  type_convert(
+    col_types = c("fffininnnnninnn")
+  )
+```
+
+
+
+
+
+\newpage
+## ASV Richness GAMMs
+
+\vspace{10pt}
+
+```{r ASV Richness GAMMs, echo TRUE}
+## Richness by distance
+ASV.richness.by.distance.GAMM <- gam(
+  Richness ~ Compartment
+    + s(Distance, by = Compartment, bs = "ts", k = 10)
+    + s(Population, bs = "re", k = 35),
+  data = alpha.diversity.cleaned.data,
+  method = "REML"
+)
+
+## Richness by HII
+ASV.richness.by.HII.GAMM <- gam(
+  Richness ~ Compartment
+    + s(Human_Influence_Index, by = Compartment, bs = "ts", k = 10)
+    + s(Population, bs = "re", k = 35),
+  data = alpha.diversity.cleaned.data,
+  method = "REML"
+)
+
+## Richness by ISC
+ASV.richness.by.ISC.GAMM <- gam(
+  Richness ~ Compartment
+    + s(Mean_ISC, by = Compartment, bs = "ts", k = 10)
+    + s(Population, bs = "re", k = 35),
+  data = alpha.diversity.cleaned.data,
+  method = "REML"
+)
+```
+
+\vspace{10pt}
+
+### Check Model Assumptions
+
+```{r performance Diagnostics: ASV Richness GAMMs, echo = TRUE, eval = FALSE}
+## Root ASV richness-by-distance model diagnostics
+check_model(ASV.richness.by.distance.GAMM)
+# Visual check = assumptions met
+
+## Root ASV richness-by-HII model diagnostics
+check_model(ASV.richness.by.HII.GAMM)
+# Visual check = assumptions met
+
+## Root ASV richness-by-ISC model diagnostics
+check_model(ASV.richness.by.ISC.GAMM)
+# Visual check = assumptions met
+```
+
+
+
+\newpage
+### ANOVAs
+
+\vspace{10pt}
+
+```{r ANOVA Table: ASV Richness-by-Distance GAMM, echo = FALSE}
+kable(
+  tidy(ASV.richness.by.distance.GAMM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the ASV richness-by-distance GAMM. Adjusted R-squared = 0.676, deviance = 68.8. Compartment: F = 652.9, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: ASV Richness-by-HII GAMM, echo = FALSE}
+kable(
+  tidy(ASV.richness.by.HII.GAMM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the ASV richness-by-HII GAMM. Adjusted R-squared = 0.669, deviance = 68.1. Compartment: F = 637.2, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: ASV Richness-by-ISC GAMM, echo = FALSE}
+kable(
+  tidy(ASV.richness.by.ISC.GAMM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the ASV richness-by-ISC GAMM. Adjusted R-squared = 0.683, deviance = 69.0. Compartment: F = 665.2, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Inverse Simpson GAMMs
+
+```{r Inverse Simpson GAMMs, echo TRUE}
+## Inverse Simpson by distance
+inverse.simpson.by.distance.GAMM <- gam(
+  Inverse_Simpson ~ Compartment
+    + s(Distance, by = Compartment, bs = "ts", k = 10)
+    + s(Population, bs = "re", k = 35),
+  data = alpha.diversity.cleaned.data,
+  method = "REML"
+)
+
+## Inverse Simpson by HII
+inverse.simpson.by.HII.GAMM <- gam(
+  Inverse_Simpson ~ Compartment
+    + s(Human_Influence_Index, by = Compartment, bs = "ts", k = 10)
+    + s(Population, bs = "re", k = 35),
+  data = alpha.diversity.cleaned.data,
+  method = "REML"
+)
+
+## Inverse Simpson by ISC
+inverse.simpson.by.ISC.GAMM <- gam(
+  Inverse_Simpson ~ Compartment
+    + s(Mean_ISC, by = Compartment, bs = "ts", k = 10)
+    + s(Population, bs = "re", k = 35),
+  data = alpha.diversity.cleaned.data,
+  method = "REML"
+)
+```
+
+\vspace{10pt}
+
+### Check Model Assumptions
+
+```{r performance Diagnostics: Inverse Simpson GAMMs, echo = TRUE, eval = FALSE}
+## Root inverse Simpson-by-distance model diagnostics
+check_model(inverse.simpson.by.distance.GAMM)
+# Visual check = assumptions met
+
+## Root inverse Simpson-by-HII model diagnostics
+check_model(inverse.simpson.by.HII.GAMM)
+# Visual check = assumptions met
+
+## Root inverse Simpson-by-ISC model diagnostics
+check_model(inverse.simpson.by.ISC.GAMM)
+# Visual check = assumptions met
+```
+
+
+
+\newpage
+### ANOVAs
+
+\vspace{10pt}
+
+```{r ANOVA Table: Inverse Simpson-by-Distance GAMM, echo = FALSE}
+kable(
+  tidy(inverse.simpson.by.distance.GAMM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the inverse Simpson-by-distance GAMM. Adjusted R-squared = 0.820, deviance = 83.8. Compartment: F = 1331, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Inverse Simpson-by-HII GAMM, echo = FALSE}
+kable(
+  tidy(inverse.simpson.by.HII.GAMM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the inverse Simpson-by-HII GAMM. Adjusted R-squared = 0.822, deviance = 83.8. Compartment: F = 1347, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Inverse Simpson-by-ISC GAMM, echo = FALSE}
+kable(
+  tidy(inverse.simpson.by.ISC.GAMM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the inverse Simpson-by-ISC GAMM. Adjusted R-squared = 0.819, deviance = 83.6. Compartment: F = 1324, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## ASV Evenness GAMMs
+
+\vspace{10pt}
+
+```{r ASV Evenness GAMMs, echo TRUE}
+## Evenness by distance
+ASV.evenness.by.distance.GAMM <- gam(
+  Evenness ~ Compartment
+    + s(Distance, by = Compartment, bs = "ts", k = 10)
+    + s(Population, bs = "re", k = 35),
+  data = alpha.diversity.cleaned.data,
+  method = "REML"
+)
+
+## Evenness by HII
+ASV.evenness.by.HII.GAMM <- gam(
+  Evenness ~ Compartment
+    + s(Human_Influence_Index, by = Compartment, bs = "ts", k = 10)
+    + s(Population, bs = "re", k = 35),
+  data = alpha.diversity.cleaned.data,
+  method = "REML"
+)
+
+## Evenness by ISC
+ASV.evenness.by.ISC.GAMM <- gam(
+  Evenness ~ Compartment + s(Mean_ISC, by = Compartment, bs = "ts", k = 10)
+    + s(Population, bs = "re", k = 35),
+  data = alpha.diversity.cleaned.data,
+  method = "REML"
+)
+```
+
+\vspace{10pt}
+
+### Check Model Assumptions
+
+```{r performance Diagnostics: ASV Evenness GAMMs, echo = TRUE, eval = FALSE}
+## Root ASV evenness-by-distance model diagnostics
+check_model(ASV.evenness.by.distance.GAMM)
+# Visual check = assumptions met
+
+## Root ASV evenness-by-HII model diagnostics
+check_model(ASV.evenness.by.HII.GAMM)
+# Visual check = assumptions met
+
+## Root ASV evenness-by-ISC model diagnostics
+check_model(ASV.evenness.by.ISC.GAMM)
+# Visual check = assumptions met
+```
+
+
+
+\newpage
+### ANOVAs
+
+\vspace{10pt}
+
+```{r ANOVA Table: ASV Evenness-by-Distance GAMM, echo = FALSE}
+kable(
+  tidy(ASV.evenness.by.distance.GAMM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the ASV evenness-by-distance GAMM. Adjusted R-squared = 0.632, deviance = 66.1. Compartment: F = 476.1, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: ASV Evenness-by-HII GAMM, echo = FALSE}
+kable(
+  tidy(ASV.evenness.by.HII.GAMM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the ASV evenness-by-HII GAMM. Adjusted R-squared = 0.632, deviance = 66.1. Compartment: F = 476.2, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: ASV Evenness-by-ISC GAMM, echo = FALSE}
+kable(
+  tidy(ASV.evenness.by.ISC.GAMM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the ASV evenness-by-ISC GAMM. Adjusted R-squared = 0.632, deviance = 66.1. Compartment: F = 476.6, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Faith's PD GAMMs
+
+\vspace{10pt}
+
+```{r Faiths PD: GAMMs, echo TRUE}
+## Faith's PD by distance
+faiths.PD.by.distance.GAMM <- gam(
+  Faiths_PD ~ Compartment
+    + s(Distance, by = Compartment, bs = "ts", k = 10)
+    + s(Population, bs = "re", k = 35),
+  data = alpha.diversity.cleaned.data,
+  method = "REML"
+)
+
+## Faith's PD by HII
+faiths.PD.by.HII.GAMM <- gam(
+  Faiths_PD ~ Compartment
+    + s(Human_Influence_Index, by = Compartment, bs = "ts", k = 10)
+    + s(Population, bs = "re", k = 35),
+  data = alpha.diversity.cleaned.data,
+  method = "REML"
+)
+
+## Faith's PD by ISC
+faiths.PD.by.ISC.GAMM <- gam(
+  Faiths_PD ~ Compartment
+    + s(Mean_ISC, by = Compartment, bs = "ts", k = 10)
+    + s(Population, bs = "re", k = 35),
+  data = alpha.diversity.cleaned.data,
+  method = "REML"
+)
+```
+
+\vspace{10pt}
+
+### Check Model Assumptions
+
+```{r performance Diagnostics: Faiths PD GAMMs, echo = TRUE, eval = FALSE}
+## Faith's PD-by-distance model diagnostics
+check_model(faiths.PD.by.distance.GAMM)
+# Visual check = assumptions met
+
+## Faith's PD-by-HII model diagnostics
+check_model(faiths.PD.by.HII.GAMM)
+# Visual check = assumptions met
+
+## Faith's PD-by-ISC model diagnostics
+check_model(faiths.PD.by.ISC.GAMM)
+# Visual check = assumptions met
+```
+
+
+
+\newpage
+### ANOVAs
+
+\vspace{10pt}
+
+```{r ANOVA Table: Faiths PD-by-Distance GAMM, echo = FALSE}
+kable(
+  tidy(faiths.PD.by.distance.GAMM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the root Faith's PD-by-distance GAMM. Adjusted R-squared = 0.731, deviance = 74.3. Compartment: F = 839.1, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Faiths PD-by-HII GAMM, echo = FALSE}
+kable(
+  tidy(faiths.PD.by.HII.GAMM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the root Faith's PD-by-HII GAMM. Adjusted R-squared = 0.722, deviance = 73.5. Compartment: F = 809.2, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table: Faiths PD-by-ISC GAMM, echo = FALSE}
+kable(
+  tidy(faiths.PD.by.ISC.GAMM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the root Faith's PD-by-ISC GAMM. Adjusted R-squared = 0.737, deviance = 74.4. Compartment: F = 856.4, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+# Beta Diversity
+
+\vspace{10pt}
+
+## Turnover & Nestedness
+
+\vspace{10pt}
+
+### Quantify Turnover & Nestedness: Root
+
+\vspace{10pt}
+
+```{r Quantify Turnover & Nestedness: Root, echo = TRUE, eval = FALSE}
+## Convert abundance matrix to presence-absence matrix
+root.ASV.presence.absence.matrix <- decostand(
+  as_tibble(ASV.abundance.matrix) %>% slice(1:161),
+  method = "pa"
+)
+
+## Calculate multi-site turnover and nestedness
+root.turnover.nestedness.null.model <- oecosimu(
+  root.ASV.presence.absence.matrix,
+  nestfun = nestedbetajac,
+  method = "r1",
+  nsimul = 1000,
+  parallel = 4
+)
+```
+
+\vspace{10pt}
+
+```{r Turnover & Nestedness Results: Root, echo = FALSE}
+## Format data for presenting results and figure creation
+root.turnover.nestedness.null.model.results <- tibble(
+  Compoenent = c("Turnover", "Nestedness", "Jaccard"),
+  Observed = root.turnover.nestedness.null.model$statistic,
+  Simulated = root.turnover.nestedness.null.model$oecosimu$means,
+  Effect_Size = root.turnover.nestedness.null.model$oecosimu$z,
+  P_Value = root.turnover.nestedness.null.model$oecosimu$pval
+)
+
+kable(
+  root.turnover.nestedness.null.model.results,
+  booktabs = TRUE,
+  caption = "Results of the turnover and nestedness analysis for root samples."
+) %>%
+  kable_styling(latex_options = "HOLD_position", "striped")
+```
+
+
+
+\newpage
+### Quantify Turnover & Nestedness: Soil
+
+\vspace{10pt}
+
+```{r Quantify Turnover & Nestedness: Soil, echo = TRUE, eval = FALSE}
+## Convert abundance matrix to presence-absence matrix
+soil.ASV.presence.absence.matrix <- decostand(
+  as_tibble(ASV.abundance.matrix) %>% slice(161:322),
+  method = "pa"
+)
+
+## Calculate multi-site turnover and nestedness
+soil.turnover.nestedness.null.model <- oecosimu(
+  soil.ASV.presence.absence.matrix,
+  nestfun = nestedbetajac,
+  method = "r1",
+  nsimul = 1000,
+  parallel = 4
+)
+```
+
+\vspace{10pt}
+
+```{r Turnover & Nestedness Results: Soil, echo = FALSE}
+## Format data for presenting results and figure creation
+soil.turnover.nestedness.null.model.results <- tibble(
+  Compoenent = c("Turnover", "Nestedness", "Jaccard"),
+  Observed = soil.turnover.nestedness.null.model$statistic,
+  Simulated = soil.turnover.nestedness.null.model$oecosimu$means,
+  Effect_Size = soil.turnover.nestedness.null.model$oecosimu$z,
+  P_Value = soil.turnover.nestedness.null.model$oecosimu$pval
+)
+
+kable(
+  soil.turnover.nestedness.null.model.results,
+  booktabs = TRUE,
+  caption = "Results of the turnover and nestedness analysis for soil samples."
+) %>%
+  kable_styling(latex_options = "HOLD_position", "striped")
+```
+
+
+
+
+
+\newpage
+# Community Composition
+
+\vspace{10pt}
+
+## Principal Coordinates Analyses
+
+\vspace{10pt}
+
+```{r PCoA, echo = TRUE, results = "hide", eval = FALSE}
+## Conduct PCoA for each distance matrix
+# Bray-Curtis
+BC.distance.PCoA <- ordinate(
+  microbiome.phyloseq.reference.relativized,
+  method = "MDS",
+  distance = "bray"
+)
+
+# UniFrac
+UniFrac.distance.PCoA <- ordinate(
+  microbiome.phyloseq.reference.relativized,
+  method = "MDS",
+  distance = "unifrac"
+)
+
+# Weighted UniFrac
+weighted.UniFrac.distance.PCoA <- ordinate(
+  microbiome.phyloseq.reference.relativized,
+  method = "MDS",
+  distance = "wunifrac"
+)
+
+
+## Determine the percent of variation explained by axes 1-2
+# Bray-Curtis = 38.5%
+sum(BC.distance.PCoA$values$Eigenvalues[1:2]) / sum(BC.distance.PCoA$values$Eigenvalues)
+
+# UniFrac = 24.7%
+sum(UniFrac.distance.PCoA$values$Eigenvalues[1:2]) / sum(UniFrac.distance.PCoA$values$Eigenvalues)
+
+# Weighted UniFrac = 55.7%
+sum(weighted.UniFrac.distance.PCoA$values$Eigenvalues[1:2]) / sum(weighted.UniFrac.distance.PCoA$values$Eigenvalues)
+```
+
+
+
+\newpage
+## PERMANOVAs
+
+\vspace{10pt}
+
+```{r Set PERMANOVA Metadata, echo = TRUE}
+## Set PERMANOVA metadata
+sample.meta.data <- sample_data(microbiome.phyloseq.reference.relativized) %>%
+  as_tibble()
+```
+
+
+
+### Bray-Curtis Distance
+
+\vspace{10pt}
+
+```{r PERMANOVA: Bray-Curtis Distance, echo = TRUE, eval = FALSE}
+## PERMANOVA by compartment
+BC.distance.PERMANOVA <- adonis2(
+  BC.distance ~ Compartment * Population,
+  data = sample.meta.data,
+  permutations = 1000
+)
+```
+
+\vspace{10pt}
+
+```{r PERMANOVA Summary Table: Bray-Curtis Distance, echo = FALSE}
+kable(
+  tidy(BC.distance.PERMANOVA),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "Summary of the PERMANOVA comparing microbiome composition by compartment, population, and their interaction (Bray-Curtis distance).",
+  col.names = c("Term", "df", "Sums-of-Squares", "R2", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+\newpage
+### UniFrac Distance
+
+\vspace{10pt}
+
+```{r PERMANOVA: UniFrac Distance, echo = TRUE, eval = FALSE}
+## PERMANOVA by compartment
+UniFrac.distance.PERMANOVA <- adonis2(
+  UniFrac.distance ~ Compartment * Population,
+  data = sample.meta.data,
+  permutations = 1000
+)
+```
+
+\vspace{10pt}
+
+```{r PERMANOVA Summary Table: UniFrac Distance, echo = FALSE}
+kable(
+  tidy(UniFrac.distance.PERMANOVA),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "Summary of the PERMANOVA comparing microbiome composition by compartment, population, and their interaction (UniFrac distance).",
+  col.names = c("Term", "df", "Sums-of-Squares", "R2", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+\newpage
+### Weighted UniFrac Distance
+
+\vspace{10pt}
+
+```{r PERMANOVA: Weighted UniFrac Distance, echo = TRUE, eval = FALSE}
+## PERMANOVA by compartment
+weighted.UniFrac.distance.PERMANOVA <- adonis2(
+  weighted.UniFrac.distance ~ Compartment * Population,
+  data = sample.meta.data,
+  permutations = 1000
+)
+```
+
+\vspace{10pt}
+
+```{r PERMANOVA Summary Table: Weighted UniFrac Distance, echo = FALSE}
+kable(
+  tidy(weighted.UniFrac.distance.PERMANOVA),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "Summary of the PERMANOVA comparing microbiome composition by compartment, population, and their interaction (weighted UniFrac distance).",
+  col.names = c("Term", "df", "Sums-of-Squares", "R2", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+\newpage
+## Multivariate Dispersion
+
+\vspace{10pt}
+
+### Dissimilarity Matrices
+
+\vspace{10pt}
+
+```{r Calculate Dissimilarity Matrices, echo = TRUE, results = "hide", eval = FALSE}
+## Convert abundance to relative abundance
+microbiome.phyloseq.reference.relativized <- transform_sample_counts(
+  microbiome.phyloseq.reference,
+  relative_abundance
+)
+
+## Conduct dissimilarity matrices
+# Bray-Curtis
+BC.distance <- distance(
+  microbiome.phyloseq.reference.relativized,
+  method = "bray"
+)
+
+# UniFrac
+UniFrac.distance <- distance(
+  microbiome.phyloseq.reference.relativized,
+  method = "unifrac"
+)
+
+# Weighted UniFrac
+weighted.UniFrac.distance <- distance(
+  microbiome.phyloseq.reference.relativized,
+  method = "wunifrac"
+)
+```
+
+
+
+\newpage
+### Quantify Multivariate Dispersion
+
+\vspace{10pt}
+
+```{r Quantify Multivariate Dispersion, echo = TRUE}
+## Calculate multivariate dispersion
+# Bray-Curtis
+BC.multivariate.dispersion <- betadisper(
+  BC.distance,
+  group = alpha.diversity.cleaned.data$Compartment,
+  type = "centroid"
+)$distances
+
+# UniFrac
+UniFrac.multivariate.dispersion <- betadisper(
+  UniFrac.distance,
+  group = alpha.diversity.cleaned.data$Compartment,
+  type = "centroid"
+)$distances
+
+# Weighted UniFrac
+weighted.UniFrac.multivariate.dispersion <- betadisper(
+  weighted.UniFrac.distance,
+  group = alpha.diversity.cleaned.data$Compartment,
+  type = "centroid"
+)$distances
+
+## Compile the multivariate dispersion data
+multivariate.dispersion.data <- tibble(
+  Sequence_ID = alpha.diversity.cleaned.data$Sequence_ID,
+  Population = alpha.diversity.cleaned.data$Population,
+  Compartment = alpha.diversity.cleaned.data$Compartment,
+  BC_Multivariate_Dispersion = BC.multivariate.dispersion,
+  UniFrac_Multivariate_Dispersion = UniFrac.multivariate.dispersion,
+  Weighted_UniFrac_Multivariate_Dispersion = weighted.UniFrac.multivariate.dispersion
+) %>%
+  group_by(Population, Compartment) %>%
+  summarise(
+    Mean_BC_Dispersion = mean(BC_Multivariate_Dispersion),
+    Mean_UniFrac_Dispersion = mean(UniFrac_Multivariate_Dispersion),
+    Mean_Weighted_UniFrac_Dispersion = mean(Weighted_UniFrac_Multivariate_Dispersion),
+    .groups = "keep"
+  ) %>%
+  ungroup() %>%
+  left_join(urbanization.data, by = "Population")
+```
+
+
+
+\newpage
+### Bray-Curtis Multivariate Dispersion GAMs
+
+\vspace{10pt}
+
+```{r Fit the Bray-Curtis Multivariate Dispersion Models, echo = TRUE}
+##  Bray-Curtis multivariate dispersion-by-distance GAM
+BC.multivariate.dispersion.by.distance.GAM <- gam(
+  Mean_BC_Dispersion ~ Compartment
+    + s(Distance, by = Compartment, bs = "ts", k = 10),
+  data = multivariate.dispersion.data,
+  method = "REML"
+)
+
+##  Bray-Curtis multivariate dispersion-by-HII GAM
+BC.multivariate.dispersion.by.HII.GAM <- gam(
+  Mean_BC_Dispersion ~ Compartment
+    + s(Human_Influence_Index, by = Compartment, bs = "ts", k = 10),
+  data = multivariate.dispersion.data,
+  method = "REML"
+)
+
+##  Bray-Curtis multivariate dispersion-by-ISC GAM
+BC.multivariate.dispersion.by.ISC.GAM <- gam(
+  Mean_BC_Dispersion ~ Compartment
+    + s(Mean_ISC, by = Compartment, bs = "ts", k = 10),
+  data = multivariate.dispersion.data,
+  method = "REML"
+)
+```
+
+\vspace{10pt}
+
+#### Check Model Assumptions
+
+```{r performance Diagnostics Bray-Curtis Multivariate Dispersion Models, echo = TRUE, eval = FALSE}
+##  multivariate dispersion-by-distance model diagnostics
+check_model(BC.multivariate.dispersion.by.distance.GAM)
+# Visual check = assumptions met
+
+##  multivariate dispersion-by-HII model diagnostics
+check_model(BC.multivariate.dispersion.by.HII.GAM)
+# Visual check = assumptions met
+
+##  multivariate dispersion-by-ISC model diagnostics
+check_model(BC.multivariate.dispersion.by.ISC.GAM)
+# Visual check = assumptions met
+```
+
+
+\newpage
+#### ANOVAs
+
+\vspace{10pt}
+
+```{r ANOVA Table Bray-Curtis Multivariate Dispersion-by-Distance GAM, echo = FALSE}
+kable(
+  tidy(BC.multivariate.dispersion.by.distance.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the multivariate dispersion-by-distance GAM (Bray-Curtis distance). Adjusted R-squared = 0.630, deviance = 64.7. Compartment: F = 109.6, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table Bray-Curtis Multivariate Dispersion-by-HII GAM, echo = FALSE}
+kable(
+  tidy(BC.multivariate.dispersion.by.HII.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the multivariate dispersion-by-HII GAM (Bray-Curtis distance). Adjusted R-squared = 0.582, deviance = 58.9. Compartment: F = 96.93, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table Bray-Curtis Multivariate Dispersion-by-ISC GAM, echo = FALSE}
+kable(
+  tidy(BC.multivariate.dispersion.by.ISC.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the multivariate dispersion-by-ISC GAM (Bray-Curtis distance). Adjusted R-squared = 0.581, deviance = 58.7. Compartment: F = 96.72, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+\newpage
+### UniFrac Multivariate Dispersion GAMs
+
+\vspace{10pt}
+
+```{r Fit the UniFrac Multivariate Dispersion Models, echo = TRUE}
+##  UniFrac multivariate dispersion-by-distance GAM
+UniFrac.multivariate.dispersion.by.distance.GAM <- gam(
+  Mean_UniFrac_Dispersion ~ Compartment
+    + s(Distance, by = Compartment, bs = "ts", k = 10),
+  data = multivariate.dispersion.data,
+  method = "REML"
+)
+
+##  UniFrac multivariate dispersion-by-HII GAM
+UniFrac.multivariate.dispersion.by.HII.GAM <- gam(
+  Mean_UniFrac_Dispersion ~ Compartment
+    + s(Human_Influence_Index, by = Compartment, bs = "ts", k = 10),
+  data = multivariate.dispersion.data,
+  method = "REML"
+)
+
+##  UniFrac multivariate dispersion-by-ISC GAM
+UniFrac.multivariate.dispersion.by.ISC.GAM <- gam(
+  Mean_UniFrac_Dispersion ~ Compartment
+    + s(Mean_ISC, by = Compartment, bs = "ts", k = 10),
+  data = multivariate.dispersion.data,
+  method = "REML"
+)
+```
+
+\vspace{10pt}
+
+#### Check Model Assumptions
+
+```{r performance Diagnostics UniFrac Multivariate Dispersion Models, echo = TRUE, eval = FALSE}
+##  multivariate dispersion-by-distance model diagnostics
+check_model(UniFrac.multivariate.dispersion.by.distance.GAM)
+# Visual check = assumptions met
+
+##  multivariate dispersion-by-HII model diagnostics
+check_model(UniFrac.multivariate.dispersion.by.HII.GAM)
+# Visual check = assumptions met
+
+##  multivariate dispersion-by-ISC model diagnostics
+check_model(UniFrac.multivariate.dispersion.by.ISC.GAM)
+# Visual check = assumptions met
+```
+
+
+\newpage
+#### ANOVAs
+
+\vspace{10pt}
+
+```{r ANOVA Table UniFrac Multivariate Dispersion-by-Distance GAM, echo = FALSE}
+kable(
+  tidy(UniFrac.multivariate.dispersion.by.distance.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the multivariate dispersion-by-distance GAM (UniFrac distance). Adjusted R-squared = 0.494, deviance 50.2. Compartment: F = 68.43, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table UniFrac Multivariate Dispersion-by-HII GAM, echo = FALSE}
+kable(
+  tidy(UniFrac.multivariate.dispersion.by.HII.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the multivariate dispersion-by-HII GAM (UniFrac distance). Adjusted R-squared = 0.518, deviance = 53.0. Compartment: F = 71.72, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table UniFrac Multivariate Dispersion-by-ISC GAM, echo = FALSE}
+kable(
+  tidy(UniFrac.multivariate.dispersion.by.ISC.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the multivariate dispersion-by-ISC GAM (UniFrac distance). Adjusted R-squared = 0.55, deviance = 57. Compartment: F = 76.87, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+\newpage
+### Weighted UniFrac Multivariate Dispersion GAMs
+
+\vspace{10pt}
+
+```{r Fit the Weighted UniFrac Multivariate Dispersion Models, echo = TRUE}
+##  weighted UniFrac multivariate dispersion-by-distance GAM
+weighted.UniFrac.multivariate.dispersion.by.distance.GAM <- gam(
+  Mean_Weighted_UniFrac_Dispersion ~ Compartment
+    + s(Distance, by = Compartment, bs = "ts", k = 10),
+  data = multivariate.dispersion.data,
+  method = "REML"
+)
+
+##  weighted UniFrac multivariate dispersion-by-HII GAM
+weighted.UniFrac.multivariate.dispersion.by.HII.GAM <- gam(
+  Mean_Weighted_UniFrac_Dispersion ~ Compartment
+    + s(Human_Influence_Index, by = Compartment, bs = "ts", k = 10),
+  data = multivariate.dispersion.data,
+  method = "REML"
+)
+
+##  weighted UniFrac multivariate dispersion-by-ISC GAM
+weighted.UniFrac.multivariate.dispersion.by.ISC.GAM <- gam(
+  Mean_Weighted_UniFrac_Dispersion ~ Compartment
+    + s(Mean_ISC, by = Compartment, bs = "ts", k = 10),
+  data = multivariate.dispersion.data,
+  method = "REML"
+)
+```
+
+\vspace{10pt}
+
+#### Check Model Assumptions
+
+```{r performance Diagnostics Weighted UniFrac Multivariate Dispersion Models, echo = TRUE, eval = FALSE}
+##  multivariate dispersion-by-distance model diagnostics
+check_model(weighted.UniFrac.multivariate.dispersion.by.distance.GAM)
+# Visual check = assumptions met
+
+##  multivariate dispersion-by-HII model diagnostics
+check_model(weighted.UniFrac.multivariate.dispersion.by.HII.GAM)
+# Visual check = assumptions met
+
+##  multivariate dispersion-by-ISC model diagnostics
+check_model(weighted.UniFrac.multivariate.dispersion.by.ISC.GAM)
+# Visual check = assumptions met
+```
+
+
+\newpage
+#### ANOVAs
+
+\vspace{10pt}
+
+```{r ANOVA Table Weighted UniFrac Multivariate Dispersion-by-Distance GAM, echo = FALSE}
+kable(
+  tidy(weighted.UniFrac.multivariate.dispersion.by.distance.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the multivariate dispersion-by-distance GAM (weighted UniFrac distance). Adjusted R-squared = 0.656, deviance = 67.2. Compartment: F = 122.4, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table Weighted UniFrac Multivariate Dispersion-by-HII GAM, echo = FALSE}
+kable(
+  tidy(weighted.UniFrac.multivariate.dispersion.by.HII.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the multivariate dispersion-by-HII GAM (weighted UniFrac distance). Adjusted R-squared = 0.605, deviance = 61.0. Compartment: F = 106.6, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+\vspace{10pt}
+
+```{r ANOVA Table Weighted UniFrac Multivariate Dispersion-by-ISC GAM, echo = FALSE}
+kable(
+  tidy(weighted.UniFrac.multivariate.dispersion.by.ISC.GAM),
+  booktabs = TRUE,
+  digits = 3,
+  caption = "ANOVA table for the multivariate dispersion-by-ISC GAM (weighted UniFrac distance). Adjusted R-squared = 0.605, deviance = 61.0. Compartment: F = 106.6, P < 0.001.",
+  col.names = c("Term", "EDF", "Ref. df", "F", "P-value")
+) %>%
+  kable_styling(latex_options = c("HOLD_position", "striped"))
+```
+
+
+
+
+
+
+
+\newpage
+# Export Data
+
+\vspace{10pt}
+
+```{r Format Data for Piecewise SEM, echo = TRUE, results = "hide"}
+## Set root PCoA data
+root.PCoA.vectors <- tibble(
+  Root_BC_PCoA_1 = BC.distance.PCoA$vectors[, 1],
+  Root_BC_PCoA_2 = BC.distance.PCoA$vectors[, 2],
+  Root_UniFrac_PCoA_1 = UniFrac.distance.PCoA$vectors[, 1],
+  Root_UniFrac_PCoA_2 = UniFrac.distance.PCoA$vectors[, 2],
+  Root_Weighted_UniFrac_PCoA_1 = weighted.UniFrac.distance.PCoA$vectors[, 1],
+  Root_Weighted_UniFrac_PCoA_2 = weighted.UniFrac.distance.PCoA$vectors[, 2]
+) %>%
+  bind_cols(sample.meta.data) %>%
+  select(Population:Compartment, Root_BC_PCoA_1:Root_Weighted_UniFrac_PCoA_2) %>%
+  filter(Compartment == "Root") %>%
+  select(-Compartment)
+
+## Set soil PCoA data
+soil.PCoA.vectors <- tibble(
+  Soil_BC_PCoA_1 = BC.distance.PCoA$vectors[, 1],
+  Soil_BC_PCoA_2 = BC.distance.PCoA$vectors[, 2],
+  Soil_UniFrac_PCoA_1 = UniFrac.distance.PCoA$vectors[, 1],
+  Soil_UniFrac_PCoA_2 = UniFrac.distance.PCoA$vectors[, 2],
+  Soil_Weighted_UniFrac_PCoA_1 = weighted.UniFrac.distance.PCoA$vectors[, 1],
+  Soil_Weighted_UniFrac_PCoA_2 = weighted.UniFrac.distance.PCoA$vectors[, 2]
+) %>%
+  bind_cols(sample.meta.data) %>%
+  select(Population:Compartment, Soil_BC_PCoA_1:Soil_Weighted_UniFrac_PCoA_2) %>%
+  filter(Compartment == "Soil") %>%
+  select(-Compartment)
+
+## Combine root and soil data for pSEM analysis
+microbiome.pSEM.data <- sample.meta.data %>%
+  select(Population) %>%
+  full_join(root.PCoA.vectors, by = "Population") %>%
+  full_join(soil.PCoA.vectors, by = "Population") %>%
+  full_join(urbanization.data, by = "Population") %>%
+  full_join(carbon.data, by = "Population") %>%
+  full_join(nitrogen.data, by = "Population") %>%
+  group_by(Population) %>%
+  summarise(across(dplyr::everything(), mean), .groups = "keep")
+```
+
+\vspace{10pt}
+
+```{r Export Data, echo = TRUE}
+## Microbiobiome phyloseq
+write_rds(
+  microbiome.phyloseq.reference,
+  file = "data/microbiome_phyloseq_reference.rds"
+)
+
+## Microbiome tidyamplicons
+write_rds(
+  microbiome.tidyamplicon.reference,
+  file = "data/microbiome_tidyamplicon_reference.rds"
+)
+
+## Root tidyamplicons
+write_rds(
+  root.tidyamplicon.reference.rarefied,
+  file = "data/root_tidyamplicon_reference.rds"
+)
+
+## Soil tidyamplicons
+write_rds(
+  soil.tidyamplicon.reference.rarefied,
+  file = "data/soil_tidyamplicon_reference.rds"
+)
+
+## Alpha diversity
+write_rds(
+  alpha.diversity.cleaned.data,
+  file = "data/alpha_diversity_data.rds"
+)
+
+## Multivariate dispersion
+write_rds(
+  multivariate.dispersion.data,
+  file = "data/multivariate_dispersion_data.rds"
+)
+
+## PCoA (Bray-Curtis)
+write_rds(
+  BC.distance.PCoA,
+  file = "data/BC_PCoA.rds"
+)
+
+## PCoA (UniFrac)
+write_rds(
+  UniFrac.distance.PCoA,
+  file = "data/UniFrac_PCoA.rds"
+)
+
+## PCoA (weighted UniFrac)
+write_rds(
+  weighted.UniFrac.distance.PCoA,
+  file = "data/weighted_UniFrac_PCoA.rds"
+)
+
+## Microbiome pSEM data
+write_rds(
+  microbiome.pSEM.data,
+  file = "data/microbiome_pSEM_data.rds"
+)
+
+## GAMMs
+save(
+  alpha.diversity.cleaned.data, multivariate.dispersion.data,
+  BC.distance.PCoA, UniFrac.distance.PCoA, weighted.UniFrac.distance.PCoA,
+  ASV.richness.by.distance.GAMM, ASV.richness.by.HII.GAMM, ASV.richness.by.ISC.GAMM,
+  inverse.simpson.by.distance.GAMM, inverse.simpson.by.HII.GAMM, inverse.simpson.by.ISC.GAMM,
+  ASV.evenness.by.distance.GAMM, ASV.evenness.by.HII.GAMM, ASV.evenness.by.ISC.GAMM,
+  faiths.PD.by.distance.GAMM, faiths.PD.by.HII.GAMM, faiths.PD.by.ISC.GAMM,
+  BC.multivariate.dispersion.by.distance.GAM, BC.multivariate.dispersion.by.HII.GAM,
+  BC.multivariate.dispersion.by.ISC.GAM,
+  UniFrac.multivariate.dispersion.by.distance.GAM, UniFrac.multivariate.dispersion.by.HII.GAM,
+  UniFrac.multivariate.dispersion.by.ISC.GAM,
+  weighted.UniFrac.multivariate.dispersion.by.distance.GAM, weighted.UniFrac.multivariate.dispersion.by.HII.GAM,
+  weighted.UniFrac.multivariate.dispersion.by.ISC.GAM,
+  file = "data_analysis/7-diversity_composition_analyses/diversity_composition-reduced_workspace.RData"
+)
+```
+
+\vspace{10pt}
+
+```{r Save Workspace, include = FALSE}
+save.image("data_analysis/7-diversity_composition_analyses/diversity_composition-workspace.RData")
+```
+
+
+
+
+
+
+
+
+
+
+\newpage
+# R Session Information
+
+```{r R Packages, echo = FALSE}
+df_session_packages <- devtools::session_info()$packages %>%
+  as.data.frame(.) %>%
+  filter(attached == TRUE) %>%
+  dplyr::select(loadedversion, date) %>%
+  rownames_to_column()
+
+colnames(df_session_packages) <- c("Package", "Loaded Version", "Date")
+
+kable(
+  df_session_packages,
+  booktabs = TRUE,
+  caption = "Packages required for data management and analysis."
+) %>%
+  kable_styling(
+    full_width = FALSE,
+    latex_options = c("HOLD_position", "striped")
+  )
+```
