@@ -57,7 +57,7 @@ relative_abundance <- function(x) {
 set.seed(666)
 
 ## Load the workspace
-load("data_analysis/7-diversity_composition_analyses/diversity_composition-workspace.RData")
+load("data_analysis/07-diversity_composition_analyses/diversity_composition-workspace.RData")
 ```
 
 
@@ -623,105 +623,11 @@ kable(
 
 \vspace{10pt}
 
-## Turnover & Nestedness
+## Community Composition
 
 \vspace{10pt}
 
-### Quantify Turnover & Nestedness: Root
-
-\vspace{10pt}
-
-```{r Quantify Turnover & Nestedness: Root, echo = TRUE, eval = FALSE}
-## Convert abundance matrix to presence-absence matrix
-root.ASV.presence.absence.matrix <- decostand(
-  as_tibble(ASV.abundance.matrix) %>% slice(1:161),
-  method = "pa"
-)
-
-## Calculate multi-site turnover and nestedness
-root.turnover.nestedness.null.model <- oecosimu(
-  root.ASV.presence.absence.matrix,
-  nestfun = nestedbetajac,
-  method = "r1",
-  nsimul = 1000,
-  parallel = 4
-)
-```
-
-\vspace{10pt}
-
-```{r Turnover & Nestedness Results: Root, echo = FALSE}
-## Format data for presenting results and figure creation
-root.turnover.nestedness.null.model.results <- tibble(
-  Compoenent = c("Turnover", "Nestedness", "Jaccard"),
-  Observed = root.turnover.nestedness.null.model$statistic,
-  Simulated = root.turnover.nestedness.null.model$oecosimu$means,
-  Effect_Size = root.turnover.nestedness.null.model$oecosimu$z,
-  P_Value = root.turnover.nestedness.null.model$oecosimu$pval
-)
-
-kable(
-  root.turnover.nestedness.null.model.results,
-  booktabs = TRUE,
-  caption = "Results of the turnover and nestedness analysis for root samples."
-) %>%
-  kable_styling(latex_options = "HOLD_position", "striped")
-```
-
-
-
-\newpage
-### Quantify Turnover & Nestedness: Soil
-
-\vspace{10pt}
-
-```{r Quantify Turnover & Nestedness: Soil, echo = TRUE, eval = FALSE}
-## Convert abundance matrix to presence-absence matrix
-soil.ASV.presence.absence.matrix <- decostand(
-  as_tibble(ASV.abundance.matrix) %>% slice(161:322),
-  method = "pa"
-)
-
-## Calculate multi-site turnover and nestedness
-soil.turnover.nestedness.null.model <- oecosimu(
-  soil.ASV.presence.absence.matrix,
-  nestfun = nestedbetajac,
-  method = "r1",
-  nsimul = 1000,
-  parallel = 4
-)
-```
-
-\vspace{10pt}
-
-```{r Turnover & Nestedness Results: Soil, echo = FALSE}
-## Format data for presenting results and figure creation
-soil.turnover.nestedness.null.model.results <- tibble(
-  Compoenent = c("Turnover", "Nestedness", "Jaccard"),
-  Observed = soil.turnover.nestedness.null.model$statistic,
-  Simulated = soil.turnover.nestedness.null.model$oecosimu$means,
-  Effect_Size = soil.turnover.nestedness.null.model$oecosimu$z,
-  P_Value = soil.turnover.nestedness.null.model$oecosimu$pval
-)
-
-kable(
-  soil.turnover.nestedness.null.model.results,
-  booktabs = TRUE,
-  caption = "Results of the turnover and nestedness analysis for soil samples."
-) %>%
-  kable_styling(latex_options = "HOLD_position", "striped")
-```
-
-
-
-
-
-\newpage
-# Community Composition
-
-\vspace{10pt}
-
-## Principal Coordinates Analyses
+### Principal Coordinates Analyses
 
 \vspace{10pt}
 
@@ -763,7 +669,7 @@ sum(weighted.UniFrac.distance.PCoA$values$Eigenvalues[1:2]) / sum(weighted.UniFr
 
 
 \newpage
-## PERMANOVAs
+### PERMANOVAs
 
 \vspace{10pt}
 
@@ -775,7 +681,7 @@ sample.meta.data <- sample_data(microbiome.phyloseq.reference.relativized) %>%
 
 
 
-### Bray-Curtis Distance
+#### Bray-Curtis Distance
 
 \vspace{10pt}
 
@@ -804,7 +710,7 @@ kable(
 
 
 \newpage
-### UniFrac Distance
+#### UniFrac Distance
 
 \vspace{10pt}
 
@@ -833,7 +739,7 @@ kable(
 
 
 \newpage
-### Weighted UniFrac Distance
+#### Weighted UniFrac Distance
 
 \vspace{10pt}
 
@@ -1360,14 +1266,14 @@ save(
   UniFrac.multivariate.dispersion.by.ISC.GAM,
   weighted.UniFrac.multivariate.dispersion.by.distance.GAM, weighted.UniFrac.multivariate.dispersion.by.HII.GAM,
   weighted.UniFrac.multivariate.dispersion.by.ISC.GAM,
-  file = "data_analysis/7-diversity_composition_analyses/diversity_composition-reduced_workspace.RData"
+  file = "data_analysis/07-diversity_composition_analyses/diversity_composition-reduced_workspace.RData"
 )
 ```
 
 \vspace{10pt}
 
 ```{r Save Workspace, include = FALSE}
-save.image("data_analysis/7-diversity_composition_analyses/diversity_composition-workspace.RData")
+save.image("data_analysis/07-diversity_composition_analyses/diversity_composition-workspace.RData")
 ```
 
 
