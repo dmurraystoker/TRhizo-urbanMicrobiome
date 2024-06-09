@@ -4,7 +4,7 @@ Data, metadata, and R code for “Diversity and assembly of the microbiome of a 
 ================
 David Murray-Stoker
 
-Updated: 15 May 2024
+Updated: 9 June 2024
 
 Data, metadata, and R code for reproducing analyses for the manuscript:
 
