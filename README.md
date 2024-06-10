@@ -10,6 +10,8 @@ Data, metadata, and R code for reproducing analyses for the manuscript:
 
 Murray-Stoker, D., L. Rossi and M. T. J. Johnson. Diversity and assembly of the microbiome of a leguminous plant along an urbanization gradient.
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.11550119.svg)](https://doi.org/10.5281/zenodo.11550119)
+
 
 ## Abstract
 
